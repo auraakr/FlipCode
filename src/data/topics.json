@@ -1,0 +1,8 @@
+{
+  "_catatan": "Daftar topik FlipCode. Tambah topik baru di sini. ID topik dipakai di flashcards.json, questions.json, dan placementTest.json.",
+  "topics": [
+    { "id": "variabel", "nama": "Variabel", "deskripsi": "Konsep dasar variabel dalam pemrograman.", "urutan": 1 },
+    { "id": "tipe_data", "nama": "Tipe Data", "deskripsi": "Jenis-jenis tipe data dasar.", "urutan": 2 },
+    { "id": "operator", "nama": "Operator", "deskripsi": "Operator aritmatika, perbandingan, dan logika.", "urutan": 3 }
+  ]
+}

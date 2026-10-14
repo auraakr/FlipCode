@@ -1,0 +1,16 @@
+{
+  "_catatan": "Soal kuis per topik dan per level. Target 45 soal (15 per topik: 5 Mudah, 5 Sedang, 5 Sulit). Satu sesi kuis mengambil 5 soal dari level siswa saat ini. jawabanBenar adalah INDEX pilihan (mulai 0). relatedCardIds dibuka saat jawaban salah.",
+  "questions": [
+    {
+      "id": "q-var-mudah-01",
+      "topicId": "variabel",
+      "level": "Mudah",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "",
+      "pilihan": ["", "", "", ""],
+      "jawabanBenar": 0,
+      "penjelasan": "",
+      "relatedCardIds": []
+    }
+  ]
+}

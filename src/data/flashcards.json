@@ -1,0 +1,16 @@
+{
+  "_catatan": "Konten flashcard. Target 30 kartu total (10 per topik). Format tiap kartu: id unik, topicId sesuai topics.json, depan (pertanyaan/istilah), belakang (penjelasan + contoh kode + analogi). relatedQuestionIds opsional, dipakai saat siswa salah jawab kuis.",
+  "cards": [
+    {
+      "id": "var-01",
+      "topicId": "variabel",
+      "depan": "",
+      "belakang": {
+        "penjelasan": "",
+        "contohKode": "",
+        "analogi": ""
+      },
+      "relatedQuestionIds": []
+    }
+  ]
+}

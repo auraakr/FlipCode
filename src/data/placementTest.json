@@ -1,0 +1,14 @@
+{
+  "_catatan": "Tes awal: 9 soal pilihan ganda, 3 soal per topik. Dikerjakan sekali di awal untuk menentukan level mulai tiap topik. Format sama dengan questions.json tapi tanpa field level (karena tes awal menentukan level, bukan dibatasi level).",
+  "questions": [
+    {
+      "id": "pt-var-01",
+      "topicId": "variabel",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "",
+      "pilihan": ["", "", "", ""],
+      "jawabanBenar": 0,
+      "penjelasan": ""
+    }
+  ]
+}
