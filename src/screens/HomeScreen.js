@@ -5,7 +5,7 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import LevelBadge from '../components/LevelBadge';
-import { colors, radius, spacing, typography } from '../constants/theme';
+import { colors, radius, spacing, typography, fonts } from '../constants/theme';
 import { ContentRepository } from '../storage/ContentRepository';
 import { ProgressRepository } from '../storage/ProgressRepository';
 import { TopicState } from '../constants/enums';
@@ -44,7 +44,7 @@ export default function HomeScreen({ navigation }) {
           <View style={s.rowBetween}>
             <Text style={[typography.small, {
               color: t.progress.state === TopicState.DIKUASAI ? colors.success : colors.textSecondary,
-              fontWeight: '600',
+              fontFamily: fonts.semibold,
             }]}>
               {t.progress.state}
             </Text>
@@ -85,5 +85,5 @@ const s = StyleSheet.create({
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
   btn: { flex: 1, paddingVertical: 12, borderRadius: radius.md, alignItems: 'center' },
-  btnText: { color: '#fff', fontWeight: '700' },
+  btnText: { color: '#fff', fontFamily: fonts.bold },
 });

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import LevelBadge from '../components/LevelBadge';
 import ProgressBar from '../components/ProgressBar';
-import { colors, radius, spacing, typography } from '../constants/theme';
+import { colors, radius, spacing, typography, fonts } from '../constants/theme';
 import { ContentRepository } from '../storage/ContentRepository';
 import { ProgressRepository } from '../storage/ProgressRepository';
 import { CardStatus } from '../constants/enums';
@@ -49,7 +49,7 @@ export default function ProgressScreen() {
           {t.progress.lastQuizScore && (
             <Text style={typography.small}>Kuis terakhir: {t.progress.lastQuizScore}</Text>
           )}
-          <Text style={[typography.small, { fontWeight: '600', color: colors.primary }]}>
+          <Text style={[typography.small, { fontFamily: fonts.semibold, color: colors.primary }]}>
             Status: {t.progress.state || 'Belum mulai'}
           </Text>
         </View>

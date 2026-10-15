@@ -5,7 +5,7 @@
 
 import React, { useRef, useState } from 'react';
 import { Animated, Pressable, Text, View, StyleSheet, Easing } from 'react-native';
-import { colors, radius, spacing, typography } from '../constants/theme';
+import { colors, radius, spacing, typography, fonts } from '../constants/theme';
 
 export default function Flashcard({ card }) {
   const [flipped, setFlipped] = useState(false);
@@ -66,8 +66,8 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
   inner: { gap: spacing.sm },
-  hint: { ...typography.small, color: colors.primary, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
-  depan: { fontSize: 22, fontWeight: '700', color: colors.textPrimary, marginVertical: spacing.md },
+  hint: { ...typography.small, color: colors.primary, fontFamily: fonts.bold, textTransform: 'uppercase', letterSpacing: 1 },
+  depan: { fontSize: 22, fontFamily: fonts.bold, color: colors.textPrimary, marginVertical: spacing.md },
   tap: { ...typography.small, color: colors.textMuted, textAlign: 'center', marginTop: spacing.md },
   code: {
     backgroundColor: '#111',

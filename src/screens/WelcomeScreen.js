@@ -29,7 +29,7 @@ export default function WelcomeScreen({ navigation }) {
         <Text className="mt-4 text-center text-3xl font-extrabold text-ink">
           Coding jadi lebih seru!
         </Text>
-        <Text className="mt-3 text-center text-base leading-6 text-slate-500">
+        <Text width={200} className="mt-3 text-center text-base font-normal leading-6 text-slate-500">
           Belajar pemrograman lewat kartu dan kuis singkat.
         </Text>
       </View>

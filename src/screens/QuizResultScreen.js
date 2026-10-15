@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import PrimaryButton from '../components/PrimaryButton';
 import LevelBadge from '../components/LevelBadge';
-import { colors, radius, spacing, typography } from '../constants/theme';
+import { colors, radius, spacing, typography, fonts } from '../constants/theme';
 
 export default function QuizResultScreen({ route, navigation }) {
   const { hasil, level } = route.params;
@@ -24,7 +24,7 @@ export default function QuizResultScreen({ route, navigation }) {
           <Text style={typography.small}>ke</Text>
           <LevelBadge level={adapt.nextLevel} />
         </View>
-        <Text style={[typography.body, { marginTop: spacing.md, fontWeight: '700' }]}>{deltaText}</Text>
+        <Text style={[typography.body, { marginTop: spacing.md, fontFamily: fonts.bold }]}>{deltaText}</Text>
         {adapt.saranUlang && (
           <Text style={[typography.small, { marginTop: spacing.xs }]}>
             Saran: pelajari ulang flashcard sebelum kuis berikutnya.
@@ -45,5 +45,5 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  skor: { fontSize: 48, fontWeight: '800', color: colors.primary },
+  skor: { fontSize: 48, fontFamily: fonts.extrabold, color: colors.primary },
 });

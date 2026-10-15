@@ -7,7 +7,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import PrimaryButton from '../components/PrimaryButton';
 import ProgressBar from '../components/ProgressBar';
 import LevelBadge from '../components/LevelBadge';
-import { colors, radius, spacing, typography } from '../constants/theme';
+import { colors, radius, spacing, typography, fonts } from '../constants/theme';
 import { QuizManager } from '../logic/QuizManager';
 import { ContentRepository } from '../storage/ContentRepository';
 
@@ -29,7 +29,7 @@ export default function QuizScreen({ route, navigation }) {
       <View style={s.center}>
         <Text style={typography.body}>
           Belum ada soal kuis untuk level ini. Isi di{' '}
-          <Text style={{ fontWeight: '700' }}>src/data/questions.json</Text>.
+          <Text style={{ fontFamily: fonts.bold }}>src/data/questions.json</Text>.
         </Text>
       </View>
     );
@@ -102,7 +102,7 @@ export default function QuizScreen({ route, navigation }) {
 
       {showFeedback && (
         <View style={[s.feedback, { borderColor: benar ? colors.success : colors.danger }]}>
-          <Text style={{ fontWeight: '700', color: benar ? colors.success : colors.danger }}>
+          <Text style={{ fontFamily: fonts.bold, color: benar ? colors.success : colors.danger }}>
             {benar ? 'Benar!' : 'Masih kurang tepat.'}
           </Text>
           {!!q.penjelasan && <Text style={[typography.body, { marginTop: spacing.sm }]}>{q.penjelasan}</Text>}

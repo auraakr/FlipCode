@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import Flashcard from '../components/Flashcard';
 import PrimaryButton from '../components/PrimaryButton';
 import ProgressBar from '../components/ProgressBar';
-import { colors, spacing, typography } from '../constants/theme';
+import { colors, spacing, typography, fonts } from '../constants/theme';
 import { FlashcardManager } from '../logic/FlashcardManager';
 
 export default function FlashcardScreen({ route, navigation }) {
@@ -21,7 +21,7 @@ export default function FlashcardScreen({ route, navigation }) {
       <View style={s.center}>
         <Text style={typography.body}>
           Belum ada kartu untuk topik ini. Isi di{' '}
-          <Text style={{ fontWeight: '700' }}>src/data/flashcards.json</Text>.
+          <Text style={{ fontFamily: fonts.bold }}>src/data/flashcards.json</Text>.
         </Text>
       </View>
     );

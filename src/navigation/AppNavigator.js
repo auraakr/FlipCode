@@ -17,7 +17,7 @@ import QuizResultScreen from '../screens/QuizResultScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
-import { colors } from '../constants/theme';
+import { colors, fonts } from '../constants/theme';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -28,6 +28,8 @@ function MainTabs() {
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: '#fff',
+        headerTitleStyle: { fontFamily: fonts.bold },
+        tabBarLabelStyle: { fontFamily: fonts.medium },
         tabBarActiveTintColor: colors.primary,
       }}
     >
@@ -45,12 +47,12 @@ export default function AppNavigator() {
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: '#fff',
-        headerTitleStyle: { fontWeight: '700' },
+        headerTitleStyle: { fontFamily: fonts.bold },
       }}
     >
       <Stack.Screen name="Welcome" component={WelcomeScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="PlacementTest" component={PlacementTestScreen} options={{ title: 'Tes Awal' }} />
-      <Stack.Screen name="PlacementResult" component={PlacementResultScreen} options={{ title: 'Hasil Tes Awal', headerBackVisible: false }} />
+      <Stack.Screen name="PlacementTest" component={PlacementTestScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="PlacementResult" component={PlacementResultScreen} options={{ headerShown: false, gestureEnabled: false }} />
       <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
       <Stack.Screen name="Flashcard" component={FlashcardScreen} options={{ title: 'Flashcard' }} />
       <Stack.Screen name="Quiz" component={QuizScreen} options={{ title: 'Kuis' }} />

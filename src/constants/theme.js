@@ -39,10 +39,20 @@ export const radius = {
   lg: 20,
 };
 
+// Nama family Nunito Sans per bobot (dimuat di App.js). Di React Native bobot
+// dipilih lewat nama family, bukan fontWeight.
+export const fonts = {
+  regular: 'NunitoSans_400Regular',
+  medium: 'NunitoSans_500Medium',
+  semibold: 'NunitoSans_600SemiBold',
+  bold: 'NunitoSans_700Bold',
+  extrabold: 'NunitoSans_800ExtraBold',
+};
+
 export const typography = {
-  title: { fontSize: 24, fontWeight: '700', color: colors.textPrimary },
-  heading: { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
-  body: { fontSize: 15, color: colors.textPrimary, lineHeight: 22 },
-  small: { fontSize: 13, color: colors.textSecondary },
-  button: { fontSize: 16, fontWeight: '600', color: '#fff' },
+  title: { fontFamily: fonts.bold, fontSize: 24, color: colors.textPrimary },
+  heading: { fontFamily: fonts.bold, fontSize: 18, color: colors.textPrimary },
+  body: { fontFamily: fonts.regular, fontSize: 15, color: colors.textPrimary, lineHeight: 22 },
+  small: { fontFamily: fonts.regular, fontSize: 13, color: colors.textSecondary },
+  button: { fontFamily: fonts.semibold, fontSize: 16, color: '#fff' },
 };
