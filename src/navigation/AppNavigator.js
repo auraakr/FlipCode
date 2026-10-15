@@ -1,10 +1,9 @@
 // Navigasi FlipCode.
-// Alur: Welcome -> PlacementTest -> PlacementResult -> MainTabs
+// Alur: Welcome (selalu tampil pertama) -> PlacementTest (jika belum) / MainTabs -> PlacementResult -> MainTabs
 // MainTabs berisi Beranda (LearningPath), Progres, dan Pengaturan.
 // Flashcard, Kuis, QuizResult, Feedback dibuka sebagai stack screen.
 
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
@@ -18,7 +17,6 @@ import QuizResultScreen from '../screens/QuizResultScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
-import { ProgressRepository } from '../storage/ProgressRepository';
 import { colors } from '../constants/theme';
 
 const Stack = createNativeStackNavigator();
@@ -41,26 +39,9 @@ function MainTabs() {
 }
 
 export default function AppNavigator() {
-  const [initial, setInitial] = useState(null);
-
-  useEffect(() => {
-    (async () => {
-      const done = await ProgressRepository.isPlacementDone();
-      setInitial(done ? 'MainTabs' : 'Welcome');
-    })();
-  }, []);
-
-  if (!initial) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
-
   return (
     <Stack.Navigator
-      initialRouteName={initial}
+      initialRouteName="Welcome"
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: '#fff',

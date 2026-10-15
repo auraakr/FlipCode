@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import PrimaryButton from '../components/PrimaryButton';
 import LevelBadge from '../components/LevelBadge';
+import LogoHasilTes from '../../assets/icon_tesawal.svg';
 import { colors, spacing, typography } from '../constants/theme';
 import { ContentRepository } from '../storage/ContentRepository';
 
@@ -10,6 +11,7 @@ export default function PlacementResultScreen({ route, navigation }) {
   const topics = ContentRepository.getAllTopics();
   return (
     <ScrollView contentContainerStyle={s.wrap}>
+      <LogoHasilTes width={300} height={300} style={{ alignSelf: 'center', marginBottom: spacing.lg }} />
       <Text style={typography.title}>Hasil Tes Awal</Text>
       <Text style={[typography.small, { marginBottom: spacing.lg }]}>
         Level awal menyesuaikan jawaban kamu di tiap topik.
