@@ -8,6 +8,8 @@ Indonesia.
 
 - **React Native + Expo** (SDK 51)
 - **React Navigation** (native-stack + bottom-tabs)
+- **NativeWind (Tailwind CSS)** untuk styling, konfigurasi di `tailwind.config.js`
+- **react-native-svg** + `react-native-svg-transformer` (file `.svg` bisa diimpor sebagai komponen)
 - **react-native-reanimated**, **react-native-gesture-handler**
 - **AsyncStorage** untuk progres belajar
 - **Konten** dalam berkas JSON (`src/data/`)
@@ -32,6 +34,9 @@ flipcode/
 ├── App.js                     # entry point
 ├── app.json                   # konfigurasi Expo
 ├── babel.config.js
+├── metro.config.js            # transformer SVG + NativeWind
+├── tailwind.config.js         # warna brand: brand, ink, cream
+├── global.css                 # direktif Tailwind (diimpor di App.js)
 ├── package.json
 └── src/
     ├── navigation/
@@ -50,7 +55,8 @@ flipcode/
     │   ├── Flashcard.js       # kartu dua sisi
     │   ├── LevelBadge.js
     │   ├── ProgressBar.js
-    │   └── PrimaryButton.js
+    │   ├── PrimaryButton.js
+    │   └── Button.js          # tombol gaya 3D (Tailwind), dipakai di Welcome
     ├── logic/                 # LAPISAN LOGIKA (lihat class diagram)
     │   ├── PlacementTest.js   # mengatur tes awal 9 soal
     │   ├── AdaptiveEngine.js  # aturan naik/turun level
@@ -133,13 +139,38 @@ di terminal Expo).
 4. Kembali ke Beranda → buka Kuis → jawab 5 soal → cek hasil dan perubahan level.
 5. Tab Progres → cek persentase kartu dikuasai.
 
-## Catatan ikon dan splash
+## Styling dengan Tailwind
 
-Folder `assets/` sengaja kosong. Letakkan di sini:
-- `icon.png` (1024×1024)
-- `splash.png` (1284×2778)
-- `adaptive-icon.png` (1024×1024, foreground Android)
-- `favicon.png` (48×48, untuk web)
+Layar baru (mulai dari `WelcomeScreen`) memakai class Tailwind lewat prop
+`className`, mis. `<View className="flex-1 bg-cream" />`. Warna kustom ada di
+`tailwind.config.js` (`brand`, `brand-dark`, `brand-light`, `ink`, `cream`).
+Layar lama masih memakai `StyleSheet` + `constants/theme.js`; keduanya bisa
+berjalan berdampingan.
 
-Expo akan membuat placeholder otomatis saat pertama kali `npm start`
-kalau berkas belum ada, jadi aman untuk pengujian awal.
+Setelah mengubah `babel.config.js`, `metro.config.js`, atau `tailwind.config.js`,
+jalankan ulang dengan cache bersih: `npx expo start -c`.
+
+## Ikon, ilustrasi, dan SVG
+
+- Ilustrasi Welcome: `assets/splash.svg`, diimpor sebagai komponen
+  (`import X from '../../assets/splash.svg'`). Jangan dipakai lewat `<Image>`.
+- SVG yang memakai `<filter>` (blur, drop shadow) sering tidak tampil di
+  `react-native-svg`. Hapus filter-nya atau ganti dengan gradient.
+- `icon`, `adaptiveIcon`, dan `favicon` di `app.json` wajib **PNG** (SVG ditolak
+  saat prebuild). Ikon: `assets/icon.png` (1024×1024), `adaptive-icon.png`
+  (1024×1024, foreground Android), `favicon.png`.
+- Splash screen bawaan dinonaktifkan, aplikasi langsung membuka Welcome.
+  Di Android 12+ sistem tetap menampilkan ikon aplikasi sesaat; di Expo Go
+  tetap muncul splash Expo.
+
+## Folder `android/` (development build)
+
+`android/` dan `ios/` dibuat oleh `npx expo prebuild` / `npx expo run:android`
+dan **tidak di-commit** (ada di `.gitignore`). Untuk membuatnya ulang:
+
+```bash
+npx expo prebuild --clean
+npx expo run:android
+```
+
+Untuk pengujian harian cukup `npm start` + Expo Go.

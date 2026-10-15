@@ -11,3 +11,7 @@ npm-debug.*
 web-build/
 .env
 .DS_Store
+
+# Hasil `expo prebuild` / `expo run:android` (dibuat ulang otomatis)
+android/
+ios/
