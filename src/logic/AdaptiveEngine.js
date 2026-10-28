@@ -28,13 +28,15 @@ function prevLevel(level) {
 export const AdaptiveEngine = {
   // Mengembalikan { nextLevel, delta, saranUlang }
   evaluateQuiz({ currentLevel, benar }) {
-    if (benar >= THRESHOLD_NAIK) {
-      return { nextLevel: nextLevel(currentLevel), delta: +1, saranUlang: false };
-    }
-    if (benar >= THRESHOLD_TETAP) {
-      return { nextLevel: currentLevel, delta: 0, saranUlang: false };
-    }
-    return { nextLevel: prevLevel(currentLevel), delta: -1, saranUlang: true };
+    let next = currentLevel;
+    if (benar >= THRESHOLD_NAIK) next = nextLevel(currentLevel);
+    else if (benar < THRESHOLD_TETAP) next = prevLevel(currentLevel);
+
+    return {
+      nextLevel: next,
+      delta: LEVEL_ORDER.indexOf(next) - LEVEL_ORDER.indexOf(currentLevel),
+      saranUlang: benar < THRESHOLD_TETAP,
+    };
   },
 
   // Menentukan apakah topik sudah dikuasai.
