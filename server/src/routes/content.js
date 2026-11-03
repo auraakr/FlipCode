@@ -3,7 +3,7 @@ import { rows, first } from '../db.js';
 import { requireAuth, wrap } from '../middleware/auth.js';
 
 const router = Router();
-router.use(requireAuth);
+router.use(['/topics', '/cards'], requireAuth);
 
 const mapCard = (c) => ({
   id: c.id,

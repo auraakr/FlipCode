@@ -4,7 +4,7 @@ import { requireAuth, wrap } from '../middleware/auth.js';
 import { CardStatus } from '../constants/enums.js';
 
 const router = Router();
-router.use(requireAuth);
+router.use(['/progress', '/cards'], requireAuth);
 
 const VALID_STATUS = Object.values(CardStatus);
 
