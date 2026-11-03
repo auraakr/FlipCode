@@ -1,6 +1,6 @@
 // Navigasi FlipCode.
 // Alur: Welcome (selalu tampil pertama) -> PlacementTest (jika belum) / MainTabs -> PlacementResult -> MainTabs
-// MainTabs berisi Beranda (LearningPath), Progres, dan Pengaturan.
+// MainTabs berisi Belajar (LearningPath), Progres, dan Pengaturan.
 // Flashcard, Kuis, QuizResult, Feedback dibuka sebagai stack screen.
 
 import React from 'react';
@@ -16,6 +16,7 @@ import QuizScreen from '../screens/QuizScreen';
 import QuizResultScreen from '../screens/QuizResultScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import CustomTabBar from '../components/CustomTabBar';
 
 import { colors, fonts } from '../constants/theme';
 
@@ -25,15 +26,12 @@ const Tab = createBottomTabNavigator();
 function MainTabs() {
   return (
     <Tab.Navigator
+      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
-        headerStyle: { backgroundColor: colors.primary },
-        headerTintColor: '#fff',
-        headerTitleStyle: { fontFamily: fonts.bold },
-        tabBarLabelStyle: { fontFamily: fonts.medium },
-        tabBarActiveTintColor: colors.primary,
+        headerShown: false,
       }}
     >
-      <Tab.Screen name="Beranda" component={HomeScreen} />
+      <Tab.Screen name="Belajar" component={HomeScreen} />
       <Tab.Screen name="Progres" component={ProgressScreen} />
       <Tab.Screen name="Pengaturan" component={SettingsScreen} />
     </Tab.Navigator>
