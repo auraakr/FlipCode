@@ -15,3 +15,7 @@ web-build/
 # Hasil `expo prebuild` / `expo run:android` (dibuat ulang otomatis)
 android/
 ios/
+
+# Server
+server/node_modules/
+server/.env
