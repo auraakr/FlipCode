@@ -1,12 +1,16 @@
 // Navigasi FlipCode.
+// Belum login: Login <-> Register. Setelah login berhasil, alur di bawah dipakai.
 // Alur: Welcome (selalu tampil pertama) -> PlacementTest (jika belum) / MainTabs -> PlacementResult -> MainTabs
 // MainTabs berisi Belajar (LearningPath), Progres, dan Pengaturan.
 // Flashcard, Kuis, QuizResult, Feedback dibuka sebagai stack screen.
 
 import React from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
+import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
 import PlacementTestScreen from '../screens/PlacementTestScreen';
 import PlacementResultScreen from '../screens/PlacementResultScreen';
@@ -19,6 +23,7 @@ import SettingsScreen from '../screens/SettingsScreen';
 import CustomTabBar from '../components/CustomTabBar';
 
 import { colors, fonts } from '../constants/theme';
+import { useAuth } from '../context/AuthContext';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -39,6 +44,27 @@ function MainTabs() {
 }
 
 export default function AppNavigator() {
+  const { status } = useAuth();
+
+  // Memeriksa token tersimpan.
+  if (status === 'loading') {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FDFCF7' }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  // Belum login: hanya layar Login dan Daftar.
+  if (status === 'signedOut') {
+    return (
+      <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+      </Stack.Navigator>
+    );
+  }
+
   return (
     <Stack.Navigator
       initialRouteName="Welcome"

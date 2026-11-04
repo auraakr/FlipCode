@@ -7,15 +7,27 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import Svg, { Path } from 'react-native-svg';
 import { fonts } from '../constants/theme';
 import { ProgressRepository } from '../storage/ProgressRepository';
+import { useAuth } from '../context/AuthContext';
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
+  const { user, logout } = useAuth();
+
+  // Alert dengan tombol tidak berfungsi di web, jadi langsung keluar di sana.
+  const keluar = () =>
+    Platform.OS === 'web'
+      ? logout()
+      : Alert.alert('Keluar', 'Kamu akan keluar dari akunmu di perangkat ini.', [
+          { text: 'Batal', style: 'cancel' },
+          { text: 'Keluar', style: 'destructive', onPress: logout },
+        ]);
 
   const confirm = (title, action) =>
     Alert.alert(title, 'Yakin? Tindakan ini tidak bisa dibatalkan.', [
@@ -126,7 +138,7 @@ export default function SettingsScreen() {
 
             <View style={s.profileInfo}>
               <View style={s.nameRow}>
-                <Text style={s.profileName}>Azmi Cihuy</Text>
+                <Text style={s.profileName}>{user?.nama || 'Pengguna'}</Text>
                 <View style={s.classBadge}>
                   <Text style={s.classBadgeText}>SMA Kelas 10</Text>
                 </View>
@@ -241,6 +253,22 @@ export default function SettingsScreen() {
               </View>
             </View>
             <Text style={s.chevron}>›</Text>
+          </TouchableOpacity>
+
+          <View style={s.divider} />
+
+          {/* Action 4: Keluar */}
+          <TouchableOpacity activeOpacity={0.7} onPress={keluar} style={s.actionRow}>
+            <View style={s.actionLeft}>
+              <View style={[s.actionIconBox, { backgroundColor: '#FEE2E2' }]}>
+                <Text style={{ fontSize: 18, color: '#EF4444' }}>⎋</Text>
+              </View>
+              <View style={s.actionTextBox}>
+                <Text style={[s.actionTitle, { color: '#DC2626' }]}>Keluar</Text>
+                <Text style={s.actionSubtitle}>{user?.email || 'Keluar dari akun'}</Text>
+              </View>
+            </View>
+            <Text style={[s.chevron, { color: '#F87171' }]}>›</Text>
           </TouchableOpacity>
         </View>
 

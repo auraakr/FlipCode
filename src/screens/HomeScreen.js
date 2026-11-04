@@ -16,8 +16,10 @@ import { ContentRepository } from '../storage/ContentRepository';
 import { ProgressRepository } from '../storage/ProgressRepository';
 import { CardStatus } from '../constants/enums';
 import LearningPathLine from '../components/LearningPathLine';
+import { useAuth } from '../context/AuthContext';
 
 export default function HomeScreen({ navigation }) {
+  const { user } = useAuth();
   const { width } = useWindowDimensions();
   const [studiedCards, setStudiedCards] = useState(3);
   const [totalCards, setTotalCards] = useState(5);
@@ -94,7 +96,7 @@ export default function HomeScreen({ navigation }) {
             <Text style={s.avatarText}>A</Text>
           </View>
           <View style={s.greetingContainer}>
-            <Text style={s.greetingSubtitle}>Hai, Azmi Cihuy</Text>
+            <Text style={s.greetingSubtitle}>Hai, {user?.nama || 'Pengguna'}</Text>
             <Text style={s.greetingTitle}>Yuk, lanjut belajar!</Text>
           </View>
         </View>
