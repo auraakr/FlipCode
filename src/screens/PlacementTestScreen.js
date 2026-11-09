@@ -1,186 +1,287 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { fonts } from '../constants/theme';
+import Svg, { Path, Circle } from 'react-native-svg';
+import Button from '../components/Button';
+import { PlacementTest } from '../logic/PlacementTest';
 import { ContentRepository } from '../storage/ContentRepository';
-import { PlacementEngine } from '../logic/PlacementEngine';
-import { CloseIcon, CheckIcon, ArrowRightIcon } from '../../assets/icons/AppIcons';
+import { fonts } from '../constants/theme';
 
-const HURUF = ['A', 'B', 'C', 'D'];
-const TOTAL_SEGMENTS = 9;
+const HURUF = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-function getTopicLabel(topicId) {
-  const topik = ContentRepository.getTopicById(topicId);
-  if (topik?.nama) return topik.nama.toUpperCase();
-  if (topicId === 'variabel') return 'VARIABEL';
-  if (topicId === 'tipe_data') return 'TIPE DATA';
-  if (topicId === 'operator') return 'OPERATOR';
-  return 'PEMROGRAMAN';
-}
-
-function getPromptHeading(kode) {
-  if (kode) return 'Perhatikan kode berikut:';
-  return 'Jawablah pertanyaan berikut:';
-}
+// Data tampilan sementara (fallback) sesuai desain Figma karena backend/database belum diisi
+const FALLBACK_QUESTIONS = [
+  {
+    id: 'pt-var-01',
+    topicId: 'variabel',
+    tipe: 'pilihan_ganda',
+    pertanyaan: 'Apa fungsi variabel dalam program?',
+    pilihan: [
+      'Menyimpan nilai',
+      'Menghapus program',
+      'Mengubah warna layar',
+      'Menyalakan komputer',
+    ],
+    jawabanBenar: 0,
+  },
+  {
+    id: 'pt-var-02',
+    topicId: 'variabel',
+    tipe: 'pilihan_ganda',
+    pertanyaan: 'Manakah penulisan nama variabel yang benar?',
+    pilihan: ['nama_siswa', '2nama', 'nama siswa', 'nama-siswa'],
+    jawabanBenar: 0,
+  },
+  {
+    id: 'pt-var-03',
+    topicId: 'variabel',
+    tipe: 'pilihan_ganda',
+    pertanyaan: 'Jika x = 5 lalu diubah menjadi x = 10, maka nilai x sekarang adalah...',
+    pilihan: ['10', '5', '15', '0'],
+    jawabanBenar: 0,
+  },
+  {
+    id: 'pt-td-01',
+    topicId: 'tipe_data',
+    tipe: 'pilihan_ganda',
+    pertanyaan: 'Tipe data yang digunakan untuk menyimpan bilangan bulat adalah...',
+    pilihan: ['Integer', 'String', 'Boolean', 'Char'],
+    jawabanBenar: 0,
+  },
+  {
+    id: 'pt-td-02',
+    topicId: 'tipe_data',
+    tipe: 'pilihan_ganda',
+    pertanyaan: 'Nilai "Halo Dunia" termasuk ke dalam tipe data...',
+    pilihan: ['String', 'Integer', 'Float', 'Boolean'],
+    jawabanBenar: 0,
+  },
+  {
+    id: 'pt-td-03',
+    topicId: 'tipe_data',
+    tipe: 'pilihan_ganda',
+    pertanyaan: 'Tipe data Boolean hanya memiliki dua nilai, yaitu...',
+    pilihan: [
+      'True dan False',
+      '0 dan 100',
+      'Huruf dan Angka',
+      'Positif dan Negatif',
+    ],
+    jawabanBenar: 0,
+  },
+  {
+    id: 'pt-op-01',
+    topicId: 'operator',
+    tipe: 'pilihan_ganda',
+    pertanyaan: 'Simbol operator yang digunakan untuk perkalian dalam pemrograman adalah...',
+    pilihan: ['*', 'x', ':', '^'],
+    jawabanBenar: 0,
+  },
+  {
+    id: 'pt-op-02',
+    topicId: 'operator',
+    tipe: 'pilihan_ganda',
+    pertanyaan: 'Hasil dari operasi 10 % 3 (modulo / sisa bagi) adalah...',
+    pilihan: ['1', '3', '0', '2'],
+    jawabanBenar: 0,
+  },
+  {
+    id: 'pt-op-03',
+    topicId: 'operator',
+    tipe: 'pilihan_ganda',
+    pertanyaan: 'Operator perbandingan untuk mengecek apakah dua nilai sama adalah...',
+    pilihan: ['==', '=', '!=', '>='],
+    jawabanBenar: 0,
+  },
+];
 
 export default function PlacementTestScreen({ navigation }) {
-  const questions = ContentRepository.getPlacementQuestions();
+  const questions = useMemo(() => {
+    const loaded = PlacementTest.loadQuestions();
+    const valid = loaded.filter(
+      (item) => item.pertanyaan && item.pertanyaan.trim() !== ''
+    );
+    return valid.length >= 9 ? valid : FALLBACK_QUESTIONS;
+  }, []);
+
   const [idx, setIdx] = useState(0);
-  const [pilih, setPilih] = useState(null);
-  const [jawaban, setJawaban] = useState([]);
+  const [jawaban, setJawaban] = useState({});
 
   const q = questions[idx];
-  const total = questions.length;
-  const sudahPilih = pilih !== null;
+  const terpilih = jawaban[idx];
+  const topik = ContentRepository.getTopicById(q.topicId);
+  const namaTopik = topik?.nama || 'Variabel';
+  const terakhir = idx === questions.length - 1;
+  const pct = ((idx + 1) / questions.length) * 100;
 
-  const lanjut = async () => {
-    if (!sudahPilih) return;
-
-    const baru = [...jawaban, { questionId: q.id, pilihanIndex: pilih }];
-    if (idx < total - 1) {
-      setJawaban(baru);
-      setPilih(null);
-      setIdx(idx + 1);
-    } else {
-      const hasil = await PlacementEngine.evaluate(baru);
-      navigation.replace('PlacementResult', { hasil });
-    }
+  const pilih = (i) => {
+    setJawaban((prev) => ({
+      ...prev,
+      [idx]: prev[idx] === i ? undefined : i,
+    }));
   };
 
   const handleClose = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
-      navigation.navigate('Welcome');
+      navigation.replace('Welcome');
     }
   };
 
-  const renderSyntaxCode = (codeStr) => {
-    const lines = codeStr.split('\n');
-    return lines.map((line, lineIdx) => {
-      const eqIdx = line.indexOf('=');
-      if (eqIdx !== -1 && !line.trim().startsWith('//')) {
-        const left = line.slice(0, eqIdx);
-        const right = line.slice(eqIdx + 1);
-        return (
-          <View key={lineIdx} style={s.codeLineRow}>
-            <Text style={s.codeLineNum}>{lineIdx + 1}</Text>
-            <Text style={s.codeText}>
-              <Text style={s.codeVar}>{left}</Text>
-              <Text style={s.codeOp}>=</Text>
-              <Text style={s.codeNum}>{right}</Text>
-            </Text>
-          </View>
-        );
-      }
-
-      return (
-        <View key={lineIdx} style={s.codeLineRow}>
-          <Text style={s.codeLineNum}>{lineIdx + 1}</Text>
-          <Text style={s.codeText}>
-            <Text style={s.codeDefault}>{line}</Text>
-          </Text>
-        </View>
-      );
-    });
+  const next = async () => {
+    if (!terakhir) {
+      setIdx(idx + 1);
+      return;
+    }
+    const arr = questions.map((_, i) => jawaban[i] ?? -1);
+    const hasil = await PlacementTest.submit(questions, arr);
+    navigation.replace('PlacementResult', { hasil });
   };
 
   return (
-    <SafeAreaView style={s.safeArea} edges={['top', 'bottom']}>
-      {/* Top Bar: Close Button + Topic Pill + Question Counter */}
-      <View style={s.topBar}>
+    <SafeAreaView style={s.safeArea}>
+      {/* Top Header with Close Button & Progress Bar */}
+      <View style={s.header}>
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={handleClose}
           style={s.closeButton}
-          accessibilityLabel="Tutup tes"
+          accessibilityLabel="Tutup"
         >
-          <CloseIcon size={16} color="#1F2A44" strokeWidth={2.2} />
+          <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+            <Path
+              d="M18 6L6 18M6 6l12 12"
+              stroke="#1F2A44"
+              strokeWidth={2.3}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
         </TouchableOpacity>
 
-        <View style={s.topicBadge}>
-          <View style={s.topicDot} />
-          <Text style={s.topicBadgeText}>{getTopicLabel(q.topicId)}</Text>
+        <View style={s.progressSection}>
+          <View style={s.progressLabelRow}>
+            <Text style={s.headerTitle}>Tes Awal</Text>
+            <Text style={s.stepCounter}>
+              {idx + 1} dari {questions.length}
+            </Text>
+          </View>
+          <View style={s.progressTrack}>
+            <View style={[s.progressFill, { width: `${pct}%` }]} />
+          </View>
         </View>
-
-        <Text style={s.counterText}>
-          {idx + 1}/{total}
-        </Text>
       </View>
 
-      {/* 9-Segment Progress Bar */}
-      <View style={s.segmentRow}>
-        {Array.from({ length: total || TOTAL_SEGMENTS }).map((_, i) => {
-          const isCompleted = i < idx;
-          const isCurrent = i === idx;
-          return (
-            <View
-              key={i}
-              style={[
-                s.segmentBar,
-                isCompleted && s.segmentCompleted,
-                isCurrent && s.segmentCurrent,
-              ]}
-            />
-          );
-        })}
-      </View>
-
+      {/* Main Content */}
       <ScrollView
         style={s.scroll}
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={s.subPrompt}>{getPromptHeading(q.kode)}</Text>
-        <Text style={s.questionText}>{q.pertanyaan}</Text>
-
-        {q.kode ? (
-          <View style={s.codeCard}>
-            <View style={s.codeHeader}>
-              <View style={s.trafficDots}>
-                <View style={[s.dot, { backgroundColor: '#FF5F56' }]} />
-                <View style={[s.dot, { backgroundColor: '#FFBD2E' }]} />
-                <View style={[s.dot, { backgroundColor: '#27C93F' }]} />
-              </View>
-              <Text style={s.codeLangLabel}>pseudocode</Text>
-            </View>
-            <View style={s.codeBody}>{renderSyntaxCode(q.kode)}</View>
+        {/* Blue Question Banner Card */}
+        <View style={s.questionCard}>
+          {/* Decorative Concentric Circles on the Right */}
+          <View style={s.cardDecor} pointerEvents="none">
+            <Svg width={180} height={180} viewBox="0 0 180 180" fill="none">
+              <Circle
+                cx="115"
+                cy="90"
+                r="82"
+                stroke="rgba(255, 255, 255, 0.12)"
+                strokeWidth={1.5}
+              />
+              <Circle
+                cx="115"
+                cy="90"
+                r="62"
+                fill="rgba(255, 255, 255, 0.04)"
+                stroke="rgba(255, 255, 255, 0.14)"
+                strokeWidth={1.5}
+              />
+            </Svg>
           </View>
-        ) : null}
 
-        <View style={s.optionsList}>
-          {q.pilihan.map((opsi, i) => {
-            const aktif = pilih === i;
+          {/* Topic Badge Pill */}
+          <View style={s.topicBadge}>
+            <Svg width={13} height={13} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="M9 8L5 12L9 16M15 8L19 12L15 16"
+                stroke="#FFFFFF"
+                strokeWidth={2.3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+            <Text style={s.topicBadgeText}>{namaTopik}</Text>
+          </View>
+
+          {/* Question Text */}
+          <Text style={s.questionText}>{q.pertanyaan}</Text>
+        </View>
+
+        {/* Instruction Label */}
+        <Text style={s.sectionHint}>Pilih satu jawaban</Text>
+
+        {/* Answer Options */}
+        <View accessibilityRole="radiogroup">
+          {q.pilihan.map((pilihanText, i) => {
+            const isSelected = terpilih === i;
             return (
               <TouchableOpacity
                 key={i}
                 activeOpacity={0.8}
-                onPress={() => setPilih(i)}
-                style={[s.optionCard, aktif && s.optionCardSelected]}
+                onPress={() => pilih(i)}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: isSelected }}
+                style={[s.optionCard, isSelected && s.optionCardSelected]}
               >
-                <View style={s.optionLeft}>
-                  <View style={[s.letterBadge, aktif && s.letterBadgeSelected]}>
-                    <Text style={[s.letterText, aktif && s.letterTextSelected]}>
-                      {HURUF[i]}
-                    </Text>
-                  </View>
-                  <Text style={[s.optionText, aktif && s.optionTextSelected]}>
-                    {opsi}
+                {/* Left Letter Circle (A, B, C, D) */}
+                <View
+                  style={[
+                    s.letterBadge,
+                    isSelected && s.letterBadgeSelected,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      s.letterText,
+                      isSelected && s.letterTextSelected,
+                    ]}
+                  >
+                    {HURUF[i]}
                   </Text>
                 </View>
 
-                {aktif ? (
-                  <View style={s.radioSelected}>
-                    <CheckIcon size={12} color="#FFFFFF" strokeWidth={2.8} />
+                {/* Option Text */}
+                <Text
+                  style={[
+                    s.optionLabel,
+                    isSelected && s.optionLabelSelected,
+                  ]}
+                >
+                  {pilihanText}
+                </Text>
+
+                {/* Right Checkmark Circle (only visible when selected) */}
+                {isSelected && (
+                  <View style={s.checkCircle}>
+                    <Svg width={13} height={13} viewBox="0 0 24 24" fill="none">
+                      <Path
+                        d="M5 12.5l4.5 4.5L19 7.5"
+                        stroke="#FFFFFF"
+                        strokeWidth={2.8}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </Svg>
                   </View>
-                ) : (
-                  <View style={s.radioUnselected} />
                 )}
               </TouchableOpacity>
             );
@@ -188,26 +289,12 @@ export default function PlacementTestScreen({ navigation }) {
         </View>
       </ScrollView>
 
-      {/* Bottom Footer Action */}
+      {/* Bottom CTA Button */}
       <View style={s.footer}>
-        {sudahPilih ? (
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={lanjut}
-            style={s.ctaActiveOuter}
-          >
-            <View style={s.ctaActiveInner}>
-              <Text style={s.ctaActiveText}>
-                {idx === total - 1 ? 'Lihat Hasil' : 'Selanjutnya'}
-              </Text>
-              <ArrowRightIcon size={18} color="#FFFFFF" strokeWidth={2.5} />
-            </View>
-          </TouchableOpacity>
-        ) : (
-          <View style={s.ctaDisabled}>
-            <Text style={s.ctaDisabledText}>Pilih jawaban dulu</Text>
-          </View>
-        )}
+        <Button
+          title={terakhir ? 'Selesai' : 'Berikutnya'}
+          onPress={next}
+        />
       </View>
     </SafeAreaView>
   );
@@ -218,191 +305,147 @@ const s = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FDFCF7',
   },
-  topBar: {
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 8,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5EAF2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  progressSection: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  progressLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 22,
-    paddingTop: 10,
-    paddingBottom: 14,
+    marginBottom: 6,
   },
-  closeButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E8EDF5',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  topicBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EDF2FF',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  topicDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#2F65F5',
-    marginRight: 6,
-  },
-  topicBadgeText: {
-    fontFamily: fonts.bold,
-    fontSize: 11,
-    color: '#2F65F5',
-    letterSpacing: 0.6,
-  },
-  counterText: {
-    fontFamily: fonts.bold,
-    fontSize: 14,
+  headerTitle: {
+    fontFamily: fonts.extrabold,
+    fontSize: 13,
     color: '#1F2A44',
-    minWidth: 32,
-    textAlign: 'right',
   },
-  segmentRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 22,
-    gap: 6,
-    marginBottom: 22,
+  stepCounter: {
+    fontFamily: fonts.bold,
+    fontSize: 12,
+    color: '#64748B',
   },
-  segmentBar: {
-    flex: 1,
-    height: 6,
+  progressTrack: {
+    height: 7,
     borderRadius: 999,
-    backgroundColor: '#E6ECF5',
+    backgroundColor: '#DCE6FF',
+    overflow: 'hidden',
   },
-  segmentCompleted: {
-    backgroundColor: '#2ED47A',
-  },
-  segmentCurrent: {
-    backgroundColor: '#2F65F5',
+  progressFill: {
+    height: '100%',
+    borderRadius: 999,
+    backgroundColor: '#2554E8',
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 22,
+    paddingHorizontal: 20,
+    paddingTop: 14,
     paddingBottom: 20,
   },
-  subPrompt: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: '#7C8BA1',
-    marginBottom: 4,
+  questionCard: {
+    backgroundColor: '#2554E8',
+    borderRadius: 24,
+    paddingHorizontal: 22,
+    paddingTop: 20,
+    paddingBottom: 24,
+    minHeight: 154,
+    borderBottomWidth: 4,
+    borderBottomColor: '#1B3FB5',
+    overflow: 'hidden',
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  cardDecor: {
+    position: 'absolute',
+    right: -10,
+    top: -12,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  topicBadge: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+    borderColor: 'rgba(255, 255, 255, 0.28)',
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingVertical: 5,
+    paddingHorizontal: 11,
+  },
+  topicBadgeText: {
+    fontFamily: fonts.bold,
+    fontSize: 12,
+    color: '#FFFFFF',
+    marginLeft: 5,
   },
   questionText: {
+    marginTop: 14,
     fontFamily: fonts.extrabold,
     fontSize: 21,
     lineHeight: 29,
-    color: '#1F2A44',
-    marginBottom: 18,
-    letterSpacing: -0.3,
+    color: '#FFFFFF',
+    paddingRight: 16,
   },
-  codeCard: {
-    backgroundColor: '#161F33',
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 16,
-    marginBottom: 20,
-    shadowColor: '#0F172A',
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
-  },
-  codeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  sectionHint: {
+    marginTop: 22,
     marginBottom: 12,
-  },
-  trafficDots: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  dot: {
-    width: 9,
-    height: 9,
-    borderRadius: 4.5,
-  },
-  codeLangLabel: {
-    fontFamily: fonts.mono,
-    fontSize: 11,
-    color: '#64748B',
-  },
-  codeBody: {
-    gap: 4,
-  },
-  codeLineRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  codeLineNum: {
-    fontFamily: fonts.mono,
+    fontFamily: fonts.semibold,
     fontSize: 13,
-    color: '#475569',
-    width: 24,
-  },
-  codeText: {
-    fontFamily: fonts.mono,
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  codeVar: {
-    color: '#7DD3FC',
-  },
-  codeOp: {
-    color: '#F472B6',
-  },
-  codeNum: {
-    color: '#FDE047',
-  },
-  codeDefault: {
-    color: '#E2E8F0',
-  },
-  optionsList: {
-    gap: 12,
+    color: '#94A3B8',
   },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingVertical: 13,
-    paddingHorizontal: 14,
     borderWidth: 1.5,
-    borderColor: '#E8EDF5',
+    borderColor: '#EAEEF4',
+    borderRadius: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 12,
   },
   optionCardSelected: {
-    backgroundColor: '#F3F7FF',
-    borderColor: '#2F65F5',
+    backgroundColor: '#EBF1FF',
     borderWidth: 2,
-  },
-  optionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: 10,
+    borderColor: '#2554E8',
   },
   letterBadge: {
     width: 34,
     height: 34,
-    borderRadius: 10,
+    borderRadius: 17,
     backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
   letterBadgeSelected: {
-    backgroundColor: '#2F65F5',
+    backgroundColor: '#2554E8',
   },
   letterText: {
     fontFamily: fonts.bold,
@@ -410,76 +453,30 @@ const s = StyleSheet.create({
     color: '#475569',
   },
   letterTextSelected: {
+    fontFamily: fonts.extrabold,
     color: '#FFFFFF',
   },
-  optionText: {
-    fontFamily: fonts.bold,
+  optionLabel: {
+    flex: 1,
+    fontFamily: fonts.semibold,
     fontSize: 15,
     color: '#1F2A44',
-    flexShrink: 1,
   },
-  optionTextSelected: {
-    color: '#2F65F5',
+  optionLabelSelected: {
+    fontFamily: fonts.bold,
+    color: '#1F2A44',
   },
-  radioUnselected: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 1.8,
-    borderColor: '#CBD5E1',
-    backgroundColor: '#FFFFFF',
-  },
-  radioSelected: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#2F65F5',
+  checkCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#2554E8',
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: 10,
   },
   footer: {
-    paddingHorizontal: 22,
-    paddingTop: 10,
-    paddingBottom: 18,
-    backgroundColor: '#FDFCF7',
-  },
-  ctaDisabled: {
-    width: '100%',
-    backgroundColor: '#E6ECF5',
-    borderRadius: 999,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ctaDisabledText: {
-    fontFamily: fonts.bold,
-    fontSize: 15,
-    color: '#94A3B8',
-  },
-  ctaActiveOuter: {
-    width: '100%',
-    backgroundColor: '#1B3FB8',
-    borderRadius: 999,
-    paddingBottom: 4,
-    shadowColor: '#2554E8',
-    shadowOpacity: 0.28,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 5,
-  },
-  ctaActiveInner: {
-    width: '100%',
-    backgroundColor: '#2957F5',
-    borderRadius: 999,
-    paddingVertical: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  ctaActiveText: {
-    fontFamily: fonts.bold,
-    fontSize: 16,
-    color: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingBottom: 22,
   },
 });

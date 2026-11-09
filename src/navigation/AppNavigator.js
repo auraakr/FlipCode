@@ -60,39 +60,30 @@ export default function AppNavigator() {
     );
   }
 
-  // Belum login: hanya layar Login dan Daftar.
-  if (status === 'signedOut') {
-    return (
-      <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-      </Stack.Navigator>
-    );
-  }
-
   return (
     <Stack.Navigator
-      initialRouteName="Welcome"
+      initialRouteName="Login"
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: '#fff',
         headerTitleStyle: { fontFamily: fonts.bold },
+        headerShown: false,
       }}
     >
-      <Stack.Screen name="Welcome" component={WelcomeScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="PlacementTest" component={PlacementTestScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="PlacementResult" component={PlacementResultScreen} options={{ headerShown: false, gestureEnabled: false }} />
-      <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
-      <Stack.Screen name="TopicDetail" component={TopicDetailScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Flashcard" component={FlashcardScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Quiz" component={QuizScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="QuizResult" component={QuizResultScreen} options={{ headerShown: false, gestureEnabled: false }} />
-      <Stack.Screen name="TopicCompleted" component={TopicCompletedScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="UpdatedLearningPath" component={UpdatedLearningPathScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="ResetCompleted" component={ResetCompletedScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="About" component={AboutScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="Welcome" component={WelcomeScreen} />
+      <Stack.Screen name="PlacementTest" component={PlacementTestScreen} />
+      <Stack.Screen name="PlacementResult" component={PlacementResultScreen} options={{ gestureEnabled: false }} />
+      <Stack.Screen name="MainTabs" component={MainTabs} />
+      <Stack.Screen name="TopicDetail" component={TopicDetailScreen} />
+      <Stack.Screen name="Flashcard" component={FlashcardScreen} />
+      <Stack.Screen name="Quiz" component={QuizScreen} />
+      <Stack.Screen name="QuizResult" component={QuizResultScreen} options={{ gestureEnabled: false }} />
+      <Stack.Screen name="TopicCompleted" component={TopicCompletedScreen} />
+      <Stack.Screen name="UpdatedLearningPath" component={UpdatedLearningPathScreen} />
+      <Stack.Screen name="ResetCompleted" component={ResetCompletedScreen} />
+      <Stack.Screen name="About" component={AboutScreen} />
     </Stack.Navigator>
   );
 }

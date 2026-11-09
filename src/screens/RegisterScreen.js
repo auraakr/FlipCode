@@ -56,6 +56,8 @@ export default function RegisterScreen({ navigation }) {
     setLoading(true);
     try {
       await register(nama, email, password);
+      setLoading(false);
+      navigation.replace('Welcome');
     } catch (e) {
       setErrors(
         e.status === 409

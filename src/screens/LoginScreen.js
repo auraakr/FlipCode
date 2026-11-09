@@ -24,8 +24,8 @@ import { LoginHeroIllustration } from '../../assets/illustrations/MascotIllustra
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('aura@flipcode.id');
+  const [password, setPassword] = useState('password123');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [errors, setErrors] = useState({});
@@ -41,6 +41,8 @@ export default function LoginScreen({ navigation }) {
     setLoading(true);
     try {
       await login(email, password);
+      setLoading(false);
+      navigation.replace('Welcome');
     } catch (e) {
       setErrors({ form: e.message || 'Gagal masuk. Periksa kembali akunmu.' });
       setLoading(false);
