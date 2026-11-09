@@ -1,6 +1,6 @@
+import { colors, radius } from '../constants/theme';
 import React from 'react';
-import { View } from 'react-native';
-import s from '../styles/ProgressBar.styles';
+import { View , StyleSheet } from 'react-native';
 
 export default function ProgressBar({ value = 0, max = 1 }) {
   const pct = Math.max(0, Math.min(1, max === 0 ? 0 : value / max));
@@ -10,3 +10,8 @@ export default function ProgressBar({ value = 0, max = 1 }) {
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  track: { height: 8, backgroundColor: colors.border, borderRadius: radius.sm, overflow: 'hidden' },
+  fill: { height: '100%', backgroundColor: colors.primary },
+});

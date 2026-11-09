@@ -1,3 +1,4 @@
+import { fonts, colors, radius } from '../constants/theme';
 // Komponen Flashcard dua sisi.
 // Tap kartu -> balik. Prop onPaham dan onUlangi dipakai di layar.
 // Catatan: animasi membalik dibuat sederhana memakai Animated bawaan.
@@ -9,9 +10,8 @@ import {
   Pressable,
   Text,
   View,
-  Easing,
+  StyleSheet
 } from 'react-native';
-import s from '../styles/Flashcard.styles';
 
 export default function Flashcard({ card }) {
   const [flipped, setFlipped] = useState(false);
@@ -59,3 +59,27 @@ export default function Flashcard({ card }) {
     </Pressable>
   );
 }
+
+const s = StyleSheet.create({
+  wrap: { width: '100%' },
+  card: {
+    minHeight: 320,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: 'center',
+  },
+  inner: { gap: spacing.sm },
+  hint: { ...typography.small, color: colors.primary, fontFamily: fonts.bold, textTransform: 'uppercase', letterSpacing: 1 },
+  depan: { fontSize: 22, fontFamily: fonts.bold, color: colors.textPrimary, marginVertical: spacing.md },
+  tap: { ...typography.small, color: colors.textMuted, textAlign: 'center', marginTop: spacing.md },
+  code: {
+    backgroundColor: '#111',
+    borderRadius: radius.sm,
+    padding: spacing.md,
+    marginTop: spacing.sm,
+  },
+  codeText: { color: '#9EEAF9', fontFamily: 'Courier', fontSize: 13 },
+});

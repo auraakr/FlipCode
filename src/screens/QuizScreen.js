@@ -1,5 +1,6 @@
+import { fonts } from '../constants/theme';
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity , StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ContentRepository } from '../storage/ContentRepository';
 import { QuizManager } from '../logic/QuizManager';
@@ -18,7 +19,6 @@ import {
   QuizBannerRobot,
   MiniFeedbackRobot,
 } from '../../assets/illustrations/MascotIllustrations';
-import s from '../styles/QuizScreen.styles';
 
 const HURUF = ['A', 'B', 'C', 'D'];
 
@@ -377,3 +377,472 @@ export default function QuizScreen({ route, navigation }) {
     </SafeAreaView>
   );
 }
+
+const s = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FDFCF7',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 6,
+  },
+  closeButton: {
+    width: 34,
+    height: 34,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  topicPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EDF2FF',
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+  },
+  topicPillText: {
+    fontFamily: fonts.extrabold,
+    fontSize: 12,
+    color: '#2554E8',
+    marginLeft: 6,
+  },
+  stepFraction: {
+    fontFamily: fonts.bold,
+    fontSize: 12.5,
+    color: '#475569',
+    minWidth: 34,
+    textAlign: 'right',
+  },
+  segmentedBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 20,
+    marginTop: 8,
+  },
+  segmentBar: {
+    flex: 1,
+    height: 5,
+    borderRadius: 999,
+  },
+  segmentBarActive: {
+    backgroundColor: '#2554E8',
+  },
+  segmentBarInactive: {
+    backgroundColor: '#E2E8F0',
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
+  questionOverline: {
+    fontFamily: fonts.bold,
+    fontSize: 10.5,
+    letterSpacing: 0.8,
+    color: '#94A3B8',
+    marginBottom: 8,
+  },
+  questionCard: {
+    backgroundColor: '#F3F6FF',
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: '#E2ECFF',
+    paddingVertical: 14,
+    paddingLeft: 18,
+    paddingRight: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  questionCardLeft: {
+    flex: 1,
+    paddingRight: 8,
+  },
+  questionTypePill: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#DCE7FF',
+    borderRadius: 999,
+    paddingVertical: 3.5,
+    paddingHorizontal: 10,
+  },
+  questionTypeText: {
+    fontFamily: fonts.extrabold,
+    fontSize: 9.5,
+    letterSpacing: 0.5,
+    color: '#2554E8',
+  },
+  questionTitle: {
+    marginTop: 10,
+    fontFamily: fonts.extrabold,
+    fontSize: 17,
+    lineHeight: 24,
+    color: '#1F2A44',
+  },
+  optionsList: {
+    marginTop: 16,
+  },
+  optionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#EAEEF4',
+    paddingVertical: 13,
+    paddingHorizontal: 15,
+    marginBottom: 10,
+  },
+  optionCardSelected: {
+    backgroundColor: '#F2F6FF',
+    borderWidth: 2,
+    borderColor: '#2554E8',
+  },
+  optionCardCorrect: {
+    backgroundColor: '#ECFDF5',
+    borderWidth: 2,
+    borderColor: '#10B981',
+  },
+  optionCardWrong: {
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1.8,
+    borderColor: '#EF4444',
+  },
+  letterBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 13,
+  },
+  letterBadgeSelected: {
+    borderRadius: 16,
+    backgroundColor: '#2554E8',
+  },
+  letterBadgeCorrect: {
+    borderRadius: 16,
+    backgroundColor: '#10B981',
+  },
+  letterBadgeWrong: {
+    borderRadius: 10,
+    backgroundColor: '#EF4444',
+  },
+  letterText: {
+    fontFamily: fonts.bold,
+    fontSize: 13.5,
+    color: '#475569',
+  },
+  letterTextWhite: {
+    fontFamily: fonts.extrabold,
+    color: '#FFFFFF',
+  },
+  optionLabel: {
+    flex: 1,
+    fontFamily: fonts.semibold,
+    fontSize: 14,
+    color: '#1F2A44',
+  },
+  optionLabelSelected: {
+    fontFamily: fonts.bold,
+    color: '#1E3A8A',
+  },
+  optionLabelCorrect: {
+    fontFamily: fonts.extrabold,
+    color: '#064E3B',
+  },
+  optionLabelWrong: {
+    fontFamily: fonts.bold,
+    color: '#BE123C',
+  },
+  radioBullseyeOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#2554E8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioBullseyeInner: {
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: '#2554E8',
+  },
+  checkCircleGreen: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#10B981',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  crossCircleRed: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#FFE4E6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hintCard: {
+    marginTop: 4,
+    backgroundColor: '#FEFCE8',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#FEF08A',
+    paddingVertical: 11,
+    paddingHorizontal: 13,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  hintIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FEF08A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  hintText: {
+    flex: 1,
+    fontFamily: fonts.medium,
+    fontSize: 11.5,
+    lineHeight: 17,
+    color: '#475569',
+  },
+  hintBold: {
+    fontFamily: fonts.extrabold,
+    color: '#1F2A44',
+  },
+  footerPreCheck: {
+    paddingHorizontal: 20,
+    paddingBottom: 18,
+    paddingTop: 6,
+  },
+  checkAnswerBtn: {
+    backgroundColor: '#EDF2F7',
+    borderRadius: 16,
+    paddingVertical: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkAnswerBtnReady: {
+    backgroundColor: '#E2E8F0',
+  },
+  checkAnswerBtnText: {
+    fontFamily: fonts.extrabold,
+    fontSize: 14,
+    color: '#94A3B8',
+  },
+  checkAnswerBtnTextReady: {
+    color: '#64748B',
+  },
+  correctSheetWrapper: {
+    position: 'relative',
+    paddingHorizontal: 10,
+    paddingBottom: 10,
+  },
+  peekingRobotWrap: {
+    position: 'absolute',
+    top: -32,
+    right: 26,
+    zIndex: 10,
+  },
+  correctSheet: {
+    backgroundColor: '#ECFDF5',
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#A7F3D0',
+    padding: 16,
+  },
+  correctHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  correctBigCheck: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#10B981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  correctTitle: {
+    fontFamily: fonts.extrabold,
+    fontSize: 15,
+    color: '#064E3B',
+  },
+  correctSubtitle: {
+    fontFamily: fonts.medium,
+    fontSize: 11.5,
+    color: '#047857',
+  },
+  correctExplainBox: {
+    marginTop: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#D1FAE5',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  correctExplainText: {
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#334155',
+  },
+  inlineCodeGreen: {
+    backgroundColor: '#D1FAE5',
+    fontFamily: fonts.bold,
+    color: '#065F46',
+  },
+  greenNextBtn: {
+    marginTop: 12,
+    backgroundColor: '#10B981',
+    borderRadius: 16,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  greenNextBtnText: {
+    fontFamily: fonts.extrabold,
+    fontSize: 14,
+    color: '#FFFFFF',
+    marginRight: 8,
+  },
+  incorrectSheet: {
+    marginHorizontal: 10,
+    marginBottom: 10,
+    backgroundColor: '#FFF1F2',
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#FECDD3',
+    padding: 16,
+  },
+  incorrectTopRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  incorrectTextCol: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  incorrectTitle: {
+    fontFamily: fonts.extrabold,
+    fontSize: 14.5,
+    color: '#991B1B',
+  },
+  incorrectDesc: {
+    marginTop: 5,
+    fontFamily: fonts.medium,
+    fontSize: 11.5,
+    lineHeight: 17.5,
+    color: '#475569',
+  },
+  inlineCodeRed: {
+    backgroundColor: '#FFE4E6',
+    fontFamily: fonts.bold,
+    color: '#BE123C',
+  },
+  inlineCodeGrey: {
+    backgroundColor: '#E2E8F0',
+    fontFamily: fonts.bold,
+    color: '#1E293B',
+  },
+  relatedCardBox: {
+    marginTop: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  relatedIconSquare: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: '#2554E8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  relatedInfoCol: {
+    flex: 1,
+  },
+  relatedOverline: {
+    fontFamily: fonts.bold,
+    fontSize: 9,
+    letterSpacing: 0.6,
+    color: '#94A3B8',
+  },
+  relatedTitle: {
+    fontFamily: fonts.extrabold,
+    fontSize: 12.5,
+    color: '#1F2A44',
+    marginTop: 1,
+  },
+  relatedBadgePill: {
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  relatedBadgeText: {
+    fontFamily: fonts.bold,
+    fontSize: 10.5,
+    color: '#64748B',
+  },
+  incorrectActionsRow: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  whiteNextBtn: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  whiteNextBtnText: {
+    fontFamily: fonts.extrabold,
+    fontSize: 12.5,
+    color: '#1F2A44',
+  },
+  blueRelatedBtn: {
+    flex: 1.15,
+    backgroundColor: '#2554E8',
+    borderRadius: 14,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  blueRelatedBtnText: {
+    fontFamily: fonts.extrabold,
+    fontSize: 12.5,
+    color: '#FFFFFF',
+  },
+});

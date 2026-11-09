@@ -13,7 +13,7 @@ import {
   ReviewBannerRobot,
   CompletedHeroIllustration,
 } from '../../assets/illustrations/MascotIllustrations';
-import s from '../styles/FlashcardScreen.styles';
+import { s } from '../screens/FlashcardScreen';
 
 // ============================================================================
 // SUB-VIEW 1: FLASHCARD SESSION COMPLETED (FlipCode - 12)

@@ -1,3 +1,4 @@
+import { fonts } from '../constants/theme';
 import React, { useState } from 'react';
 import {
   View,
@@ -7,7 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
+  StyleSheet
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
@@ -19,7 +20,6 @@ import {
   ArrowRightIcon,
 } from '../../assets/icons/AppIcons';
 import { LoginHeroIllustration } from '../../assets/illustrations/MascotIllustrations';
-import s from '../styles/LoginScreen.styles';
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
@@ -212,3 +212,195 @@ export default function LoginScreen({ navigation }) {
     </SafeAreaView>
   );
 }
+
+const s = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FDFCF7',
+  },
+  flex: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 28,
+  },
+  heroBanner: {
+    backgroundColor: '#2554E8',
+    borderBottomLeftRadius: 34,
+    borderBottomRightRadius: 34,
+    paddingHorizontal: 22,
+    paddingTop: 18,
+    paddingBottom: 14,
+    overflow: 'hidden',
+    borderBottomWidth: 4,
+    borderBottomColor: '#1B3FB8',
+  },
+  brandPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    gap: 6,
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  brandCodeIcon: {
+    fontFamily: fonts.mono,
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#D97706',
+  },
+  brandTitleText: {
+    fontFamily: fonts.extrabold,
+    fontSize: 14,
+    color: '#1F2A44',
+  },
+  formContainer: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 26,
+  },
+  welcomeTitle: {
+    fontFamily: fonts.extrabold,
+    fontSize: 23,
+    color: '#1F2A44',
+    letterSpacing: -0.4,
+    marginBottom: 6,
+  },
+  welcomeSubtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 13.5,
+    color: '#64748B',
+    marginBottom: 22,
+  },
+  fieldGroup: {
+    marginBottom: 16,
+  },
+  fieldLabel: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: '#1F2A44',
+    marginBottom: 8,
+  },
+  inputBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: '#E6ECF5',
+    paddingHorizontal: 14,
+    height: 50,
+  },
+  textInput: {
+    flex: 1,
+    fontFamily: fonts.regular,
+    fontSize: 13.5,
+    color: '#1F2A44',
+    marginLeft: 10,
+    paddingVertical: 0,
+  },
+  eyeBtn: {
+    padding: 4,
+    marginLeft: 6,
+  },
+  errorText: {
+    fontFamily: fonts.medium,
+    fontSize: 11.5,
+    color: '#EF4444',
+    marginTop: 5,
+  },
+  optionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 2,
+    marginBottom: 22,
+  },
+  rememberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkboxSquare: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 9,
+  },
+  checkboxSquareChecked: {
+    backgroundColor: '#2554E8',
+    borderColor: '#2554E8',
+  },
+  rememberText: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: '#1F2A44',
+  },
+  forgotText: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: '#2554E8',
+  },
+  formErrorText: {
+    fontFamily: fonts.semibold,
+    fontSize: 12.5,
+    color: '#EF4444',
+    textAlign: 'center',
+    marginBottom: 14,
+  },
+  submitBtnOuter: {
+    width: '100%',
+    backgroundColor: '#1B3FB8',
+    borderRadius: 999,
+    paddingBottom: 4,
+    shadowColor: '#2554E8',
+    shadowOpacity: 0.28,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 5,
+  },
+  submitBtnInner: {
+    width: '100%',
+    backgroundColor: '#2957F5',
+    borderRadius: 999,
+    paddingVertical: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  submitBtnText: {
+    fontFamily: fonts.bold,
+    fontSize: 15.5,
+    color: '#FFFFFF',
+  },
+  bottomFooterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 'auto',
+    paddingTop: 32,
+  },
+  bottomPromptText: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    color: '#64748B',
+  },
+  bottomLinkText: {
+    fontFamily: fonts.extrabold,
+    fontSize: 13,
+    color: '#2554E8',
+  },
+});

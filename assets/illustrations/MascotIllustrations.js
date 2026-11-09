@@ -3,6 +3,132 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Path, Circle, Rect, G, Ellipse } from 'react-native-svg';
 import { fonts } from '../../src/constants/theme';
 
+export function WelcomeHeroIllustration() {
+  return (
+    <View style={s.welcomeHeroWrapper}>
+      <Svg width={280} height={190} viewBox="0 0 280 190" fill="none">
+        {/* Soft Background Card / Glow */}
+        <Rect width="280" height="190" rx="24" fill="#2554E8" />
+        <Circle cx="140" cy="95" r="75" fill="rgba(255, 255, 255, 0.08)" />
+        <Circle cx="140" cy="95" r="55" fill="rgba(255, 255, 255, 0.12)" />
+
+        {/* Small floating sparkles and dots */}
+        <Circle cx="35" cy="40" r="4" fill="#FACC15" />
+        <Circle cx="245" cy="35" r="3.5" fill="#4ADE80" />
+        <Circle cx="45" cy="145" r="3" fill="rgba(255,255,255,0.6)" />
+        <Circle cx="240" cy="140" r="4" fill="#F472B6" />
+        <Path
+          d="M55 70L57 74L61 76L57 78L55 82L53 78L49 76L53 74L55 70Z"
+          fill="#FACC15"
+        />
+
+        {/* Floating Code Card Left (`x = ?`) */}
+        <G transform="rotate(-10 60 100)">
+          <Rect
+            x="30"
+            y="80"
+            width="60"
+            height="40"
+            rx="10"
+            fill="rgba(255, 255, 255, 0.2)"
+            stroke="rgba(255, 255, 255, 0.4)"
+            strokeWidth={1.2}
+          />
+          <Rect x="40" y="92" width="22" height="5" rx="2.5" fill="#FACC15" />
+          <Rect
+            x="40"
+            y="102"
+            width="40"
+            height="4"
+            rx="2"
+            fill="rgba(255, 255, 255, 0.8)"
+          />
+        </G>
+
+        {/* Floating Check Card Right */}
+        <G transform="rotate(10 220 100)">
+          <Rect
+            x="190"
+            y="75"
+            width="55"
+            height="45"
+            rx="10"
+            fill="rgba(255, 255, 255, 0.2)"
+            stroke="rgba(255, 255, 255, 0.4)"
+            strokeWidth={1.2}
+          />
+          <Circle cx="217" cy="97" r="11" fill="#2ED47A" />
+          <Path
+            d="M212.5 97L215.8 100.3L222 94"
+            stroke="#FFFFFF"
+            strokeWidth={2.2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </G>
+
+        {/* Robot Antenna */}
+        <Rect x="138.5" y="28" width="3" height="12" rx="1.5" fill="#94A3B8" />
+        <Circle cx="140" cy="25" r="8" fill="rgba(250, 204, 21, 0.3)" />
+        <Circle cx="140" cy="25" r="5.5" fill="#FACC15" />
+
+        {/* Robot Ears */}
+        <Circle cx="88" cy="92" r="9" fill="#FFFFFF" />
+        <Circle cx="192" cy="92" r="9" fill="#FFFFFF" />
+
+        {/* Robot Body */}
+        <Rect x="110" y="112" width="60" height="42" rx="16" fill="#E2E8F0" />
+        <Rect x="110" y="108" width="60" height="40" rx="16" fill="#FFFFFF" />
+        <Rect x="123" y="122" width="34" height="14" rx="7" fill="#2554E8" />
+        <Path
+          d="M132 126L129.5 128.5L132 131M148 126L150.5 128.5L148 131M143 125.5L141 131.5"
+          stroke="#FFFFFF"
+          strokeWidth={1.4}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {/* Robot Head Outer */}
+        <Rect
+          x="94"
+          y="42"
+          width="92"
+          height="70"
+          rx="24"
+          fill="#FFFFFF"
+          stroke="#C7D7FE"
+          strokeWidth={2}
+        />
+
+        {/* Robot Screen (Dark Face) */}
+        <Rect x="104" y="52" width="72" height="50" rx="16" fill="#0F172A" />
+
+        {/* Robot Eyes (Happy cyan eyes) */}
+        <Path
+          d="M116 74C118 69 126 69 128 74"
+          stroke="#38BDF8"
+          strokeWidth={3.5}
+          strokeLinecap="round"
+        />
+        <Path
+          d="M152 74C154 69 162 69 164 74"
+          stroke="#38BDF8"
+          strokeWidth={3.5}
+          strokeLinecap="round"
+        />
+
+        {/* Robot Smile */}
+        <Path
+          d="M136 86C138 88.5 142 88.5 144 86"
+          stroke="#38BDF8"
+          strokeWidth={2}
+          strokeLinecap="round"
+        />
+      </Svg>
+    </View>
+  );
+}
+
 // ============================================================================
 // 1. PLACEMENT RESULT BANNER ILLUSTRATION (FlipCode - 05)
 // ============================================================================
@@ -1754,5 +1880,17 @@ const s = StyleSheet.create({
   loginRobotRightWrap: {
     marginRight: -10,
     marginBottom: -14,
+  },
+  welcomeHeroWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#2554E8',
+    shadowOpacity: 0.22,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
   },
 });
