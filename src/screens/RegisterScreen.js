@@ -1,16 +1,17 @@
-import { fonts } from '../constants/theme';
 import React, { useState } from 'react';
 import {
   View,
   Text,
+  StyleSheet,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StyleSheet
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { fonts } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
 import {
   UserIcon,

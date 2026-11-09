@@ -1,6 +1,6 @@
-import { colors, radius } from '../constants/theme';
 import React from 'react';
-import { View , StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { colors, radius } from '../constants/theme';
 
 export default function ProgressBar({ value = 0, max = 1 }) {
   const pct = Math.max(0, Math.min(1, max === 0 ? 0 : value / max));

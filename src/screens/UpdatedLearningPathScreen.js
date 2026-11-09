@@ -1,13 +1,14 @@
-import { fonts } from '../constants/theme';
 import React from 'react';
 import {
   View,
   Text,
+  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  StyleSheet
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { fonts } from '../constants/theme';
 import {
   ArrowLeftIcon,
   ArchiveBoxIcon,
@@ -358,6 +359,68 @@ const s = StyleSheet.create({
     justifyContent: 'space-around',
     marginTop: 2,
   },
+  guideWrapper: {
+    alignItems: 'center',
+  },
+  speechBubble: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2ECFF',
+    borderRadius: 999,
+    paddingVertical: 5,
+    paddingHorizontal: 11,
+    marginBottom: 8,
+    position: 'relative',
+    shadowColor: '#2554E8',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  speechBubbleText: {
+    fontFamily: fonts.extrabold,
+    fontSize: 10.5,
+    color: '#2554E8',
+  },
+  speechBubbleTail: {
+    position: 'absolute',
+    bottom: -4,
+    alignSelf: 'center',
+    width: 8,
+    height: 8,
+    backgroundColor: '#FFFFFF',
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#E2ECFF',
+    transform: [{ rotate: '45deg' }],
+  },
+  guideOuterRing: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: '#DCE7FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guideInnerCircle: {
+    width: 74,
+    height: 74,
+    borderRadius: 37,
+    backgroundColor: '#2554E8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guideName: {
+    marginTop: 8,
+    fontFamily: fonts.extrabold,
+    fontSize: 13,
+    color: '#1F2A44',
+  },
+  guideRole: {
+    fontFamily: fonts.medium,
+    fontSize: 10.5,
+    color: '#94A3B8',
+  },
   unlockedNodeCol: {
     alignItems: 'center',
   },
@@ -522,3 +585,4 @@ const s = StyleSheet.create({
     marginRight: 8,
   },
 });
+

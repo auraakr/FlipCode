@@ -4,13 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import Button from '../components/Button';
 import WelcomeIllustration from '../../assets/splash.svg';
-import { ProgressRepository } from '../storage/ProgressRepository';
 import { fonts } from '../constants/theme';
 
 export default function WelcomeScreen({ navigation }) {
-  const mulai = async () => {
-    const done = await ProgressRepository.isPlacementDone();
-    navigation.replace(done ? 'MainTabs' : 'PlacementTest');
+  const mulai = () => {
+    navigation.navigate('PlacementTest');
   };
 
   const handleBack = () => {

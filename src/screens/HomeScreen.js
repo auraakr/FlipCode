@@ -1,13 +1,19 @@
-import { fonts } from '../constants/theme';
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image , StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { fonts } from '../constants/theme';
 import { ContentRepository } from '../storage/ContentRepository';
 import { ProgressRepository } from '../storage/ProgressRepository';
 import { CardStatus } from '../constants/enums';
 import { useAuth } from '../context/AuthContext';
-import { HOME_HERO_CONFIGS } from '../data/screenConfigs';
 import {
   WavingHandIcon,
   MiniRobotNodeIcon,
@@ -56,6 +62,7 @@ export default function HomeScreen({ route, navigation }) {
 
   useFocusEffect(
     useCallback(() => {
+      // Sinkronkan topik aktif setiap kali kembali ke HomeScreen
       setActiveTopic(getGlobalActiveTopic());
 
       (async () => {
@@ -105,7 +112,61 @@ export default function HomeScreen({ route, navigation }) {
   const isTipeDataActive = activeTopic === 'tipe_data';
   const isOperatorActive = activeTopic === 'operator';
 
-  const heroConfig = HOME_HERO_CONFIGS[activeTopic] || HOME_HERO_CONFIGS.variabel;
+  // Konfigurasi Hero Banner sesuai topik yang sedang aktif (dengan desain HomeScreen awal yang konsisten)
+  const heroConfig = isTipeDataActive
+    ? {
+        bg: '#F5B82E',
+        lip: '#D99B16',
+        badgeText: 'Topik saat ini • Sedang',
+        badgeBg: 'rgba(120, 53, 15, 0.14)',
+        badgeDot: '#78350F',
+        badgeTextColor: '#78350F',
+        title: 'Tipe Data',
+        titleColor: '#1F2A44',
+        subColor: '#78350F',
+        btnBg: '#1E293B',
+        btnTextColor: '#FFFFFF',
+        robotBadge: '#D97706',
+        completedNote: 'Variabel selesai dengan 80% kartu dikuasai',
+        tipsText:
+          'Pahami perbedaan Integer, String, dan Boolean agar tidak salah mengolah data! 🔥',
+      }
+    : isOperatorActive
+    ? {
+        bg: '#F26B50',
+        lip: '#C94A32',
+        badgeText: 'Topik saat ini • Mudah',
+        badgeBg: 'rgba(255, 255, 255, 0.2)',
+        badgeDot: '#FACC15',
+        badgeTextColor: '#FFFFFF',
+        title: 'Operator',
+        titleColor: '#FFFFFF',
+        subColor: 'rgba(255, 255, 255, 0.9)',
+        btnBg: '#FFFFFF',
+        btnTextColor: '#E04F33',
+        robotBadge: '#E04F33',
+        completedNote: 'Tipe Data selesai dengan 80% kartu dikuasai',
+        tipsText:
+          'Latih operator aritmatika dan perbandingan untuk membangun logika program! 🔥',
+      }
+    : {
+        bg: '#2554E8',
+        lip: '#1B3FB5',
+        badgeText: 'Topik saat ini • Mudah',
+        badgeBg: 'rgba(255, 255, 255, 0.16)',
+        badgeDot: '#FACC15',
+        badgeTextColor: '#FFFFFF',
+        title: 'Variabel',
+        titleColor: '#FFFFFF',
+        subColor: 'rgba(255, 255, 255, 0.85)',
+        btnBg: '#FFFFFF',
+        btnTextColor: '#2554E8',
+        robotBadge: '#2554E8',
+        completedNote: null,
+        tipsText:
+          'Selesaikan minimal 7 kartu variabel hari ini agar streak belajarmu tetap aktif! 🔥',
+      };
+
   const startedTopicsCount = isOperatorActive ? 3 : isTipeDataActive ? 2 : 1;
 
   return (
@@ -143,7 +204,7 @@ export default function HomeScreen({ route, navigation }) {
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero Banner Card */}
+        {/* Hero Banner Card (Desain konsisten dengan HomeScreen awal) */}
         <View
           style={[
             s.heroCard,
@@ -229,7 +290,7 @@ export default function HomeScreen({ route, navigation }) {
           </View>
         </View>
 
-        {/* Zig-Zag Learning Path Cards */}
+        {/* Zig-Zag Learning Path Cards (Desain HomeScreen awal yang berkesinambungan) */}
         <View style={s.pathContainer}>
           {/* 1. Tes Awal (Left - Selesai) */}
           <TouchableOpacity
@@ -249,9 +310,10 @@ export default function HomeScreen({ route, navigation }) {
             </View>
           </TouchableOpacity>
 
+          {/* Connector 1: Tes Awal (Left) -> Variabel (Right) */}
           <CurvedConnector fromRight={false} active={true} />
 
-          {/* 2. Variabel */}
+          {/* 2. Variabel (Right - Aktif jika activeTopic === 'variabel', Selesai jika 'tipe_data' / 'operator') */}
           {isVariabelActive ? (
             <View style={[s.activeCardWrapper, s.stepCardRight]}>
               <View style={s.hereBadge}>
@@ -300,12 +362,13 @@ export default function HomeScreen({ route, navigation }) {
             </TouchableOpacity>
           )}
 
+          {/* Connector 2: Variabel (Right) -> Tipe Data (Left) */}
           <CurvedConnector
             fromRight={true}
             active={isTipeDataActive || isOperatorActive}
           />
 
-          {/* 3. Tipe Data */}
+          {/* 3. Tipe Data (Left - Terkunci saat 'variabel', Aktif saat 'tipe_data', Selesai saat 'operator') */}
           {isTipeDataActive ? (
             <View style={[s.activeCardWrapper, s.stepCardLeft]}>
               <View style={s.hereBadge}>
@@ -374,9 +437,10 @@ export default function HomeScreen({ route, navigation }) {
             </TouchableOpacity>
           )}
 
+          {/* Connector 3: Tipe Data (Left) -> Operator (Right) */}
           <CurvedConnector fromRight={false} active={isOperatorActive} />
 
-          {/* 4. Operator */}
+          {/* 4. Operator (Right - Aktif saat 'operator', Terkunci selain itu) */}
           {isOperatorActive ? (
             <View style={[s.activeCardWrapper, s.stepCardRight]}>
               <View style={s.hereBadge}>
@@ -644,6 +708,11 @@ const s = StyleSheet.create({
   },
   pathContainer: {
     width: '100%',
+  },
+  connectorWrap: {
+    width: '100%',
+    height: 40,
+    marginVertical: -2,
   },
   stepCard: {
     width: '63%',

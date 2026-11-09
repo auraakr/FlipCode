@@ -1,6 +1,6 @@
-import { fonts } from '../constants/theme';
 import React from 'react';
-import { View, Text, TouchableOpacity , StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { fonts } from '../constants/theme';
 import {
   BelajarTabIcon,
   ProgresTabIcon,

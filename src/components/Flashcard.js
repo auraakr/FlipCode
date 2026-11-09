@@ -1,17 +1,11 @@
-import { fonts, colors, radius } from '../constants/theme';
 // Komponen Flashcard dua sisi.
 // Tap kartu -> balik. Prop onPaham dan onUlangi dipakai di layar.
 // Catatan: animasi membalik dibuat sederhana memakai Animated bawaan.
 // Nanti bisa ditingkatkan dengan react-native-reanimated kalau mau efek 3D.
 
 import React, { useRef, useState } from 'react';
-import {
-  Animated,
-  Pressable,
-  Text,
-  View,
-  StyleSheet
-} from 'react-native';
+import { Animated, Pressable, Text, View, StyleSheet, Easing } from 'react-native';
+import { colors, radius, spacing, typography, fonts } from '../constants/theme';
 
 export default function Flashcard({ card }) {
   const [flipped, setFlipped] = useState(false);
@@ -36,19 +30,19 @@ export default function Flashcard({ card }) {
         {sisi === 'depan' ? (
           <View style={s.inner}>
             <Text style={s.hint}>Pertanyaan / Istilah</Text>
-            <Text style={s.depan}>{card.depan || '(isi kartu kosong — isi di flashcards.json)'}</Text>
+            <Text style={s.depan}>{card?.depan || '(isi kartu kosong — isi di flashcards.json)'}</Text>
             <Text style={s.tap}>Ketuk untuk membalik</Text>
           </View>
         ) : (
           <View style={s.inner}>
             <Text style={s.hint}>Penjelasan</Text>
-            <Text style={typography.body}>{card.belakang?.penjelasan || '-'}</Text>
-            {!!card.belakang?.contohKode && (
+            <Text style={typography.body}>{card?.belakang?.penjelasan || '-'}</Text>
+            {!!card?.belakang?.contohKode && (
               <View style={s.code}>
                 <Text style={s.codeText}>{card.belakang.contohKode}</Text>
               </View>
             )}
-            {!!card.belakang?.analogi && (
+            {!!card?.belakang?.analogi && (
               <Text style={[typography.small, { marginTop: spacing.sm, fontStyle: 'italic' }]}>
                 Analogi: {card.belakang.analogi}
               </Text>

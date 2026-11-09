@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { CheckIcon } from '../../assets/icons/AppIcons';
+import Svg, { Path } from 'react-native-svg';
 
 // Input pilihan jawaban (satu pilihan dari banyak) dengan Tailwind.
 // Props: label (teks jawaban), letter (A/B/C/D), selected, onPress, disabled.
@@ -29,7 +29,9 @@ export default function ChoiceOption({ label, letter, selected = false, onPress,
           }`}
         >
           {selected && (
-            <CheckIcon size={14} color="#FFFFFF" strokeWidth={3.5} />
+            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+              <Path d="M5 12.5l4.5 4.5L19 7.5" stroke="#fff" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" />
+            </Svg>
           )}
         </View>
       </Pressable>

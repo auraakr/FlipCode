@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View , StyleSheet } from 'react-native';
+import { Text, View, StyleSheet } from 'react-native';
 import { Level } from '../constants/enums';
 import { colors, radius, fonts } from '../constants/theme';
 

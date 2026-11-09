@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity , StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fonts } from '../constants/theme';
 import { ContentRepository } from '../storage/ContentRepository';
@@ -571,6 +577,36 @@ const s = StyleSheet.create({
   },
   decorItem: {
     position: 'absolute',
+  },
+  scoreBadgeOuter: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#FFFFFF',
+    marginTop: -36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
+    zIndex: 15,
+  },
+  scoreTextRow: {
+    position: 'absolute',
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  scoreMainNumber: {
+    fontFamily: fonts.extrabold,
+    fontSize: 18,
+    color: '#1F2A44',
+  },
+  scoreTotalNumber: {
+    fontFamily: fonts.bold,
+    fontSize: 12,
+    color: '#94A3B8',
   },
   bodyWrap: {
     width: '100%',

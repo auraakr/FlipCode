@@ -1,12 +1,17 @@
-import { fonts } from '../constants/theme';
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity , StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { fonts } from '../constants/theme';
 import { ContentRepository } from '../storage/ContentRepository';
 import { QuizManager } from '../logic/QuizManager';
 import { Level } from '../constants/enums';
 import { useAuth } from '../context/AuthContext';
-import { FALLBACK_QUIZ_QUESTIONS } from '../data/screenConfigs';
 import {
   CloseIcon,
   BookmarkFilledIcon,
@@ -21,6 +26,108 @@ import {
 } from '../../assets/illustrations/MascotIllustrations';
 
 const HURUF = ['A', 'B', 'C', 'D'];
+
+// Data fallback 5 soal kuis sesuai wireframe Figma (dimulai pada Soal 2 dari 5)
+const FALLBACK_QUIZ_QUESTIONS = [
+  {
+    id: 'q-var-01',
+    topicId: 'variabel',
+    level: Level.MUDAH,
+    tipe: 'PILIHAN GANDA',
+    pertanyaan: 'Apa fungsi utama variabel di dalam program?',
+    pilihan: [
+      'Menyimpan nilai data',
+      'Menghapus kode program',
+      'Mematikan layar komputer',
+      'Membuat koneksi internet',
+    ],
+    jawabanBenar: 0,
+    petunjuk: 'ingat, variabel bekerja seperti kotak penyimpanan berlabel.',
+    benarHighlight: 'Menyimpan nilai data',
+    benarPenjelasan:
+      ' adalah fungsi utama variabel agar nilai dapat dipanggil dan diolah kembali.',
+    salahPenjelasanPrefix:
+      ' bukan fungsi dari variabel. Variabel digunakan untuk menyimpan data di memori.',
+    relatedCardTitle: 'Pengertian Variabel',
+    relatedCardNumber: 'Kartu 1',
+  },
+  {
+    id: 'q-var-02',
+    topicId: 'variabel',
+    level: Level.MUDAH,
+    tipe: 'PILIHAN GANDA',
+    pertanyaan: 'Manakah nama variabel yang valid?',
+    pilihan: ['1nama', 'nama_siswa', 'nama siswa', 'nama-siswa'],
+    jawabanBenar: 1,
+    petunjuk: 'ingat, tanpa spasi dan tidak diawali angka.',
+    benarHighlight: 'nama_siswa',
+    benarPenjelasan:
+      ' hanya memakai huruf dan garis bawah, tidak diawali angka, dan tanpa spasi.',
+    salahHighlight: 'nama siswa',
+    salahPenjelasanMid:
+      ' mengandung spasi, jadi dibaca sebagai dua nama terpisah. Gunakan ',
+    salahCodeInline: '_',
+    salahPenjelasanSuffix: ' sebagai pemisah.',
+    relatedCardTitle: 'Aturan Nama Variabel',
+    relatedCardNumber: 'Kartu 4',
+  },
+  {
+    id: 'q-var-03',
+    topicId: 'variabel',
+    level: Level.MUDAH,
+    tipe: 'PILIHAN GANDA',
+    pertanyaan: 'Simbol apa yang digunakan untuk mengisi nilai ke variabel?',
+    pilihan: ['==', '=', '!=', '->'],
+    jawabanBenar: 1,
+    petunjuk: 'gunakan satu tanda sama dengan untuk assignment.',
+    benarHighlight: '=',
+    benarPenjelasan:
+      ' adalah operator assignment untuk memasukkan nilai di kanan ke variabel di kiri.',
+    salahPenjelasanPrefix:
+      ' bukan operator pengisian nilai variabel.',
+    relatedCardTitle: 'Assignment (Pengisian Nilai)',
+    relatedCardNumber: 'Kartu 2',
+  },
+  {
+    id: 'q-var-04',
+    topicId: 'variabel',
+    level: Level.MUDAH,
+    tipe: 'PILIHAN GANDA',
+    pertanyaan: 'Jika skor = 70 lalu diubah menjadi skor = 85, berapa nilai skor?',
+    pilihan: ['70', '85', '155', '15'],
+    jawabanBenar: 1,
+    petunjuk: 'nilai terbaru akan menggantikan nilai yang lama.',
+    benarHighlight: '85',
+    benarPenjelasan:
+      ' menggantikan nilai lama 70 karena variabel selalu menyimpan nilai terakhir yang diberikan.',
+    salahPenjelasanPrefix:
+      ' kurang tepat karena nilai lama langsung tertimpa oleh nilai baru.',
+    relatedCardTitle: 'Mengubah Nilai Variabel',
+    relatedCardNumber: 'Kartu 3',
+  },
+  {
+    id: 'q-var-05',
+    topicId: 'variabel',
+    level: Level.MUDAH,
+    tipe: 'PILIHAN GANDA',
+    pertanyaan: 'Manakah penulisan pengisian variabel teks (string) yang tepat?',
+    pilihan: [
+      'nama = "Alya"',
+      'nama = Alya',
+      '"Alya" = nama',
+      'nama == "Alya"',
+    ],
+    jawabanBenar: 0,
+    petunjuk: 'nama variabel di kiri dan nilai teks diapit tanda kutip.',
+    benarHighlight: 'nama = "Alya"',
+    benarPenjelasan:
+      ' menempatkan variabel di sisi kiri dan nilai string di dalam tanda kutip.',
+    salahPenjelasanPrefix:
+      ' tidak sesuai dengan aturan assignment nilai string.',
+    relatedCardTitle: 'Aturan Nama Variabel',
+    relatedCardNumber: 'Kartu 4',
+  },
+];
 
 export default function QuizScreen({ route, navigation }) {
   const { user } = useAuth();
@@ -41,6 +148,8 @@ export default function QuizScreen({ route, navigation }) {
 
   const handleSelectOption = (i) => {
     setPilih(i);
+    // Jika feedback sedang terbuka dan user klik opsi lain, izinkan berganti
+    // agar mudah melihat tampilan Benar (Frame 15) maupun Salah (Frame 16).
   };
 
   const handleCheckAnswer = () => {
@@ -101,6 +210,7 @@ export default function QuizScreen({ route, navigation }) {
           <CloseIcon size={18} color="#475569" strokeWidth={2.2} />
         </TouchableOpacity>
 
+        {/* Center Topic & Level Pill */}
         <View style={s.topicPill}>
           <BookmarkFilledIcon size={12} color="#2554E8" />
           <Text style={s.topicPillText}>{namaTopik} — Mudah</Text>
@@ -140,6 +250,7 @@ export default function QuizScreen({ route, navigation }) {
           SOAL {idx + 1} DARI {questions.length}
         </Text>
 
+        {/* Question Banner Card with Robot */}
         <View style={s.questionCard}>
           <View style={s.questionCardLeft}>
             <View style={s.questionTypePill}>
@@ -173,6 +284,7 @@ export default function QuizScreen({ route, navigation }) {
                   isWrongPicked && s.optionCardWrong,
                 ]}
               >
+                {/* Left Letter Badge (A, B, C, D) */}
                 <View
                   style={[
                     s.letterBadge,
@@ -194,6 +306,7 @@ export default function QuizScreen({ route, navigation }) {
                   </Text>
                 </View>
 
+                {/* Option Text */}
                 <Text
                   style={[
                     s.optionLabel,
@@ -205,6 +318,7 @@ export default function QuizScreen({ route, navigation }) {
                   {optText}
                 </Text>
 
+                {/* Right Status Icon */}
                 {isSelectedPreCheck && (
                   <View style={s.radioBullseyeOuter}>
                     <View style={s.radioBullseyeInner} />
@@ -227,6 +341,7 @@ export default function QuizScreen({ route, navigation }) {
           })}
         </View>
 
+        {/* Yellow Petunjuk Card */}
         <View style={s.hintCard}>
           <View style={s.hintIconCircle}>
             <LightbulbIcon size={15} color="#D97706" />
@@ -238,7 +353,7 @@ export default function QuizScreen({ route, navigation }) {
         </View>
       </ScrollView>
 
-      {/* BOTTOM AREA */}
+      {/* BOTTOM AREA: Either "Periksa Jawaban" (Frames 13 & 14) or Feedback Sheet (Frames 15 & 16) */}
       {!showFeedback ? (
         <View style={s.footerPreCheck}>
           <TouchableOpacity
@@ -260,7 +375,9 @@ export default function QuizScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
       ) : benar ? (
+        /* FRAME 15: CORRECT FEEDBACK SHEET */
         <View style={s.correctSheetWrapper}>
+          {/* Peeking Robot on Top Right */}
           <View style={s.peekingRobotWrap} pointerEvents="none">
             <MiniFeedbackRobot happy={true} />
           </View>
@@ -278,6 +395,7 @@ export default function QuizScreen({ route, navigation }) {
               </View>
             </View>
 
+            {/* White Explanation Box inside Correct Sheet */}
             <View style={s.correctExplainBox}>
               <Text style={s.correctExplainText}>
                 <Text style={s.inlineCodeGreen}>{` ${q.benarHighlight} `}</Text>
@@ -285,6 +403,7 @@ export default function QuizScreen({ route, navigation }) {
               </Text>
             </View>
 
+            {/* Green CTA Button: Soal Berikutnya -> */}
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleNextQuestion}
@@ -296,6 +415,7 @@ export default function QuizScreen({ route, navigation }) {
           </View>
         </View>
       ) : (
+        /* FRAME 16: INCORRECT FEEDBACK SHEET */
         <View style={s.incorrectSheet}>
           <View style={s.incorrectTopRow}>
             <View style={s.incorrectTextCol}>
@@ -324,6 +444,7 @@ export default function QuizScreen({ route, navigation }) {
             <MiniFeedbackRobot happy={false} />
           </View>
 
+          {/* Related Flashcard Card */}
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={() =>
@@ -349,6 +470,7 @@ export default function QuizScreen({ route, navigation }) {
             </View>
           </TouchableOpacity>
 
+          {/* Bottom 2 Action Buttons */}
           <View style={s.incorrectActionsRow}>
             <TouchableOpacity
               activeOpacity={0.8}
@@ -649,6 +771,9 @@ const s = StyleSheet.create({
   checkAnswerBtnTextReady: {
     color: '#64748B',
   },
+  // ============================================================================
+  // FRAME 15: CORRECT FEEDBACK SHEET
+  // ============================================================================
   correctSheetWrapper: {
     position: 'relative',
     paddingHorizontal: 10,
@@ -725,6 +850,9 @@ const s = StyleSheet.create({
     color: '#FFFFFF',
     marginRight: 8,
   },
+  // ============================================================================
+  // FRAME 16: INCORRECT FEEDBACK SHEET
+  // ============================================================================
   incorrectSheet: {
     marginHorizontal: 10,
     marginBottom: 10,

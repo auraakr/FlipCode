@@ -1,25 +1,25 @@
-import { fonts } from '../constants/theme';
 import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
+  StyleSheet,
   TouchableOpacity,
   ScrollView,
   Animated,
-  StyleSheet
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { fonts } from '../constants/theme';
 import { ContentRepository } from '../storage/ContentRepository';
 import { FlashcardManager } from '../logic/FlashcardManager';
-import { FALLBACK_CARDS } from '../data/screenConfigs';
-import {
-  FlashcardCompletedView,
-  FlashcardReviewView,
-} from '../components/FlashcardSubViews';
 import {
   FlipArrowsIcon,
   FaceEmojiIcon,
   CloseIcon,
+  QuizClipboardIcon,
+  RotateCcwIcon,
+  ChevronLeftIcon,
+  LightningBoltIcon,
   ArrowRightIcon,
   ArrowLeftIcon,
   LinkChainIcon,
@@ -29,6 +29,103 @@ import {
   LightbulbIcon,
   UndoCornerLeftIcon,
 } from '../../assets/icons/AppIcons';
+import {
+  ReviewBannerRobot,
+  CompletedHeroIllustration,
+} from '../../assets/illustrations/MascotIllustrations';
+
+// Data fallback 10 kartu sesuai wireframe Figma (dimulai dari kartu ke-4: "4 dari 10")
+const FALLBACK_CARDS = [
+  {
+    id: 'var-01',
+    topicId: 'variabel',
+    statusLabel: 'Dikuasai',
+    pertanyaanParts: [
+      { type: 'text', text: 'Apa fungsi utama ' },
+      { type: 'codeValid', text: 'variabel' },
+      { type: 'text', text: ' di dalam program?' },
+    ],
+    judulPenjelasan: 'Pengertian Variabel',
+    penjelasan:
+      'Variabel adalah wadah bernama di memori komputer untuk menyimpan nilai yang bisa digunakan kembali.',
+    kodeBenar: { lhs: 'umur', rhs: '16' },
+    kodeSalah: { lhs: '16', rhs: 'umur' },
+    tips: 'Bayangkan variabel seperti kotak berlabel tempat menyimpan barang.',
+    tipsHighlight: null,
+  },
+  {
+    id: 'var-02',
+    topicId: 'variabel',
+    statusLabel: 'Dikuasai',
+    pertanyaanParts: [
+      { type: 'text', text: 'Bagaimana cara mengisi nilai ke dalam variabel ' },
+      { type: 'codeValid', text: 'x' },
+      { type: 'text', text: '?' },
+    ],
+    judulPenjelasan: 'Assignment (Pengisian Nilai)',
+    penjelasan:
+      'Gunakan tanda sama dengan (=) untuk menyimpan nilai di sebelah kanan ke nama variabel di sebelah kiri.',
+    kodeBenar: { lhs: 'x', rhs: '10' },
+    kodeSalah: { lhs: '10', rhs: 'x' },
+    tips: 'Nama variabel selalu berada di sebelah kiri tanda =.',
+    tipsHighlight: '=',
+  },
+  {
+    id: 'var-03',
+    topicId: 'variabel',
+    statusLabel: 'Dikuasai',
+    pertanyaanParts: [
+      { type: 'text', text: 'Apakah nilai di dalam ' },
+      { type: 'codeValid', text: 'skor' },
+      { type: 'text', text: ' bisa diubah saat program berjalan?' },
+    ],
+    judulPenjelasan: 'Mengubah Nilai Variabel',
+    penjelasan:
+      'Nilai variabel dapat diperbarui kapan saja dengan memberikan nilai baru ke nama variabel tersebut.',
+    kodeBenar: { lhs: 'skor', rhs: '100' },
+    kodeSalah: { lhs: 'skor ==', rhs: '100' },
+    tips: 'Nilai lama akan otomatis tergantikan oleh nilai yang baru.',
+    tipsHighlight: null,
+  },
+  {
+    id: 'var-04',
+    topicId: 'variabel',
+    statusLabel: 'Baru',
+    pertanyaanParts: [
+      { type: 'text', text: 'Kenapa ' },
+      { type: 'codeValid', text: 'nama_siswa' },
+      { type: 'text', text: ' valid, tetapi ' },
+      { type: 'codeInvalid', text: '1nama' },
+      { type: 'text', text: ' tidak?' },
+    ],
+    judulPenjelasan: 'Aturan Nama Variabel',
+    penjelasan:
+      'Nama variabel tidak boleh diawali angka atau mengandung spasi.',
+    kodeBenar: { lhs: 'nama_siswa', rhs: '"Alya"' },
+    kodeSalah: { lhs: '1nama', rhs: '"Alya"' },
+    tipsPrefix: 'pakai huruf kecil dan garis bawah ',
+    tipsHighlight: '_',
+    tipsSuffix: ' untuk memisahkan kata.',
+  },
+  {
+    id: 'var-05',
+    topicId: 'variabel',
+    statusLabel: 'Baru',
+    pertanyaanParts: [
+      { type: 'text', text: 'Kenapa ' },
+      { type: 'codeInvalid', text: 'total harga' },
+      { type: 'text', text: ' menyebabkan error pada program?' },
+    ],
+    judulPenjelasan: 'Larangan Spasi pada Variabel',
+    penjelasan:
+      'Nama variabel tidak boleh memiliki spasi karena komputer akan membacanya sebagai dua perintah terpisah.',
+    kodeBenar: { lhs: 'total_harga', rhs: '25000' },
+    kodeSalah: { lhs: 'total harga', rhs: '25000' },
+    tipsPrefix: 'gunakan tanda garis bawah ',
+    tipsHighlight: '_',
+    tipsSuffix: ' sebagai pengganti spasi.',
+  },
+];
 
 export default function FlashcardScreen({ route, navigation }) {
   const topicId = route?.params?.topicId || 'variabel';
@@ -39,6 +136,11 @@ export default function FlashcardScreen({ route, navigation }) {
 
   // Mulai pada index 3 ("4 dari 10") sesuai desain wireframe Figma
   const [idx, setIdx] = useState(3);
+  // Tahap tampilan:
+  // 'card' (08 Question <-> 09 Explanation dengan animasi flip)
+  // -> 'assessment' (10 Self-assessment)
+  // -> 'review' (11 Flashcard: Review)
+  // -> 'completed' (12 Flashcard Session Completed)
   const [step, setStep] = useState('card');
   const [isFlipped, setIsFlipped] = useState(fromQuiz);
   const [rating, setRating] = useState('mudah');
@@ -122,39 +224,245 @@ export default function FlashcardScreen({ route, navigation }) {
     } catch (e) {
       // Abaikan jika penyimpanan lokal gagal pada mode preview
     }
+    // Lanjut ke halaman Ulasan Kartu (FlipCode - 11)
     setStep('review');
   };
 
+  // ============================================================================
+  // RENDER FRAME 12: FLASHCARD SESSION COMPLETED
+  // ============================================================================
   if (step === 'completed') {
     return (
-      <FlashcardCompletedView
-        namaTopik={namaTopik}
-        onClose={() => navigation.navigate('TopicDetail', { topicId })}
-        onStartQuiz={() => navigation.navigate('Quiz', { topicId })}
-        onRepeatCards={() => {
-          setIsFlipped(false);
-          setStep('review');
-        }}
-      />
+      <SafeAreaView style={s.safeArea} edges={['top', 'bottom']}>
+        <ScrollView
+          style={s.scroll}
+          contentContainerStyle={s.completedScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Top Blue Hero Banner */}
+          <View style={s.completedHeroBanner}>
+            <TouchableOpacity
+              activeOpacity={0.75}
+              onPress={() => navigation.navigate('TopicDetail', { topicId })}
+              style={s.completedCloseBtn}
+              accessibilityLabel="Tutup"
+            >
+              <CloseIcon size={16} color="#FFFFFF" strokeWidth={2.3} />
+            </TouchableOpacity>
+
+            <CompletedHeroIllustration />
+          </View>
+
+          {/* Body Content */}
+          <View style={s.completedBody}>
+            <Text style={s.completedTitle}>Sesi flashcard selesai!</Text>
+            <Text style={s.completedSubtitle}>{namaTopik} • Mudah</Text>
+
+            {/* 3 Stat Cards Row */}
+            <View style={s.statsRow}>
+              <View style={[s.statBox, s.statBoxBlue]}>
+                <Text style={[s.statNumber, { color: '#2554E8' }]}>10</Text>
+                <Text style={s.statLabel}>{'Kartu\ndipelajari'}</Text>
+              </View>
+
+              <View style={[s.statBox, s.statBoxGreen]}>
+                <Text style={[s.statNumber, { color: '#10B981' }]}>7</Text>
+                <Text style={s.statLabel}>{'Kartu\ndikuasai'}</Text>
+              </View>
+
+              <View style={[s.statBox, s.statBoxYellow]}>
+                <Text style={[s.statNumber, { color: '#D97706' }]}>3</Text>
+                <Text style={s.statLabel}>{'Perlu\ndiulang'}</Text>
+              </View>
+            </View>
+
+            {/* Mastery Progress Card */}
+            <View style={s.masteryCard}>
+              <View style={s.masteryHeaderRow}>
+                <Text style={s.masteryTitle}>Penguasaan kartu</Text>
+                <Text style={s.masteryPct}>70%</Text>
+              </View>
+
+              <View style={s.masteryTrack}>
+                <View style={s.masteryFill} />
+              </View>
+
+              <Text style={s.masteryNote}>
+                Syarat 70% kartu dikuasai tercapai
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+
+        {/* Bottom Actions: Mulai Kuis & Ulangi Kartu */}
+        <View style={s.completedFooter}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('Quiz', { topicId })}
+            style={s.primaryBtnOuter}
+          >
+            <View style={s.primaryBtnInner}>
+              <QuizClipboardIcon size={17} color="#FFFFFF" />
+              <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>
+                Mulai Kuis
+              </Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={() => {
+              setIsFlipped(false);
+              setStep('review');
+            }}
+            style={s.repeatLinkBtn}
+          >
+            <RotateCcwIcon size={15} color="#2554E8" />
+            <Text style={s.repeatLinkText}>Ulangi Kartu</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
+  // ============================================================================
+  // RENDER FRAME 11: FLASHCARD REVIEW (ULASAN KARTU)
+  // ============================================================================
   if (step === 'review') {
     return (
-      <FlashcardReviewView
-        namaTopik={namaTopik}
-        onBack={handleBack}
-        onRepeatCard={() => {
-          setIsFlipped(false);
-          setStep('card');
-        }}
-        onContinueCompleted={() => setStep('completed')}
-      />
+      <SafeAreaView style={s.safeArea}>
+        {/* Header: ULASAN KARTU */}
+        <View style={s.header}>
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={handleBack}
+            style={s.backButton}
+            accessibilityLabel="Kembali"
+          >
+            <ChevronLeftIcon size={18} color="#1F2A44" strokeWidth={2.3} />
+          </TouchableOpacity>
+
+          <View style={s.headerCenter}>
+            <Text style={s.headerOverline}>ULASAN KARTU</Text>
+            <Text style={s.headerTitle}>{namaTopik}</Text>
+          </View>
+
+          <View style={s.threeDotsRow}>
+            <View style={[s.dotSmall, { backgroundColor: '#F59E0B' }]} />
+            <View style={[s.dotSmall, { backgroundColor: '#F59E0B' }]} />
+            <View style={[s.dotSmall, { backgroundColor: '#FDE68A' }]} />
+          </View>
+        </View>
+
+        <ScrollView
+          style={s.scroll}
+          contentContainerStyle={s.reviewScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Cream Encouragement Banner with Robot */}
+          <View style={s.reviewBanner}>
+            <View style={s.reviewBannerLeft}>
+              <View style={s.reviewCountPill}>
+                <View style={s.reviewCountDot} />
+                <Text style={s.reviewCountText}>3 kartu perlu diulang</Text>
+              </View>
+              <Text style={s.reviewBannerTitle}>
+                Tidak apa-apa! Mengulang bikin makin paham.
+              </Text>
+            </View>
+            <ReviewBannerRobot />
+          </View>
+
+          {/* Main Blue Review Card */}
+          <View style={s.reviewBlueCard}>
+            {/* Top Pills Row */}
+            <View style={s.cardTopRow}>
+              <View style={s.studyingYellowPill}>
+                <LightningBoltIcon size={12} color="#1F2A44" />
+                <Text style={s.studyingYellowText}>Sedang dipelajari</Text>
+              </View>
+
+              <View style={s.selfRatedPill}>
+                <View style={s.selfRatedDot} />
+                <Text style={s.selfRatedPrefix}>Kamu menilai: </Text>
+                <Text style={s.selfRatedValue}>Sedang</Text>
+              </View>
+            </View>
+
+            {/* Review Question Text */}
+            <Text style={s.reviewQuestionText}>
+              Apa yang terjadi pada nilai lama saat variabel diberi nilai baru?
+            </Text>
+
+            {/* Dark Code Box */}
+            <View style={s.reviewCodeBox}>
+              <Text style={s.codeCommentLine}># ulangi kartu ini</Text>
+              <Text style={s.codeLine}>
+                <Text style={{ color: '#60A5FA' }}>skor</Text>
+                <Text style={{ color: '#E2E8F0' }}>{' = '}</Text>
+                <Text style={{ color: '#4ADE80' }}>70</Text>
+              </Text>
+              <Text style={s.codeLine}>
+                <Text style={{ color: '#60A5FA' }}>skor</Text>
+                <Text style={{ color: '#E2E8F0' }}>{' = '}</Text>
+                <Text style={{ color: '#4ADE80' }}>85</Text>
+              </Text>
+              <Text style={s.codeLine}>
+                <Text style={{ color: '#C084FC' }}>print</Text>
+                <Text style={{ color: '#E2E8F0' }}>(skor) </Text>
+                <Text style={{ color: '#FACC15' }}># ?</Text>
+              </Text>
+            </View>
+
+            {/* Bottom Concept & Counter Row */}
+            <View style={s.reviewCardFooter}>
+              <Text style={s.reviewConceptText}>
+                Konsep: Variable Reassignment
+              </Text>
+              <Text style={s.reviewCardCountText}>Kartu 2 dari 5</Text>
+            </View>
+          </View>
+        </ScrollView>
+
+        {/* Bottom Footer Buttons: Ulangi Lagi & Lanjutkan -> */}
+        <View style={s.footer}>
+          <View style={s.explanationFooterRow}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                setIsFlipped(false);
+                setStep('card');
+              }}
+              style={s.repeatOutlineBtn}
+            >
+              <RotateCcwIcon size={16} color="#2554E8" />
+              <Text style={s.repeatOutlineText}>Ulangi Lagi</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => setStep('completed')}
+              style={[s.primaryBtnOuter, { flex: 1, marginLeft: 12 }]}
+            >
+              <View style={s.primaryBtnInner}>
+                <Text style={[s.primaryBtnText, { marginRight: 8 }]}>
+                  Lanjutkan
+                </Text>
+                <ArrowRightIcon size={17} color="#FFFFFF" strokeWidth={2.5} />
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
     );
   }
 
+  // ============================================================================
+  // RENDER FRAMES 08, 09, 10: QUESTION <-> EXPLANATION (ANIMATED FLIP) & ASSESSMENT
+  // ============================================================================
   return (
     <SafeAreaView style={s.safeArea}>
+      {/* Top Header */}
       <View style={s.header}>
         <TouchableOpacity
           activeOpacity={0.75}
@@ -191,12 +499,14 @@ export default function FlashcardScreen({ route, navigation }) {
         )}
       </View>
 
+      {/* Progress Bar */}
       {!fromQuiz && (
         <View style={s.progressTrack}>
           <View style={[s.progressFill, { width: `${pct}%` }]} />
         </View>
       )}
 
+      {/* Main Content Area */}
       <ScrollView
         style={s.scroll}
         contentContainerStyle={[
@@ -205,6 +515,7 @@ export default function FlashcardScreen({ route, navigation }) {
         ]}
         showsVerticalScrollIndicator={false}
       >
+        {/* STEP 'card': ANIMATED FLIP BETWEEN QUESTION (08) & EXPLANATION (09) */}
         {step === 'card' && (
           <View style={s.stageWrap}>
             <Animated.View
@@ -219,11 +530,13 @@ export default function FlashcardScreen({ route, navigation }) {
               ]}
             >
               {!isFlipped ? (
+                /* FRONT SIDE: QUESTION CARD (FlipCode - 08) */
                 <TouchableOpacity
                   activeOpacity={0.94}
                   onPress={() => triggerCardFlip(true)}
                   style={s.questionCard}
                 >
+                  {/* Top Row inside Card */}
                   <View style={s.cardTopRow}>
                     <View style={s.codeIconBox}>
                       <CodeSlashIcon size={16} color="#FFFFFF" />
@@ -235,6 +548,7 @@ export default function FlashcardScreen({ route, navigation }) {
                     </View>
                   </View>
 
+                  {/* Middle Question Block */}
                   <View style={s.questionCenterBlock}>
                     <Text style={s.questionOverline}>PERTANYAAN</Text>
                     <View style={s.questionFlowRow}>
@@ -266,6 +580,7 @@ export default function FlashcardScreen({ route, navigation }) {
                     </View>
                   </View>
 
+                  {/* Bottom Flip Hint inside Card */}
                   <View style={s.cardBottomHintWrap}>
                     <View style={s.cardDivider} />
                     <View style={s.cardFlipHintRow}>
@@ -277,11 +592,13 @@ export default function FlashcardScreen({ route, navigation }) {
                   </View>
                 </TouchableOpacity>
               ) : (
+                /* BACK SIDE: EXPLANATION CARD (FlipCode - 09) */
                 <TouchableOpacity
                   activeOpacity={0.95}
                   onPress={() => triggerCardFlip(false)}
                   style={s.explanationCard}
                 >
+                  {/* Top Row inside Dark Card */}
                   <View style={s.cardTopRow}>
                     <View style={s.explanationBadge}>
                       <OpenBookOutlineIcon size={13} color="#60A5FA" />
@@ -298,11 +615,13 @@ export default function FlashcardScreen({ route, navigation }) {
                     </TouchableOpacity>
                   </View>
 
+                  {/* Title & Description */}
                   <Text style={s.explanationTitle}>
                     {current.judulPenjelasan}
                   </Text>
                   <Text style={s.explanationDesc}>{current.penjelasan}</Text>
 
+                  {/* Code Examples (Valid & Invalid) */}
                   <View style={s.codeExamplesGroup}>
                     <View style={[s.codeRowBox, s.codeRowValid]}>
                       <View style={s.codeStatusCircleGreen}>
@@ -335,6 +654,7 @@ export default function FlashcardScreen({ route, navigation }) {
                     </View>
                   </View>
 
+                  {/* Yellow Tips Box inside Card */}
                   <View style={s.tipsYellowBox}>
                     <LightbulbIcon
                       size={15}
@@ -360,6 +680,7 @@ export default function FlashcardScreen({ route, navigation }) {
               )}
             </Animated.View>
 
+            {/* Sub-card Hint (only shown on Question side) */}
             {!isFlipped && (
               <View style={s.belowCardHintRow}>
                 <LightbulbIcon size={14} color="#94A3B8" />
@@ -371,6 +692,7 @@ export default function FlashcardScreen({ route, navigation }) {
           </View>
         )}
 
+        {/* STEP 'assessment': SELF-ASSESSMENT (FlipCode - 10) */}
         {step === 'assessment' && (
           <View style={s.assessmentContainer}>
             <Text style={s.assessmentTitle}>Seberapa paham kamu?</Text>
@@ -378,6 +700,7 @@ export default function FlashcardScreen({ route, navigation }) {
               Jujur saja, Flip akan menyesuaikan ulangannya.
             </Text>
 
+            {/* 3 Option Cards: Sulit, Sedang, Mudah */}
             <View style={s.ratingRow}>
               {[
                 { key: 'sulit', label: 'Sulit', activeBg: '#EF4444' },
@@ -419,6 +742,7 @@ export default function FlashcardScreen({ route, navigation }) {
               })}
             </View>
 
+            {/* Status Indicator Pill */}
             <View
               style={[
                 s.markedPill,
@@ -447,6 +771,7 @@ export default function FlashcardScreen({ route, navigation }) {
               </Text>
             </View>
 
+            {/* Footnote */}
             <Text style={s.assessmentFootnote}>
               Sulit / Sedang → Sedang dipelajari • Mudah → Dikuasai
             </Text>
@@ -454,6 +779,7 @@ export default function FlashcardScreen({ route, navigation }) {
         )}
       </ScrollView>
 
+      {/* Bottom Footer Actions */}
       <View style={s.footer}>
         {fromQuiz ? (
           <TouchableOpacity
@@ -513,7 +839,7 @@ export default function FlashcardScreen({ route, navigation }) {
   );
 }
 
-export const s = StyleSheet.create({
+const s = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#FDFCF7',
@@ -913,6 +1239,20 @@ export const s = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 5,
   },
+  emojiOuterCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emojiInnerCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   ratingLabel: {
     fontFamily: fonts.bold,
     fontSize: 13,
@@ -954,6 +1294,9 @@ export const s = StyleSheet.create({
     color: '#94A3B8',
     textAlign: 'center',
   },
+  // ============================================================================
+  // STYLES FOR FRAME 11 (REVIEW)
+  // ============================================================================
   reviewScrollContent: {
     paddingHorizontal: 20,
     paddingTop: 8,
@@ -1113,6 +1456,9 @@ export const s = StyleSheet.create({
     color: '#2554E8',
     marginLeft: 7,
   },
+  // ============================================================================
+  // STYLES FOR FRAME 12 (COMPLETED)
+  // ============================================================================
   completedScrollContent: {
     paddingBottom: 16,
   },
@@ -1255,6 +1601,9 @@ export const s = StyleSheet.create({
     color: '#2554E8',
     marginLeft: 6,
   },
+  // ============================================================================
+  // SHARED FOOTER BUTTONS
+  // ============================================================================
   footer: {
     paddingHorizontal: 22,
     paddingBottom: 20,

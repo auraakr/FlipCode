@@ -1,6 +1,6 @@
-import { fonts } from '../constants/theme';
 import React from 'react';
-import { View, Text , StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { fonts } from '../constants/theme';
 import { Level } from '../constants/enums';
 import { LockIcon } from '../../assets/icons/AppIcons';
 

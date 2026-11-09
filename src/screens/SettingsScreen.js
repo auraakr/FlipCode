@@ -1,17 +1,18 @@
-import { fonts } from '../constants/theme';
 import React, { useState } from 'react';
 import {
   View,
   Text,
+  StyleSheet,
   Alert,
   ScrollView,
   TouchableOpacity,
   Image,
   Modal,
-  StyleSheet
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { fonts } from '../constants/theme';
 import { ProgressRepository } from '../storage/ProgressRepository';
 import { useAuth } from '../context/AuthContext';
 import { setGlobalActiveTopic } from './HomeScreen';
@@ -386,6 +387,10 @@ const s = StyleSheet.create({
     color: '#1F2A44',
     marginBottom: 16,
   },
+
+  // ==========================================================================
+  // HERO PROFILE CARD
+  // ==========================================================================
   heroProfileCard: {
     backgroundColor: '#2554E8',
     borderRadius: 24,
@@ -451,6 +456,10 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  // ==========================================================================
+  // SECTIONS & CARDS
+  // ==========================================================================
   sectionLabel: {
     marginTop: 20,
     marginBottom: 8,
@@ -528,6 +537,10 @@ const s = StyleSheet.create({
     fontSize: 11.5,
     color: '#64748B',
   },
+
+  // ==========================================================================
+  // MODAL CONFIRM REPEAT TEST (FRAME 28)
+  // ==========================================================================
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.56)',

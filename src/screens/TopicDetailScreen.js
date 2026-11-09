@@ -1,10 +1,15 @@
-import { fonts } from '../constants/theme';
 import React, { useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity , StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { fonts } from '../constants/theme';
 import { ContentRepository } from '../storage/ContentRepository';
 import { setGlobalActiveTopic } from './HomeScreen';
-import { TOPIC_LEARNED_ITEMS } from '../data/screenConfigs';
 import {
   ArrowLeftIcon,
   LevelBarsIcon,
@@ -20,6 +25,7 @@ export default function TopicDetailScreen({ route, navigation }) {
   const topik = ContentRepository.getTopicById(topicId);
   const isTipeData = topicId === 'tipe_data';
   const isOperator = topicId === 'operator';
+  const isVariabel = !isTipeData && !isOperator;
 
   const namaTopik =
     topik?.nama || (isTipeData ? 'Tipe Data' : isOperator ? 'Operator' : 'Variabel');
@@ -50,8 +56,46 @@ export default function TopicDetailScreen({ route, navigation }) {
       : 'Pelajari cara melakukan perhitungan dan perbandingan nilai.';
 
     const learnedItems = isTipeData
-      ? TOPIC_LEARNED_ITEMS.tipe_data
-      : TOPIC_LEARNED_ITEMS.operator;
+      ? [
+          {
+            title: 'Integer',
+            code: 'umur = 16',
+            pillBg: '#EDF2FF',
+            pillColor: '#2554E8',
+          },
+          {
+            title: 'String',
+            code: 'nama = "Aura"',
+            pillBg: '#FFF1F2',
+            pillColor: '#E11D48',
+          },
+          {
+            title: 'Boolean',
+            code: 'lulus = True',
+            pillBg: '#ECFDF5',
+            pillColor: '#10B981',
+          },
+        ]
+      : [
+          {
+            title: 'Aritmatika',
+            code: 'x = 10 + 5',
+            pillBg: '#EDF2FF',
+            pillColor: '#2554E8',
+          },
+          {
+            title: 'Perbandingan',
+            code: 'skor >= 75',
+            pillBg: '#FFF1F2',
+            pillColor: '#E11D48',
+          },
+          {
+            title: 'Logika',
+            code: 'a and b',
+            pillBg: '#ECFDF5',
+            pillColor: '#10B981',
+          },
+        ];
 
     return (
       <SafeAreaView style={s.safeArea} edges={['top', 'bottom']}>
@@ -228,6 +272,7 @@ export default function TopicDetailScreen({ route, navigation }) {
                 </View>
               </View>
 
+              {/* Legend Row */}
               <View style={[s.legendRow, { marginTop: 14 }]}>
                 <View style={s.legendItem}>
                   <View style={[s.legendDot, { backgroundColor: '#2ED47A' }]} />
@@ -305,12 +350,14 @@ export default function TopicDetailScreen({ route, navigation }) {
       >
         {/* Top Blue Hero Banner */}
         <View style={s.heroBanner}>
+          {/* Faint Code Watermark on Top Right */}
           <View style={s.watermarkWrap} pointerEvents="none">
             <Text style={s.watermarkText}>{'x = 10'}</Text>
             <Text style={s.watermarkText}>{'kelas = "XI"'}</Text>
             <Text style={s.watermarkText}>{'       42'}</Text>
           </View>
 
+          {/* Top Bar inside Hero: Back Button & Mudah Badge */}
           <View style={s.heroTopRow}>
             <TouchableOpacity
               activeOpacity={0.75}
@@ -332,6 +379,7 @@ export default function TopicDetailScreen({ route, navigation }) {
             </View>
           </View>
 
+          {/* Bottom Content inside Hero: Title & Variable Illustration */}
           <View style={s.heroBodyRow}>
             <View style={s.heroTextCol}>
               <Text style={s.topicOverline}>TOPIK {urutanTopik}</Text>
@@ -341,6 +389,7 @@ export default function TopicDetailScreen({ route, navigation }) {
               </Text>
             </View>
 
+            {/* Right Graphic: Tilted Variable Box with "x" and "42" badge */}
             <View style={s.varGraphicWrap}>
               <View style={s.varOuterBox}>
                 <View style={s.varInnerBox}>
@@ -354,7 +403,9 @@ export default function TopicDetailScreen({ route, navigation }) {
           </View>
         </View>
 
+        {/* Body Content Container */}
         <View style={s.bodyContainer}>
+          {/* 1. Progres Belajar Card */}
           <View style={s.card}>
             <CircularProgress percentage={30} />
             <View style={s.progressTextCol}>
@@ -366,6 +417,7 @@ export default function TopicDetailScreen({ route, navigation }) {
             </View>
           </View>
 
+          {/* 2. Flashcard Card */}
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={() => navigation.navigate('Flashcard', { topicId })}
@@ -384,12 +436,14 @@ export default function TopicDetailScreen({ route, navigation }) {
               </View>
             </View>
 
+            {/* 3-Color Segmented Progress Bar */}
             <View style={s.segmentedBar}>
               <View style={[s.segmentItem, s.segmentGreen]} />
               <View style={[s.segmentItem, s.segmentYellow]} />
               <View style={[s.segmentItem, s.segmentBlueGrey]} />
             </View>
 
+            {/* Legend Row */}
             <View style={s.legendRow}>
               <View style={s.legendItem}>
                 <View style={[s.legendDot, { backgroundColor: '#2ED47A' }]} />
@@ -414,6 +468,7 @@ export default function TopicDetailScreen({ route, navigation }) {
             </View>
           </TouchableOpacity>
 
+          {/* 3. Kuis Variabel Card */}
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={() => navigation.navigate('Quiz', { topicId })}
@@ -435,6 +490,7 @@ export default function TopicDetailScreen({ route, navigation }) {
             </View>
           </TouchableOpacity>
 
+          {/* 4. Yang akan kamu pelajari */}
           <Text style={s.learnSectionTitle}>Yang akan kamu pelajari</Text>
 
           <View style={s.chipsContainer}>
@@ -689,6 +745,19 @@ const s = StyleSheet.create({
     borderColor: '#E6ECF5',
     padding: 16,
     marginBottom: 12,
+  },
+  ringContainer: {
+    width: 54,
+    height: 54,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  ringText: {
+    position: 'absolute',
+    fontFamily: fonts.extrabold,
+    fontSize: 12.5,
+    color: '#1F2A44',
   },
   progressTextCol: {
     flex: 1,

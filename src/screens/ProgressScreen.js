@@ -1,11 +1,18 @@
-import { fonts } from '../constants/theme';
 import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity , StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { fonts } from '../constants/theme';
+import { ContentRepository } from '../storage/ContentRepository';
 import { ProgressRepository } from '../storage/ProgressRepository';
+import { CardStatus } from '../constants/enums';
 import { getGlobalActiveTopic } from './HomeScreen';
-import { mapRepositoryToProgressModels } from '../data/screenConfigs';
 import {
   TrophyIcon,
   CardPlusBadgeIcon,
@@ -22,7 +29,206 @@ import {
   IsometricBoxIcon,
 } from '../../assets/illustrations/MascotIllustrations';
 
+// ============================================================================
+// DEFAULT VIEW-MODEL DATA (Backend-Friendly Fallback)
+// Ketika backend / database belum memiliki data riil, struktur di bawah ini
+// otomatis dipakai agar tampilan 100% sesuai wireframe FlipCode - 25 & 26.
+// ============================================================================
+const DEFAULT_DASHBOARD_DATA = {
+  statusLabel: 'Berkembang',
+  totalProgressPct: 25,
+  activeSegments: 1,
+  totalSegments: 4,
+  topics: [
+    {
+      id: 'variabel',
+      title: 'Variabel',
+      pct: 75,
+      levelLabel: 'Sedang',
+      unlocked: true,
+      accentColor: '#2554E8',
+      levelColor: '#D97706',
+    },
+    {
+      id: 'tipe_data',
+      title: 'Tipe Data',
+      pct: 0,
+      levelLabel: '0%',
+      unlocked: false,
+      lockBg: '#FFF7ED',
+      lockBorder: '#FFEDD5',
+      lockColor: '#F59E0B',
+    },
+    {
+      id: 'operator',
+      title: 'Operator',
+      pct: 0,
+      levelLabel: '0%',
+      unlocked: false,
+      lockBg: '#FFF1F2',
+      lockBorder: '#FFE4E6',
+      lockColor: '#F43F5E',
+    },
+  ],
+  quizPerformance: {
+    averagePct: 65,
+    levelBadge: 'Level Sedang',
+    history: [
+      {
+        id: 'q1',
+        label: 'Kuis 1',
+        score: 3,
+        total: 5,
+        trackBg: '#FEF9E7',
+        fillBg: '#FCD34D',
+      },
+      {
+        id: 'q2',
+        label: 'Kuis 2',
+        score: 2,
+        total: 5,
+        trackBg: '#FFF1EE',
+        fillBg: '#FB9274',
+      },
+      {
+        id: 'q3',
+        label: 'Kuis 3',
+        score: 4,
+        total: 5,
+        trackBg: '#E8FBF0',
+        fillBg: '#34D399',
+      },
+      {
+        id: 'q4',
+        label: 'Kuis 4',
+        score: 4,
+        total: 5,
+        trackBg: '#E8FBF0',
+        fillBg: '#34D399',
+      },
+    ],
+  },
+  flashcardSummary: {
+    mastered: 6,
+    learning: 3,
+    total: 30,
+  },
+  repeatConcept: {
+    topicId: 'variabel',
+    title: 'Nilai lama tertimpa',
+    countLabel: '1 konsep',
+  },
+};
+
+const DEFAULT_BY_TOPIC_DATA = {
+  completedBadgeLabel: '1 topik selesai',
+  totalProgressPct: 47,
+  legend: [
+    {
+      id: 'variabel',
+      title: 'Variabel',
+      meta: '100% • Selesai',
+      pct: 100,
+      color: '#2554E8',
+      unlocked: true,
+    },
+    {
+      id: 'tipe_data',
+      title: 'Tipe Data',
+      meta: '40% • Berjalan',
+      pct: 40,
+      color: '#F59E0B',
+      unlocked: true,
+    },
+    {
+      id: 'operator',
+      title: 'Operator',
+      meta: '0% • Terkunci',
+      pct: 0,
+      color: '#CBD5E1',
+      unlocked: false,
+    },
+  ],
+  masteredTopic: {
+    id: 'variabel',
+    title: 'Variabel',
+    cardsPill: '8/10 kartu',
+    quizPill: '4/5 di Sulit',
+  },
+  activeTopicCard: {
+    id: 'tipe_data',
+    iconText: '123',
+    title: 'Tipe Data',
+    levelBadge: 'SEDANG',
+    subtitle: 'Flashcard 4 dari 10',
+    pct: 40,
+  },
+  summaryCards: {
+    masteredCards: 12,
+    totalCards: 30,
+    quizAveragePct: 72,
+  },
+};
+
+// Helper pemetaan data dari ProgressRepository / API ke struktur View-Model
+function mapRepositoryToProgressModels(rawAll, activeTopicId) {
+  const dashboard = JSON.parse(JSON.stringify(DEFAULT_DASHBOARD_DATA));
+  const byTopic = JSON.parse(JSON.stringify(DEFAULT_BY_TOPIC_DATA));
+
+  if (!rawAll) {
+    return { dashboard, byTopic };
+  }
+
+  // Hitung kartu yang sudah dikuasai dari repository bila sudah ada interaksi nyata
+  const varCards = ContentRepository.getFlashcardsByTopic('variabel') || [];
+  const tdCards = ContentRepository.getFlashcardsByTopic('tipe_data') || [];
+  const opCards = ContentRepository.getFlashcardsByTopic('operator') || [];
+
+  const countMastered = (cards) =>
+    cards.filter((c) => rawAll.cards?.[c.id]?.status === CardStatus.DIKUASAI)
+      .length;
+
+  const varMastered = countMastered(varCards);
+  const tdMastered = countMastered(tdCards);
+  const opMastered = countMastered(opCards);
+  const totalMastered = varMastered + tdMastered + opMastered;
+
+  if (totalMastered > 0) {
+    const varTotal = varCards.length || 10;
+    const varPct = Math.round((varMastered / varTotal) * 100);
+    dashboard.topics[0].pct = varPct > 0 ? varPct : 75;
+    dashboard.flashcardSummary.mastered = totalMastered;
+  }
+
+  // Jika sudah di fase Operator, sesuaikan kartu aktif pada tampilan Progress by Topic
+  if (activeTopicId === 'operator') {
+    byTopic.completedBadgeLabel = '2 topik selesai';
+    byTopic.totalProgressPct = 70;
+    byTopic.legend[1].meta = '100% • Selesai';
+    byTopic.legend[1].pct = 100;
+    byTopic.legend[2].meta = '10% • Berjalan';
+    byTopic.legend[2].pct = 10;
+    byTopic.legend[2].color = '#F26B50';
+    byTopic.legend[2].unlocked = true;
+    byTopic.activeTopicCard = {
+      id: 'operator',
+      iconText: '+ -',
+      title: 'Operator',
+      levelBadge: 'MUDAH',
+      subtitle: 'Flashcard 1 dari 10',
+      pct: 10,
+    };
+    byTopic.summaryCards.masteredCards = 18;
+  }
+
+  return { dashboard, byTopic };
+}
+
+// ============================================================================
+// MAIN COMPONENT: ProgressScreen (FlipCode - 25 & FlipCode - 26)
+// ============================================================================
 export default function ProgressScreen({ route, navigation }) {
+  // Mode tampilan: 'dashboard' (FlipCode - 25) | 'by_topic' (FlipCode - 26)
   const [viewMode, setViewMode] = useState('dashboard');
   const [models, setModels] = useState(() =>
     mapRepositoryToProgressModels(null, 'variabel')
@@ -31,6 +237,8 @@ export default function ProgressScreen({ route, navigation }) {
   useFocusEffect(
     useCallback(() => {
       const currentTopic = getGlobalActiveTopic();
+      // Jika user sudah menyelesaikan Variabel (aktif di Tipe Data / Operator),
+      // tampilkan FlipCode - 26 secara otomatis, atau ikuti param jika ada
       if (route?.params?.mode) {
         setViewMode(route.params.mode);
       } else if (currentTopic === 'tipe_data' || currentTopic === 'operator') {
@@ -67,9 +275,11 @@ export default function ProgressScreen({ route, navigation }) {
           contentContainerStyle={s.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {/* Top Header Row */}
           <View style={s.topHeaderRow}>
             <Text style={s.pageTitle}>Progres Belajar</Text>
 
+            {/* Ketuk badge ini untuk beralih antara Frame 25 & Frame 26 */}
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={toggleViewMode}
@@ -192,6 +402,7 @@ export default function ProgressScreen({ route, navigation }) {
 
           {/* 4. Bottom 2-Column Summary Cards */}
           <View style={s.bottomTwoCols}>
+            {/* Left: Kartu dikuasai */}
             <View style={s.summaryWhiteCard}>
               <View style={s.summaryHeaderRow}>
                 <View style={s.summaryBlueIconBox}>
@@ -211,6 +422,7 @@ export default function ProgressScreen({ route, navigation }) {
               </View>
             </View>
 
+            {/* Right: Rata-rata kuis */}
             <View style={s.summaryWhiteCard}>
               <View style={s.summaryHeaderRow}>
                 <View style={s.summaryPurpleIconBox}>
@@ -250,9 +462,11 @@ export default function ProgressScreen({ route, navigation }) {
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Top Header Row */}
         <View style={s.topHeaderRow}>
           <Text style={s.pageTitle}>Progres Belajar</Text>
 
+          {/* Ketuk badge ini untuk beralih ke Frame 26 (Progress by Topic) */}
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={toggleViewMode}
@@ -264,7 +478,7 @@ export default function ProgressScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* 1. Dark Navy Hero Banner */}
+        {/* 1. Dark Navy Hero Banner: Total progres 25% */}
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={toggleViewMode}
@@ -278,6 +492,7 @@ export default function ProgressScreen({ route, navigation }) {
               <Text style={s.navyHeroPctSymbol}>%</Text>
             </View>
 
+            {/* 4 Segmented Indicator Bars */}
             <View style={s.navySegmentsRow}>
               {Array.from({ length: dashboard.totalSegments }).map((_, idx) => {
                 const isActive = idx < dashboard.activeSegments;
@@ -303,7 +518,7 @@ export default function ProgressScreen({ route, navigation }) {
           </View>
         </TouchableOpacity>
 
-        {/* 2. 3 Topic Mini-Cards Row */}
+        {/* 2. 3 Topic Mini-Cards Row (Variabel, Tipe Data, Operator) */}
         <View style={s.threeTopicsRow}>
           {dashboard.topics.map((item) => (
             <TouchableOpacity
@@ -359,7 +574,7 @@ export default function ProgressScreen({ route, navigation }) {
           ))}
         </View>
 
-        {/* 3. Quiz Performance Card */}
+        {/* 3. Quiz Performance Card (Performa kuis) */}
         <View style={s.quizPerfCard}>
           <View style={s.quizPerfTopRow}>
             <Text style={s.quizPerfLabel}>Performa kuis</Text>
@@ -377,6 +592,7 @@ export default function ProgressScreen({ route, navigation }) {
             <Text style={s.quizAvgSubText}> rata-rata</Text>
           </View>
 
+          {/* 4 Bar Columns */}
           <View style={s.barsRow}>
             {dashboard.quizPerformance.history.map((bar) => {
               const fillPct = Math.round((bar.score / bar.total) * 100);
@@ -410,8 +626,9 @@ export default function ProgressScreen({ route, navigation }) {
           </View>
         </View>
 
-        {/* 4. Bottom 2-Column Row */}
+        {/* 4. Bottom 2-Column Row: Flashcard & Perlu diulang */}
         <View style={s.bottomTwoCols}>
+          {/* Left Card: Flashcard */}
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={() =>
@@ -436,6 +653,7 @@ export default function ProgressScreen({ route, navigation }) {
               </Text>
             </View>
 
+            {/* Segmented Mini Bar */}
             <View style={s.fcMiniTrack}>
               <View
                 style={[
@@ -452,6 +670,7 @@ export default function ProgressScreen({ route, navigation }) {
             </View>
           </TouchableOpacity>
 
+          {/* Right Card: Perlu diulang */}
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={() =>
@@ -541,6 +760,10 @@ const s = StyleSheet.create({
     fontSize: 11.5,
     color: '#10B981',
   },
+
+  // ==========================================================================
+  // FRAME 25 STYLES
+  // ==========================================================================
   navyHeroCard: {
     backgroundColor: '#132A56',
     borderRadius: 24,
@@ -598,6 +821,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   threeTopicsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -618,6 +842,19 @@ const s = StyleSheet.create({
     backgroundColor: '#FAFBFD',
     borderColor: '#E2E8F0',
     borderStyle: 'dashed',
+  },
+  miniRingWrap: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  miniRingText: {
+    position: 'absolute',
+    fontFamily: fonts.extrabold,
+    fontSize: 11,
+    color: '#1F2A44',
   },
   miniLockCircle: {
     width: 46,
@@ -640,6 +877,7 @@ const s = StyleSheet.create({
     fontSize: 10.5,
     textAlign: 'center',
   },
+
   quizPerfCard: {
     marginTop: 14,
     backgroundColor: '#FFFFFF',
@@ -717,6 +955,7 @@ const s = StyleSheet.create({
     fontSize: 11,
     color: '#94A3B8',
   },
+
   bottomTwoCols: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -826,6 +1065,10 @@ const s = StyleSheet.create({
     fontSize: 11.5,
     color: '#94A3B8',
   },
+
+  // ==========================================================================
+  // FRAME 26 STYLES
+  // ==========================================================================
   donutCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
@@ -835,6 +1078,29 @@ const s = StyleSheet.create({
     paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  donutWrap: {
+    width: 114,
+    height: 114,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  donutCenter: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  donutBigPct: {
+    fontFamily: fonts.extrabold,
+    fontSize: 22,
+    color: '#1F2A44',
+  },
+  donutSubLabel: {
+    fontFamily: fonts.medium,
+    fontSize: 11,
+    color: '#94A3B8',
+    marginTop: -2,
   },
   legendCol: {
     flex: 1,
@@ -865,6 +1131,7 @@ const s = StyleSheet.create({
     color: '#94A3B8',
     marginTop: 1,
   },
+
   masteredBanner: {
     marginTop: 14,
     backgroundColor: '#18A96B',
@@ -921,6 +1188,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   activeTopicRowCard: {
     marginTop: 14,
     backgroundColor: '#FEF7E0',
@@ -982,6 +1250,7 @@ const s = StyleSheet.create({
     color: '#1F2A44',
     marginLeft: 8,
   },
+
   summaryWhiteCard: {
     flex: 1,
     backgroundColor: '#FFFFFF',

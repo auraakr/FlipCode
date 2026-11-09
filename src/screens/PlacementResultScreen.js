@@ -1,7 +1,13 @@
-import { fonts } from '../constants/theme';
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity , StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { fonts } from '../constants/theme';
 import { ContentRepository } from '../storage/ContentRepository';
 import { Level } from '../constants/enums';
 import TopicLevelCard from '../components/TopicLevelCard';
