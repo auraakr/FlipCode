@@ -1,7 +1,8 @@
 import React from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, View } from 'react-native';
 import { Level } from '../constants/enums';
 import { colors, radius, fonts } from '../constants/theme';
+import s from '../styles/LevelBadge.styles';
 
 export default function LevelBadge({ level }) {
   const bg =
@@ -14,8 +15,3 @@ export default function LevelBadge({ level }) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.sm, alignSelf: 'flex-start' },
-  text: { color: '#fff', fontFamily: fonts.bold, fontSize: 12 },
-});

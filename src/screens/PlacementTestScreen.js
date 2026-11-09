@@ -1,101 +1,207 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
-import Button from '../components/Button';
-import ChoiceOption from '../components/ChoiceOption';
-import { PlacementTest } from '../logic/PlacementTest';
 import { ContentRepository } from '../storage/ContentRepository';
+import { PlacementEngine } from '../logic/PlacementEngine';
+import { CloseIcon, CheckIcon, ArrowRightIcon } from '../../assets/icons/AppIcons';
+import s from '../styles/PlacementTestScreen.styles';
 
-const HURUF = ['A', 'B', 'C', 'D', 'E', 'F'];
+const HURUF = ['A', 'B', 'C', 'D'];
+const TOTAL_SEGMENTS = 9;
+
+function getTopicLabel(topicId) {
+  const topik = ContentRepository.getTopicById(topicId);
+  if (topik?.nama) return topik.nama.toUpperCase();
+  if (topicId === 'variabel') return 'VARIABEL';
+  if (topicId === 'tipe_data') return 'TIPE DATA';
+  if (topicId === 'operator') return 'OPERATOR';
+  return 'PEMROGRAMAN';
+}
+
+function getPromptHeading(kode) {
+  if (kode) return 'Perhatikan kode berikut:';
+  return 'Jawablah pertanyaan berikut:';
+}
 
 export default function PlacementTestScreen({ navigation }) {
-  const questions = useMemo(() => PlacementTest.loadQuestions(), []);
+  const questions = ContentRepository.getPlacementQuestions();
   const [idx, setIdx] = useState(0);
-  const [jawaban, setJawaban] = useState({});
-
-  if (questions.length === 0) {
-    return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-cream px-6">
-        <Text className="text-center text-base font-normal text-ink">
-          Soal tes awal belum diisi. Tambahkan soal di{' '}
-          <Text className="font-bold">src/data/placementTest.json</Text>.
-        </Text>
-      </SafeAreaView>
-    );
-  }
+  const [pilih, setPilih] = useState(null);
+  const [jawaban, setJawaban] = useState([]);
 
   const q = questions[idx];
-  const terpilih = jawaban[idx];
-  const topik = ContentRepository.getTopicById(q.topicId);
-  const terakhir = idx === questions.length - 1;
-  const pct = ((idx + 1) / questions.length) * 100;
+  const total = questions.length;
+  const sudahPilih = pilih !== null;
 
-  const pilih = (i) => setJawaban((prev) => ({ ...prev, [idx]: i }));
+  const lanjut = async () => {
+    if (!sudahPilih) return;
 
-  const kembali = () => {
-    if (idx > 0) setIdx(idx - 1);
-    else navigation.replace('Welcome');
+    const baru = [...jawaban, { questionId: q.id, pilihanIndex: pilih }];
+    if (idx < total - 1) {
+      setJawaban(baru);
+      setPilih(null);
+      setIdx(idx + 1);
+    } else {
+      const hasil = await PlacementEngine.evaluate(baru);
+      navigation.replace('PlacementResult', { hasil });
+    }
   };
 
-  const next = async () => {
-    if (!terakhir) {
-      setIdx(idx + 1);
-      return;
+  const handleClose = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Welcome');
     }
-    const arr = questions.map((_, i) => jawaban[i] ?? -1);
-    const hasil = await PlacementTest.submit(questions, arr);
-    navigation.replace('PlacementResult', { hasil });
+  };
+
+  const renderSyntaxCode = (codeStr) => {
+    const lines = codeStr.split('\n');
+    return lines.map((line, lineIdx) => {
+      const eqIdx = line.indexOf('=');
+      if (eqIdx !== -1 && !line.trim().startsWith('//')) {
+        const left = line.slice(0, eqIdx);
+        const right = line.slice(eqIdx + 1);
+        return (
+          <View key={lineIdx} style={s.codeLineRow}>
+            <Text style={s.codeLineNum}>{lineIdx + 1}</Text>
+            <Text style={s.codeText}>
+              <Text style={s.codeVar}>{left}</Text>
+              <Text style={s.codeOp}>=</Text>
+              <Text style={s.codeNum}>{right}</Text>
+            </Text>
+          </View>
+        );
+      }
+
+      return (
+        <View key={lineIdx} style={s.codeLineRow}>
+          <Text style={s.codeLineNum}>{lineIdx + 1}</Text>
+          <Text style={s.codeText}>
+            <Text style={s.codeDefault}>{line}</Text>
+          </Text>
+        </View>
+      );
+    });
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-cream">
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-4 pt-2">
-        <Pressable onPress={kembali} hitSlop={12} accessibilityLabel="Kembali" className="h-10 w-10 justify-center">
-          <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-            <Path d="M19 12H5M11 6l-6 6 6 6" stroke="#1F2A44" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
-          </Svg>
-        </Pressable>
-        <Text className="text-lg font-extrabold text-ink">Tes Awal</Text>
-        <Text className="w-16 text-right text-xs font-bold text-slate-400">
-          {idx + 1} dari {questions.length}
+    <SafeAreaView style={s.safeArea} edges={['top', 'bottom']}>
+      {/* Top Bar: Close Button + Topic Pill + Question Counter */}
+      <View style={s.topBar}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={handleClose}
+          style={s.closeButton}
+          accessibilityLabel="Tutup tes"
+        >
+          <CloseIcon size={16} color="#1F2A44" strokeWidth={2.2} />
+        </TouchableOpacity>
+
+        <View style={s.topicBadge}>
+          <View style={s.topicDot} />
+          <Text style={s.topicBadgeText}>{getTopicLabel(q.topicId)}</Text>
+        </View>
+
+        <Text style={s.counterText}>
+          {idx + 1}/{total}
         </Text>
       </View>
 
-      {/* Progress */}
-      <View className="mx-4 mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-        <View className="h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
-      </View>
-
-      <ScrollView className="flex-1" contentContainerClassName="px-4 pb-4 pt-6">
-        {topik && (
-          <View className="self-start rounded-full bg-[#DDE5FF] px-3 py-1">
-            <Text className="text-[11px] font-bold uppercase tracking-wide text-brand-dark">
-              {topik.nama}
-            </Text>
-          </View>
-        )}
-        <Text className="mt-3 text-2xl font-extrabold leading-8 text-ink">
-          {q.pertanyaan || '(soal belum diisi)'}
-        </Text>
-
-        <View className="mt-6" accessibilityRole="radiogroup">
-          {q.pilihan.map((p, i) => (
-            <ChoiceOption
+      {/* 9-Segment Progress Bar */}
+      <View style={s.segmentRow}>
+        {Array.from({ length: total || TOTAL_SEGMENTS }).map((_, i) => {
+          const isCompleted = i < idx;
+          const isCurrent = i === idx;
+          return (
+            <View
               key={i}
-              letter={HURUF[i]}
-              label={p || `(pilihan ${i + 1} kosong)`}
-              selected={terpilih === i}
-              onPress={() => pilih(i)}
-              className="mb-3"
+              style={[
+                s.segmentBar,
+                isCompleted && s.segmentCompleted,
+                isCurrent && s.segmentCurrent,
+              ]}
             />
-          ))}
+          );
+        })}
+      </View>
+
+      <ScrollView
+        style={s.scroll}
+        contentContainerStyle={s.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={s.subPrompt}>{getPromptHeading(q.kode)}</Text>
+        <Text style={s.questionText}>{q.pertanyaan}</Text>
+
+        {q.kode ? (
+          <View style={s.codeCard}>
+            <View style={s.codeHeader}>
+              <View style={s.trafficDots}>
+                <View style={[s.dot, { backgroundColor: '#FF5F56' }]} />
+                <View style={[s.dot, { backgroundColor: '#FFBD2E' }]} />
+                <View style={[s.dot, { backgroundColor: '#27C93F' }]} />
+              </View>
+              <Text style={s.codeLangLabel}>pseudocode</Text>
+            </View>
+            <View style={s.codeBody}>{renderSyntaxCode(q.kode)}</View>
+          </View>
+        ) : null}
+
+        <View style={s.optionsList}>
+          {q.pilihan.map((opsi, i) => {
+            const aktif = pilih === i;
+            return (
+              <TouchableOpacity
+                key={i}
+                activeOpacity={0.8}
+                onPress={() => setPilih(i)}
+                style={[s.optionCard, aktif && s.optionCardSelected]}
+              >
+                <View style={s.optionLeft}>
+                  <View style={[s.letterBadge, aktif && s.letterBadgeSelected]}>
+                    <Text style={[s.letterText, aktif && s.letterTextSelected]}>
+                      {HURUF[i]}
+                    </Text>
+                  </View>
+                  <Text style={[s.optionText, aktif && s.optionTextSelected]}>
+                    {opsi}
+                  </Text>
+                </View>
+
+                {aktif ? (
+                  <View style={s.radioSelected}>
+                    <CheckIcon size={12} color="#FFFFFF" strokeWidth={2.8} />
+                  </View>
+                ) : (
+                  <View style={s.radioUnselected} />
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </ScrollView>
 
-      <View className="px-4 pb-4">
-        <Button title={terakhir ? 'Selesai' : 'Berikutnya'} onPress={next} disabled={terpilih === undefined} />
+      {/* Bottom Footer Action */}
+      <View style={s.footer}>
+        {sudahPilih ? (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={lanjut}
+            style={s.ctaActiveOuter}
+          >
+            <View style={s.ctaActiveInner}>
+              <Text style={s.ctaActiveText}>
+                {idx === total - 1 ? 'Lihat Hasil' : 'Selanjutnya'}
+              </Text>
+              <ArrowRightIcon size={18} color="#FFFFFF" strokeWidth={2.5} />
+            </View>
+          </TouchableOpacity>
+        ) : (
+          <View style={s.ctaDisabled}>
+            <Text style={s.ctaDisabledText}>Pilih jawaban dulu</Text>
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );

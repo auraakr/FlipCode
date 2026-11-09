@@ -1,49 +1,71 @@
 import React from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
-import Button from '../components/Button';
-import TopicLevelCard from '../components/TopicLevelCard';
-import HasilIllustration from '../../assets/icon_tesawal.svg';
 import { ContentRepository } from '../storage/ContentRepository';
+import { Level } from '../constants/enums';
+import TopicLevelCard from '../components/TopicLevelCard';
+import { ArrowRightIcon } from '../../assets/icons/AppIcons';
+import { ResultBannerIllustration } from '../../assets/illustrations/MascotIllustrations';
+import s from '../styles/PlacementResultScreen.styles';
 
 export default function PlacementResultScreen({ route, navigation }) {
-  const { hasil } = route.params || { hasil: { perTopicLevel: {} } };
-  const topics = ContentRepository.getAllTopics();
+  const hasil = route?.params?.hasil || {};
+  const topics = ContentRepository.getTopics();
 
   return (
-    <SafeAreaView className="flex-1 bg-cream">
-      <ScrollView className="flex-1" contentContainerClassName="items-center px-4 pb-4 pt-6">
-        <HasilIllustration width="100%" height={220} />
-        <Text className="mt-4 text-center text-3xl font-extrabold text-ink">Yeay, levelmu ketemu!</Text>
-        <Text className="mt-1 text-center text-sm font-normal text-slate-500">
-          Ini level awal yang cocok buat kamu.
+    <SafeAreaView style={s.safeArea} edges={['top', 'bottom']}>
+      <ScrollView
+        style={s.scroll}
+        contentContainerStyle={s.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Top Hero Banner Card */}
+        <View style={s.heroCard}>
+          <ResultBannerIllustration />
+        </View>
+
+        {/* Green Status Badge: • TES AWAL SELESAI */}
+        <View style={s.doneBadge}>
+          <View style={s.doneDot} />
+          <Text style={s.doneBadgeText}>TES AWAL SELESAI</Text>
+        </View>
+
+        {/* Heading & Subtitle */}
+        <Text style={s.title}>Level belajarmu siap!</Text>
+        <Text style={s.subtitle}>
+          Flip menyesuaikan titik mulai tiap topik dari hasil jawabanmu.
         </Text>
 
-        <View className="mt-6 w-full">
-          {topics.map((t) => (
-            <TopicLevelCard
-              key={t.id}
-              topicId={t.id}
-              nama={t.nama}
-              level={hasil.perTopicLevel[t.id]}
-              className="mb-3"
-            />
-          ))}
+        {/* Topic Level Cards */}
+        <View style={s.cardsList}>
+          {topics.map((t, index) => {
+            const info = hasil[t.id];
+            return (
+              <TopicLevelCard
+                key={t.id}
+                id={t.id}
+                nama={t.nama}
+                level={info?.level || Level.MUDAH}
+                skor={info?.skor ?? 1}
+                total={info?.total ?? 3}
+                unlocked={index === 0}
+              />
+            );
+          })}
         </View>
-      </ScrollView>
 
-      <View className="px-4 pb-4">
-        <Button
-          title="Mulai Belajar"
+        {/* Primary CTA Button */}
+        <TouchableOpacity
+          activeOpacity={0.85}
           onPress={() => navigation.replace('MainTabs')}
-          rightIcon={
-            <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-              <Path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
-            </Svg>
-          }
-        />
-      </View>
+          style={s.ctaOuter}
+        >
+          <View style={s.ctaInner}>
+            <Text style={s.ctaText}>Mulai Belajar Variabel</Text>
+            <ArrowRightIcon size={18} color="#FFFFFF" strokeWidth={2.5} />
+          </View>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 }

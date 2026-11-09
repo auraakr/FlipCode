@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, Text, StyleSheet } from 'react-native';
+import { Pressable, Text } from 'react-native';
 import { colors, radius, spacing, typography } from '../constants/theme';
+import s from '../styles/PrimaryButton.styles';
 
 export default function PrimaryButton({ title, onPress, variant = 'primary', disabled, style }) {
   const bg =
@@ -23,13 +24,3 @@ export default function PrimaryButton({ title, onPress, variant = 'primary', dis
     </Pressable>
   );
 }
-
-const s = StyleSheet.create({
-  btn: {
-    paddingVertical: 14,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

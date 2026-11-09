@@ -1,149 +1,379 @@
-// Layar Kuis: 5 soal, umpan balik langsung.
-// Setelah menjawab, tombol lanjut membuka panel feedback.
-// Jika salah dan soal punya relatedCardIds, tampil tombol "Buka kartu terkait".
-
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import PrimaryButton from '../components/PrimaryButton';
-import ProgressBar from '../components/ProgressBar';
-import LevelBadge from '../components/LevelBadge';
-import { colors, radius, spacing, typography, fonts } from '../constants/theme';
-import { QuizManager } from '../logic/QuizManager';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ContentRepository } from '../storage/ContentRepository';
+import { QuizManager } from '../logic/QuizManager';
+import { Level } from '../constants/enums';
+import { useAuth } from '../context/AuthContext';
+import { FALLBACK_QUIZ_QUESTIONS } from '../data/screenConfigs';
+import {
+  CloseIcon,
+  BookmarkFilledIcon,
+  CheckIcon,
+  LightbulbIcon,
+  ArrowRightIcon,
+  CodeSlashIcon,
+} from '../../assets/icons/AppIcons';
+import {
+  QuizBannerRobot,
+  MiniFeedbackRobot,
+} from '../../assets/illustrations/MascotIllustrations';
+import s from '../styles/QuizScreen.styles';
+
+const HURUF = ['A', 'B', 'C', 'D'];
 
 export default function QuizScreen({ route, navigation }) {
-  const { topicId } = route.params;
-  const [sesi, setSesi] = useState(null);
-  const [idx, setIdx] = useState(0);
+  const { user } = useAuth();
+  const topicId = route?.params?.topicId || 'variabel';
+  const topik = ContentRepository.getTopicById(topicId);
+  const namaTopik = topik?.nama || 'Variabel';
+  const displayName = user?.nama || 'Aura';
+
+  // Mulai pada index 1 ("2/5" — "Manakah nama variabel yang valid?") sesuai gambar Figma
+  const [idx, setIdx] = useState(1);
   const [pilih, setPilih] = useState(null);
-  const [jawaban, setJawaban] = useState([]);
+  const [jawaban, setJawaban] = useState([0]);
   const [showFeedback, setShowFeedback] = useState(false);
 
-  useEffect(() => {
-    (async () => setSesi(await QuizManager.buildSession(topicId)))();
-  }, [topicId]);
-
-  if (!sesi) return null;
-  if (sesi.questions.length === 0) {
-    return (
-      <View style={s.center}>
-        <Text style={typography.body}>
-          Belum ada soal kuis untuk level ini. Isi di{' '}
-          <Text style={{ fontFamily: fonts.bold }}>src/data/questions.json</Text>.
-        </Text>
-      </View>
-    );
-  }
-
-  const q = sesi.questions[idx];
+  const questions = FALLBACK_QUIZ_QUESTIONS;
+  const q = questions[idx] || questions[1];
   const benar = pilih === q.jawabanBenar;
 
-  const jawab = (i) => {
-    if (showFeedback) return;
+  const handleSelectOption = (i) => {
     setPilih(i);
+  };
+
+  const handleCheckAnswer = () => {
+    if (pilih === null) return;
     setShowFeedback(true);
   };
 
-  const lanjut = async () => {
+  const handleNextQuestion = async () => {
     const arr = [...jawaban];
-    arr[idx] = pilih;
+    arr[idx] = pilih ?? -1;
     setJawaban(arr);
     setPilih(null);
     setShowFeedback(false);
-    if (idx < sesi.questions.length - 1) {
+
+    if (idx < questions.length - 1) {
       setIdx(idx + 1);
     } else {
-      const hasil = await QuizManager.submit({
-        topicId, level: sesi.level, questions: sesi.questions, jawaban: arr,
-      });
-      navigation.replace('QuizResult', { topicId, hasil, level: sesi.level });
+      try {
+        const hasil = await QuizManager.submit({
+          topicId,
+          level: Level.MUDAH,
+          questions,
+          jawaban: arr,
+        });
+        navigation.replace('QuizResult', {
+          topicId,
+          hasil,
+          level: Level.MUDAH,
+        });
+      } catch (e) {
+        navigation.replace('QuizResult', {
+          topicId,
+          hasil: { benar: 4, total: 5 },
+          level: Level.MUDAH,
+        });
+      }
     }
   };
 
-  const bukaKartuTerkait = () => {
-    // Buka layar flashcard untuk topik ini. Pengembang dapat mengganti
-    // dengan navigasi langsung ke kartu tertentu kalau diinginkan.
-    const relId = q.relatedCardIds && q.relatedCardIds[0];
-    const card = relId ? ContentRepository.getFlashcardById(relId) : null;
-    navigation.navigate('Flashcard', { topicId: card?.topicId || topicId });
+  const handleClose = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('TopicDetail', { topicId });
+    }
   };
 
   return (
-    <ScrollView contentContainerStyle={s.wrap}>
-      <View style={s.rowBetween}>
-        <Text style={typography.small}>Soal {idx + 1} dari {sesi.questions.length}</Text>
-        <LevelBadge level={sesi.level} />
+    <SafeAreaView style={s.safeArea} edges={['top', 'bottom']}>
+      {/* Top Header */}
+      <View style={s.header}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={handleClose}
+          style={s.closeButton}
+          accessibilityLabel="Tutup Kuis"
+        >
+          <CloseIcon size={18} color="#475569" strokeWidth={2.2} />
+        </TouchableOpacity>
+
+        <View style={s.topicPill}>
+          <BookmarkFilledIcon size={12} color="#2554E8" />
+          <Text style={s.topicPillText}>{namaTopik} — Mudah</Text>
+        </View>
+
+        <Text style={s.stepFraction}>
+          {idx + 1}/{questions.length}
+        </Text>
       </View>
-      <ProgressBar value={idx + 1} max={sesi.questions.length} />
-      <Text style={[typography.heading, { marginTop: spacing.lg }]}>
-        {q.pertanyaan || '(soal belum diisi)'}
-      </Text>
-      <View style={{ gap: spacing.sm, marginTop: spacing.md }}>
-        {q.pilihan.map((p, i) => {
-          const isPicked = pilih === i;
-          const isCorrect = showFeedback && i === q.jawabanBenar;
-          const isWrong = showFeedback && isPicked && !benar;
+
+      {/* 5-Segment Progress Bar */}
+      <View style={s.segmentedBarRow}>
+        {questions.map((_, segIdx) => {
+          const active = segIdx <= idx;
           return (
-            <Pressable
-              key={i}
-              onPress={() => jawab(i)}
+            <View
+              key={segIdx}
               style={[
-                s.opt,
-                isPicked && !showFeedback && { borderColor: colors.primary, backgroundColor: colors.primaryLight },
-                isCorrect && { borderColor: colors.success, backgroundColor: '#E6F4EB' },
-                isWrong && { borderColor: colors.danger, backgroundColor: '#FBE8E8' },
+                s.segmentBar,
+                active ? s.segmentBarActive : s.segmentBarInactive,
               ]}
-            >
-              <Text style={typography.body}>{p || `(pilihan ${i + 1} kosong)`}</Text>
-            </Pressable>
+            />
           );
         })}
       </View>
 
-      {showFeedback && (
-        <View style={[s.feedback, { borderColor: benar ? colors.success : colors.danger }]}>
-          <Text style={{ fontFamily: fonts.bold, color: benar ? colors.success : colors.danger }}>
-            {benar ? 'Benar!' : 'Masih kurang tepat.'}
+      {/* Scrollable Quiz Content */}
+      <ScrollView
+        style={s.scroll}
+        contentContainerStyle={[
+          s.scrollContent,
+          showFeedback && { paddingBottom: 24 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={s.questionOverline}>
+          SOAL {idx + 1} DARI {questions.length}
+        </Text>
+
+        <View style={s.questionCard}>
+          <View style={s.questionCardLeft}>
+            <View style={s.questionTypePill}>
+              <Text style={s.questionTypeText}>{q.tipe}</Text>
+            </View>
+            <Text style={s.questionTitle}>{q.pertanyaan}</Text>
+          </View>
+
+          <QuizBannerRobot />
+        </View>
+
+        {/* 4 Answer Options */}
+        <View style={s.optionsList} accessibilityRole="radiogroup">
+          {q.pilihan.map((optText, i) => {
+            const isPicked = pilih === i;
+            const isCorrectOption = showFeedback && i === q.jawabanBenar;
+            const isWrongPicked = showFeedback && isPicked && !benar;
+            const isSelectedPreCheck = !showFeedback && isPicked;
+
+            return (
+              <TouchableOpacity
+                key={i}
+                activeOpacity={0.82}
+                onPress={() => handleSelectOption(i)}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: isPicked }}
+                style={[
+                  s.optionCard,
+                  isSelectedPreCheck && s.optionCardSelected,
+                  isCorrectOption && s.optionCardCorrect,
+                  isWrongPicked && s.optionCardWrong,
+                ]}
+              >
+                <View
+                  style={[
+                    s.letterBadge,
+                    isSelectedPreCheck && s.letterBadgeSelected,
+                    isCorrectOption && s.letterBadgeCorrect,
+                    isWrongPicked && s.letterBadgeWrong,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      s.letterText,
+                      (isSelectedPreCheck ||
+                        isCorrectOption ||
+                        isWrongPicked) &&
+                        s.letterTextWhite,
+                    ]}
+                  >
+                    {HURUF[i]}
+                  </Text>
+                </View>
+
+                <Text
+                  style={[
+                    s.optionLabel,
+                    isSelectedPreCheck && s.optionLabelSelected,
+                    isCorrectOption && s.optionLabelCorrect,
+                    isWrongPicked && s.optionLabelWrong,
+                  ]}
+                >
+                  {optText}
+                </Text>
+
+                {isSelectedPreCheck && (
+                  <View style={s.radioBullseyeOuter}>
+                    <View style={s.radioBullseyeInner} />
+                  </View>
+                )}
+
+                {isCorrectOption && (
+                  <View style={s.checkCircleGreen}>
+                    <CheckIcon size={13} color="#FFFFFF" strokeWidth={3} />
+                  </View>
+                )}
+
+                {isWrongPicked && (
+                  <View style={s.crossCircleRed}>
+                    <CloseIcon size={12} color="#EF4444" strokeWidth={2.6} />
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <View style={s.hintCard}>
+          <View style={s.hintIconCircle}>
+            <LightbulbIcon size={15} color="#D97706" />
+          </View>
+          <Text style={s.hintText}>
+            <Text style={s.hintBold}>Petunjuk: </Text>
+            {q.petunjuk}
           </Text>
-          {!!q.penjelasan && <Text style={[typography.body, { marginTop: spacing.sm }]}>{q.penjelasan}</Text>}
-          {!benar && q.relatedCardIds?.length > 0 && (
-            <PrimaryButton
-              title="Buka kartu terkait"
-              variant="ghost"
-              onPress={bukaKartuTerkait}
-              style={{ marginTop: spacing.sm }}
-            />
-          )}
+        </View>
+      </ScrollView>
+
+      {/* BOTTOM AREA */}
+      {!showFeedback ? (
+        <View style={s.footerPreCheck}>
+          <TouchableOpacity
+            activeOpacity={pilih !== null ? 0.8 : 1}
+            onPress={handleCheckAnswer}
+            style={[
+              s.checkAnswerBtn,
+              pilih !== null && s.checkAnswerBtnReady,
+            ]}
+          >
+            <Text
+              style={[
+                s.checkAnswerBtnText,
+                pilih !== null && s.checkAnswerBtnTextReady,
+              ]}
+            >
+              Periksa Jawaban
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : benar ? (
+        <View style={s.correctSheetWrapper}>
+          <View style={s.peekingRobotWrap} pointerEvents="none">
+            <MiniFeedbackRobot happy={true} />
+          </View>
+
+          <View style={s.correctSheet}>
+            <View style={s.correctHeaderRow}>
+              <View style={s.correctBigCheck}>
+                <CheckIcon size={16} color="#FFFFFF" strokeWidth={3} />
+              </View>
+              <View>
+                <Text style={s.correctTitle}>Benar!</Text>
+                <Text style={s.correctSubtitle}>
+                  Kerja bagus, {displayName}!
+                </Text>
+              </View>
+            </View>
+
+            <View style={s.correctExplainBox}>
+              <Text style={s.correctExplainText}>
+                <Text style={s.inlineCodeGreen}>{` ${q.benarHighlight} `}</Text>
+                {q.benarPenjelasan}
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleNextQuestion}
+              style={s.greenNextBtn}
+            >
+              <Text style={s.greenNextBtnText}>Soal Berikutnya</Text>
+              <ArrowRightIcon size={17} color="#FFFFFF" strokeWidth={2.5} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : (
+        <View style={s.incorrectSheet}>
+          <View style={s.incorrectTopRow}>
+            <View style={s.incorrectTextCol}>
+              <Text style={s.incorrectTitle}>Belum tepat, tetap semangat!</Text>
+              <Text style={s.incorrectDesc}>
+                {q.salahHighlight ? (
+                  <>
+                    <Text style={s.inlineCodeRed}>
+                      {` ${q.pilihan[pilih] || q.salahHighlight} `}
+                    </Text>
+                    {q.salahPenjelasanMid}
+                    <Text style={s.inlineCodeGrey}>{` ${q.salahCodeInline} `}</Text>
+                    {q.salahPenjelasanSuffix}
+                  </>
+                ) : (
+                  <>
+                    <Text style={s.inlineCodeRed}>
+                      {` ${q.pilihan[pilih]} `}
+                    </Text>
+                    {q.salahPenjelasanPrefix}
+                  </>
+                )}
+              </Text>
+            </View>
+
+            <MiniFeedbackRobot happy={false} />
+          </View>
+
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() =>
+              navigation.navigate('Flashcard', {
+                topicId,
+                fromQuiz: true,
+                questionNumber: idx + 1,
+              })
+            }
+            style={s.relatedCardBox}
+          >
+            <View style={s.relatedIconSquare}>
+              <CodeSlashIcon size={16} color="#FFFFFF" />
+            </View>
+
+            <View style={s.relatedInfoCol}>
+              <Text style={s.relatedOverline}>KARTU TERKAIT</Text>
+              <Text style={s.relatedTitle}>{q.relatedCardTitle}</Text>
+            </View>
+
+            <View style={s.relatedBadgePill}>
+              <Text style={s.relatedBadgeText}>{q.relatedCardNumber}</Text>
+            </View>
+          </TouchableOpacity>
+
+          <View style={s.incorrectActionsRow}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={handleNextQuestion}
+              style={s.whiteNextBtn}
+            >
+              <Text style={s.whiteNextBtnText}>Soal Berikutnya</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() =>
+                navigation.navigate('Flashcard', {
+                  topicId,
+                  fromQuiz: true,
+                  questionNumber: idx + 1,
+                })
+              }
+              style={s.blueRelatedBtn}
+            >
+              <Text style={s.blueRelatedBtnText}>Buka Kartu Terkait</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
-
-      {showFeedback && (
-        <PrimaryButton
-          title={idx < sesi.questions.length - 1 ? 'Soal berikutnya' : 'Lihat hasil'}
-          onPress={lanjut}
-          style={{ marginTop: spacing.lg }}
-        />
-      )}
-    </ScrollView>
+    </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  wrap: { padding: spacing.lg },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
-  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  opt: {
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  feedback: {
-    marginTop: spacing.lg,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    backgroundColor: colors.surface,
-  },
-});

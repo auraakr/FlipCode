@@ -15,9 +15,14 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import PlacementTestScreen from '../screens/PlacementTestScreen';
 import PlacementResultScreen from '../screens/PlacementResultScreen';
 import HomeScreen from '../screens/HomeScreen';
+import TopicDetailScreen from '../screens/TopicDetailScreen';
+import UpdatedLearningPathScreen from '../screens/UpdatedLearningPathScreen';
 import FlashcardScreen from '../screens/FlashcardScreen';
 import QuizScreen from '../screens/QuizScreen';
 import QuizResultScreen from '../screens/QuizResultScreen';
+import TopicCompletedScreen from '../screens/TopicCompletedScreen';
+import ResetCompletedScreen from '../screens/ResetCompletedScreen';
+import AboutScreen from '../screens/AboutScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import CustomTabBar from '../components/CustomTabBar';
@@ -78,9 +83,16 @@ export default function AppNavigator() {
       <Stack.Screen name="PlacementTest" component={PlacementTestScreen} options={{ headerShown: false }} />
       <Stack.Screen name="PlacementResult" component={PlacementResultScreen} options={{ headerShown: false, gestureEnabled: false }} />
       <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
-      <Stack.Screen name="Flashcard" component={FlashcardScreen} options={{ title: 'Flashcard' }} />
-      <Stack.Screen name="Quiz" component={QuizScreen} options={{ title: 'Kuis' }} />
-      <Stack.Screen name="QuizResult" component={QuizResultScreen} options={{ title: 'Hasil Kuis', headerBackVisible: false }} />
+      <Stack.Screen name="TopicDetail" component={TopicDetailScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Flashcard" component={FlashcardScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Quiz" component={QuizScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="QuizResult" component={QuizResultScreen} options={{ headerShown: false, gestureEnabled: false }} />
+      <Stack.Screen name="TopicCompleted" component={TopicCompletedScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="UpdatedLearningPath" component={UpdatedLearningPathScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="ResetCompleted" component={ResetCompletedScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="About" component={AboutScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

@@ -1,492 +1,483 @@
 import React, { useCallback, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import Svg, { Path } from 'react-native-svg';
-import { fonts } from '../constants/theme';
-import { ContentRepository } from '../storage/ContentRepository';
 import { ProgressRepository } from '../storage/ProgressRepository';
-import { CardStatus } from '../constants/enums';
+import { getGlobalActiveTopic } from './HomeScreen';
+import { mapRepositoryToProgressModels } from '../data/screenConfigs';
+import {
+  TrophyIcon,
+  CardPlusBadgeIcon,
+  ChartBarBadgeIcon,
+  TrendUpIcon,
+  LockIcon,
+  FlashcardTileIcon,
+  RepeatCycleIcon,
+} from '../../assets/icons/AppIcons';
+import {
+  DashboardRobotMascot,
+  MiniTopicRing,
+  MultiSegmentDonut,
+  IsometricBoxIcon,
+} from '../../assets/illustrations/MascotIllustrations';
+import s from '../styles/ProgressScreen.styles';
 
-export default function ProgressScreen({ navigation }) {
-  const [variabelData, setVariabelData] = useState({
-    mastered: 0,
-    total: 10,
-    pct: 0,
-    level: 'Belum ada',
-    lastQuiz: 'Belum ada',
-    statusBadge: 'Belum dimulai',
-  });
+export default function ProgressScreen({ route, navigation }) {
+  const [viewMode, setViewMode] = useState('dashboard');
+  const [models, setModels] = useState(() =>
+    mapRepositoryToProgressModels(null, 'variabel')
+  );
 
   useFocusEffect(
     useCallback(() => {
+      const currentTopic = getGlobalActiveTopic();
+      if (route?.params?.mode) {
+        setViewMode(route.params.mode);
+      } else if (currentTopic === 'tipe_data' || currentTopic === 'operator') {
+        setViewMode('by_topic');
+      } else {
+        setViewMode('dashboard');
+      }
+
       (async () => {
         try {
           const all = await ProgressRepository.getAll();
-          const topicProg = await ProgressRepository.getTopicProgress('variabel');
-          const cards = ContentRepository.getFlashcardsByTopic('variabel');
-          const masteredCount = cards.filter(
-            (c) => all.cards[c.id]?.status === CardStatus.DIKUASAI
-          ).length;
-
-          // Jika sudah ada progres riil di database, tampilkan progres riil
-          if (masteredCount > 0) {
-            const total = cards.length || 10;
-            const pct = Math.round((masteredCount / total) * 100);
-            setVariabelData({
-              mastered: masteredCount,
-              total,
-              pct,
-              level: topicProg.level || 'Sedang',
-              lastQuiz: topicProg.lastQuizScore || 'Belum ada',
-              statusBadge: pct >= 80 ? 'Dikuasai' : 'Perlu diulang',
-            });
-          }
+          setModels(mapRepositoryToProgressModels(all, currentTopic));
         } catch (e) {
           console.warn('Gagal memuat progres:', e);
         }
       })();
-    }, [])
+    }, [route?.params?.mode])
+  );
+
+  const toggleViewMode = () => {
+    setViewMode((prev) => (prev === 'dashboard' ? 'by_topic' : 'dashboard'));
+  };
+
+  const { dashboard, byTopic } = models;
+
+  // ==========================================================================
+  // RENDER FRAME 26: PROGRESS BY TOPIC (viewMode === 'by_topic')
+  // ==========================================================================
+  if (viewMode === 'by_topic') {
+    return (
+      <SafeAreaView style={s.safeArea} edges={['top']}>
+        <ScrollView
+          style={s.scroll}
+          contentContainerStyle={s.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={s.topHeaderRow}>
+            <Text style={s.pageTitle}>Progres Belajar</Text>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={toggleViewMode}
+              style={s.completedTopPill}
+              accessibilityLabel="Ganti tampilan progres"
+            >
+              <Text style={s.trophyEmoji}>🏆</Text>
+              <Text style={s.completedTopPillText}>
+                {byTopic.completedBadgeLabel}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* 1. Donut Chart Total Progress Card */}
+          <View style={s.donutCard}>
+            <MultiSegmentDonut totalPct={byTopic.totalProgressPct} />
+
+            <View style={s.legendCol}>
+              {byTopic.legend.map((item, idx) => (
+                <TouchableOpacity
+                  key={item.id}
+                  activeOpacity={0.75}
+                  onPress={() =>
+                    navigation.navigate('TopicDetail', { topicId: item.id })
+                  }
+                  style={[s.legendItemRow, idx > 0 && { marginTop: 12 }]}
+                >
+                  <View
+                    style={[s.legendDot, { backgroundColor: item.color }]}
+                  />
+                  <View style={s.legendTextWrap}>
+                    <Text
+                      style={[
+                        s.legendTopicName,
+                        !item.unlocked && { color: '#94A3B8' },
+                      ]}
+                    >
+                      {item.title}
+                    </Text>
+                    <Text style={s.legendTopicMeta}>{item.meta}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* 2. Green Mastered Topic Banner: Variabel */}
+          <TouchableOpacity
+            activeOpacity={0.88}
+            onPress={() =>
+              navigation.navigate('TopicDetail', {
+                topicId: byTopic.masteredTopic.id,
+              })
+            }
+            style={s.masteredBanner}
+          >
+            <View style={s.masteredLeftCol}>
+              <View style={s.masteredOverlineRow}>
+                <TrophyIcon size={12} color="rgba(255,255,255,0.9)" />
+                <Text style={s.masteredOverlineText}>TOPIK DIKUASAI</Text>
+              </View>
+
+              <Text style={s.masteredTitle}>{byTopic.masteredTopic.title}</Text>
+
+              <View style={s.masteredPillsRow}>
+                <View style={s.masteredDarkPill}>
+                  <Text style={s.masteredDarkPillText}>
+                    {byTopic.masteredTopic.cardsPill}
+                  </Text>
+                </View>
+                <View style={s.masteredDarkPill}>
+                  <Text style={s.masteredDarkPillText}>
+                    {byTopic.masteredTopic.quizPill}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={s.masteredBoxIllustWrap}>
+              <IsometricBoxIcon />
+            </View>
+          </TouchableOpacity>
+
+          {/* 3. Active Topic Row Card: Tipe Data */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() =>
+              navigation.navigate('TopicDetail', {
+                topicId: byTopic.activeTopicCard.id,
+              })
+            }
+            style={s.activeTopicRowCard}
+          >
+            <View style={s.activeTopicSquareIcon}>
+              <Text style={s.activeTopicSquareText}>
+                {byTopic.activeTopicCard.iconText}
+              </Text>
+            </View>
+
+            <View style={s.activeTopicMiddleCol}>
+              <View style={s.activeTopicTitleRow}>
+                <Text style={s.activeTopicName}>
+                  {byTopic.activeTopicCard.title}
+                </Text>
+                <View style={s.activeTopicLevelPill}>
+                  <Text style={s.activeTopicLevelPillText}>
+                    {byTopic.activeTopicCard.levelBadge}
+                  </Text>
+                </View>
+              </View>
+              <Text style={s.activeTopicSubtitle}>
+                {byTopic.activeTopicCard.subtitle}
+              </Text>
+            </View>
+
+            <Text style={s.activeTopicPctText}>
+              {byTopic.activeTopicCard.pct}%
+            </Text>
+          </TouchableOpacity>
+
+          {/* 4. Bottom 2-Column Summary Cards */}
+          <View style={s.bottomTwoCols}>
+            <View style={s.summaryWhiteCard}>
+              <View style={s.summaryHeaderRow}>
+                <View style={s.summaryBlueIconBox}>
+                  <CardPlusBadgeIcon size={14} color="#2554E8" />
+                </View>
+                <Text style={s.summaryCardLabel}>Kartu dikuasai</Text>
+              </View>
+
+              <View style={s.summaryValueRow}>
+                <Text style={s.summaryBigNumber}>
+                  {byTopic.summaryCards.masteredCards}
+                </Text>
+                <Text style={s.summaryTotalNumber}>
+                  {' '}
+                  / {byTopic.summaryCards.totalCards}
+                </Text>
+              </View>
+            </View>
+
+            <View style={s.summaryWhiteCard}>
+              <View style={s.summaryHeaderRow}>
+                <View style={s.summaryPurpleIconBox}>
+                  <ChartBarBadgeIcon size={14} color="#9333EA" />
+                </View>
+                <Text style={s.summaryCardLabel}>Rata-rata kuis</Text>
+              </View>
+
+              <View style={s.summaryValueRow}>
+                <Text style={s.summaryBigNumber}>
+                  {byTopic.summaryCards.quizAveragePct}%
+                </Text>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // ==========================================================================
+  // RENDER FRAME 25: PROGRESS DASHBOARD (viewMode === 'dashboard')
+  // ==========================================================================
+  const masteredWidthPct = Math.round(
+    (dashboard.flashcardSummary.mastered / dashboard.flashcardSummary.total) *
+      100
+  );
+  const learningWidthPct = Math.round(
+    (dashboard.flashcardSummary.learning / dashboard.flashcardSummary.total) *
+      100
   );
 
   return (
     <SafeAreaView style={s.safeArea} edges={['top']}>
-      {/* Top Header Bar */}
-      <View style={s.header}>
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => navigation.navigate('Belajar')}
-          style={s.headerButton}
-        >
-          <Svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M19 12H5M5 12L12 19M5 12L12 5"
-              stroke="#2F66EE"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </Svg>
-        </TouchableOpacity>
-
-        {/* Center Logo FlipCode */}
-        <View style={s.logoContainer}>
-          <Image
-            source={require('../../assets/nama_logo.png')}
-            style={s.logo}
-            resizeMode="contain"
-          />
-        </View>
-
-        {/* Right Streak Fire Icon */}
-        <View style={s.headerButtonRight}>
-          <Text style={s.fireIcon}>🔥</Text>
-        </View>
-      </View>
-
-      {/* Main Content */}
       <ScrollView
-        style={s.scrollView}
+        style={s.scroll}
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Title Section */}
-        <Text style={s.pageTitle}>Progres Belajar</Text>
-        <Text style={s.pageSubtitle}>Sedikit demi sedikit, makin jago!</Text>
+        <View style={s.topHeaderRow}>
+          <Text style={s.pageTitle}>Progres Belajar</Text>
 
-        {/* Card 1: Variabel */}
-        <View style={s.card}>
-          <View style={s.cardHeaderRow}>
-            <Text style={s.cardTitle}>Variabel</Text>
-            <View style={variabelData.level === 'Belum ada' ? s.badgeLocked : s.badgeLevel}>
-              <Text style={variabelData.level === 'Belum ada' ? s.badgeLockedText : s.badgeLevelText}>
-                Level: {variabelData.level}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={toggleViewMode}
+            style={s.growingPill}
+            accessibilityLabel="Ganti tampilan progres"
+          >
+            <TrendUpIcon size={13} color="#7C3AED" />
+            <Text style={s.growingPillText}>{dashboard.statusLabel}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 1. Dark Navy Hero Banner */}
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={toggleViewMode}
+          style={s.navyHeroCard}
+        >
+          <View style={s.navyHeroLeft}>
+            <Text style={s.navyHeroOverline}>Total progres</Text>
+
+            <View style={s.navyHeroPctRow}>
+              <Text style={s.navyHeroBigNum}>{dashboard.totalProgressPct}</Text>
+              <Text style={s.navyHeroPctSymbol}>%</Text>
+            </View>
+
+            <View style={s.navySegmentsRow}>
+              {Array.from({ length: dashboard.totalSegments }).map((_, idx) => {
+                const isActive = idx < dashboard.activeSegments;
+                return (
+                  <View
+                    key={idx}
+                    style={[
+                      s.navySegmentPill,
+                      {
+                        backgroundColor: isActive
+                          ? '#3B82F6'
+                          : 'rgba(255, 255, 255, 0.18)',
+                      },
+                    ]}
+                  />
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={s.navyHeroRight}>
+            <DashboardRobotMascot />
+          </View>
+        </TouchableOpacity>
+
+        {/* 2. 3 Topic Mini-Cards Row */}
+        <View style={s.threeTopicsRow}>
+          {dashboard.topics.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              activeOpacity={0.85}
+              onPress={() =>
+                navigation.navigate('TopicDetail', { topicId: item.id })
+              }
+              style={[
+                s.miniTopicCard,
+                !item.unlocked && s.miniTopicCardLocked,
+              ]}
+            >
+              {item.unlocked ? (
+                <MiniTopicRing pct={item.pct} color={item.accentColor} />
+              ) : (
+                <View
+                  style={[
+                    s.miniLockCircle,
+                    {
+                      backgroundColor: item.lockBg,
+                      borderColor: item.lockBorder,
+                    },
+                  ]}
+                >
+                  <LockIcon
+                    size={15}
+                    color={item.lockColor}
+                    keyholeColor={null}
+                  />
+                </View>
+              )}
+
+              <Text
+                style={[
+                  s.miniTopicTitle,
+                  !item.unlocked && { color: '#475569' },
+                ]}
+                numberOfLines={1}
+              >
+                {item.title}
+              </Text>
+
+              <Text
+                style={[
+                  s.miniTopicSub,
+                  { color: item.unlocked ? item.levelColor : '#94A3B8' },
+                ]}
+              >
+                {item.levelLabel}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* 3. Quiz Performance Card */}
+        <View style={s.quizPerfCard}>
+          <View style={s.quizPerfTopRow}>
+            <Text style={s.quizPerfLabel}>Performa kuis</Text>
+            <View style={s.quizLevelBadge}>
+              <Text style={s.quizLevelBadgeText}>
+                {dashboard.quizPerformance.levelBadge}
               </Text>
             </View>
           </View>
 
-          <View style={s.cardMetaRow}>
-            <Text style={variabelData.pct > 0 ? s.cardMetaText : s.cardMetaTextLocked}>
-              {variabelData.mastered} dari {variabelData.total} kartu dikuasai
+          <View style={s.quizAvgRow}>
+            <Text style={s.quizAvgBigPct}>
+              {dashboard.quizPerformance.averagePct}%
             </Text>
-            <Text style={variabelData.pct > 0 ? s.cardPctText : s.cardPctTextLocked}>
-              {variabelData.pct}%
-            </Text>
+            <Text style={s.quizAvgSubText}> rata-rata</Text>
           </View>
 
-          {/* Progress Bar */}
-          <View style={s.progressTrack}>
-            <View style={[s.progressFill, { width: `${variabelData.pct}%` }]} />
-          </View>
+          <View style={s.barsRow}>
+            {dashboard.quizPerformance.history.map((bar) => {
+              const fillPct = Math.round((bar.score / bar.total) * 100);
+              return (
+                <View key={bar.id} style={s.barCol}>
+                  <Text style={s.barTopScoreText}>
+                    {bar.score}/{bar.total}
+                  </Text>
 
-          {/* Card Footer */}
-          <View style={s.cardFooterRow}>
-            <Text style={variabelData.pct > 0 ? s.cardScoreText : s.cardScoreTextLocked}>
-              Skor terakhir: {variabelData.lastQuiz}
-            </Text>
-            <View style={variabelData.statusBadge === 'Belum dimulai' ? s.badgeMuted : s.badgeWarning}>
-              <Text style={variabelData.statusBadge === 'Belum dimulai' ? s.badgeMutedText : s.badgeWarningText}>
-                {variabelData.statusBadge}
+                  <View
+                    style={[
+                      s.barTrackBox,
+                      { backgroundColor: bar.trackBg },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        s.barFillBox,
+                        {
+                          height: `${fillPct}%`,
+                          backgroundColor: bar.fillBg,
+                        },
+                      ]}
+                    />
+                  </View>
+
+                  <Text style={s.barBottomLabel}>{bar.label}</Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* 4. Bottom 2-Column Row */}
+        <View style={s.bottomTwoCols}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() =>
+              navigation.navigate('Flashcard', { topicId: 'variabel' })
+            }
+            style={s.flashcardBlueCard}
+          >
+            <View style={s.summaryHeaderRow}>
+              <View style={s.summaryBlueIconBox}>
+                <FlashcardTileIcon size={14} color="#2554E8" />
+              </View>
+              <Text style={s.summaryCardLabel}>Flashcard</Text>
+            </View>
+
+            <View style={s.summaryValueRow}>
+              <Text style={s.summaryBigNumber}>
+                {dashboard.flashcardSummary.mastered}
+              </Text>
+              <Text style={s.summaryTotalNumber}>
+                {' '}
+                / {dashboard.flashcardSummary.total}
               </Text>
             </View>
-          </View>
-        </View>
 
-        {/* Card 2: Tipe Data (Terkunci) */}
-        <View style={s.card}>
-          <View style={s.cardHeaderRow}>
-            <View style={s.titleWithLock}>
-              <Text style={s.cardTitleLocked}>Tipe Data</Text>
-              <Image
-                source={require('../../assets/home_screen/icon_lock.png')}
-                style={s.lockIcon}
-                resizeMode="contain"
+            <View style={s.fcMiniTrack}>
+              <View
+                style={[
+                  s.fcMiniSegmentGreen,
+                  { width: `${Math.max(masteredWidthPct, 24)}%` },
+                ]}
+              />
+              <View
+                style={[
+                  s.fcMiniSegmentAmber,
+                  { width: `${Math.max(learningWidthPct, 12)}%` },
+                ]}
               />
             </View>
-            <View style={s.badgeLocked}>
-              <Text style={s.badgeLockedText}>Terkunci</Text>
-            </View>
-          </View>
-
-          <View style={s.cardMetaRow}>
-            <Text style={s.cardMetaTextLocked}>0 dari 10 kartu dikuasai</Text>
-            <Text style={s.cardPctTextLocked}>0%</Text>
-          </View>
-
-          {/* Progress Bar 0% */}
-          <View style={s.progressTrack}>
-            <View style={[s.progressFill, { width: '0%' }]} />
-          </View>
-
-          <View style={s.cardFooterRow}>
-            <Text style={s.cardScoreTextLocked}>Skor terakhir: Belum ada</Text>
-            <View style={s.badgeMuted}>
-              <Text style={s.badgeMutedText}>Belum dimulai</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Card 3: Operator (Terkunci) */}
-        <View style={s.card}>
-          <View style={s.cardHeaderRow}>
-            <View style={s.titleWithLock}>
-              <Text style={s.cardTitleLocked}>Operator</Text>
-              <Image
-                source={require('../../assets/home_screen/icon_lock.png')}
-                style={s.lockIcon}
-                resizeMode="contain"
-              />
-            </View>
-            <View style={s.badgeLocked}>
-              <Text style={s.badgeLockedText}>Terkunci</Text>
-            </View>
-          </View>
-
-          <View style={s.cardMetaRow}>
-            <Text style={s.cardMetaTextLocked}>0 dari 10 kartu dikuasai</Text>
-            <Text style={s.cardPctTextLocked}>0%</Text>
-          </View>
-
-          {/* Progress Bar 0% */}
-          <View style={s.progressTrack}>
-            <View style={[s.progressFill, { width: '0%' }]} />
-          </View>
-
-          <View style={s.cardFooterRow}>
-            <Text style={s.cardScoreTextLocked}>Skor terakhir: Belum ada</Text>
-            <View style={s.badgeMuted}>
-              <Text style={s.badgeMutedText}>Belum dimulai</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Section: Yuk, ulangi konsep ini! */}
-        <Text style={s.sectionTitle}>Yuk, ulangi konsep ini!</Text>
-        <View style={s.repeatCard}>
-          <View style={s.repeatList}>
-            <View style={s.repeatItem}>
-              <View style={s.bulletDot} />
-              <Text style={s.repeatItemText}>Aturan Nama Variabel</Text>
-            </View>
-            <View style={[s.repeatItem, { marginTop: 8 }]}>
-              <View style={s.bulletDot} />
-              <Text style={s.repeatItemText}>Pengertian Variabel</Text>
-            </View>
-          </View>
+          </TouchableOpacity>
 
           <TouchableOpacity
             activeOpacity={0.85}
-            onPress={() => navigation.navigate('Flashcard', { topicId: 'variabel' })}
-            style={s.repeatButton}
+            onPress={() =>
+              navigation.navigate('Flashcard', {
+                topicId: dashboard.repeatConcept.topicId,
+              })
+            }
+            style={s.repeatCreamCard}
           >
-            <Text style={s.repeatButtonText}>Ulangi Kartu</Text>
+            <View style={s.summaryHeaderRow}>
+              <View style={s.repeatAmberIconBox}>
+                <RepeatCycleIcon size={13} color="#D97706" />
+              </View>
+              <Text style={s.repeatHeaderLabel}>Perlu diulang</Text>
+            </View>
+
+            <Text style={s.repeatConceptTitle} numberOfLines={2}>
+              {dashboard.repeatConcept.title}
+            </Text>
+
+            <Text style={s.repeatConceptCount}>
+              {dashboard.repeatConcept.countLabel}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#FAF8F5',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    backgroundColor: '#FAF8F5',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEF2F6',
-  },
-  headerButton: {
-    width: 36,
-    height: 36,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-  },
-  headerButtonRight: {
-    width: 36,
-    height: 36,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-  },
-  logoContainer: {
-    height: 38,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logo: {
-    width: 155,
-    height: 78,
-  },
-  fireIcon: {
-    fontSize: 20,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 100,
-  },
-  pageTitle: {
-    fontSize: 22,
-    fontFamily: fonts.extrabold,
-    color: '#0F172A',
-  },
-  pageSubtitle: {
-    fontSize: 13,
-    fontFamily: fonts.medium,
-    color: '#64748B',
-    marginTop: 4,
-    marginBottom: 16,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#EEF2F6',
-    padding: 16,
-    marginBottom: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  cardHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardTitle: {
-    fontSize: 17,
-    fontFamily: fonts.bold,
-    color: '#0F172A',
-  },
-  cardTitleLocked: {
-    fontSize: 17,
-    fontFamily: fonts.bold,
-    color: '#64748B',
-  },
-  titleWithLock: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  lockIcon: {
-    width: 14,
-    height: 14,
-    marginLeft: 6,
-    tintColor: '#64748B',
-  },
-  badgeLevel: {
-    backgroundColor: '#EDF3FE',
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-  },
-  badgeLevelText: {
-    fontSize: 11,
-    fontFamily: fonts.bold,
-    color: '#2F66EE',
-  },
-  badgeLocked: {
-    backgroundColor: '#F1F5F9',
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-  },
-  badgeLockedText: {
-    fontSize: 11,
-    fontFamily: fonts.semibold,
-    color: '#94A3B8',
-  },
-  cardMetaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  cardMetaText: {
-    fontSize: 13,
-    fontFamily: fonts.medium,
-    color: '#475569',
-  },
-  cardMetaTextLocked: {
-    fontSize: 13,
-    fontFamily: fonts.medium,
-    color: '#94A3B8',
-  },
-  cardPctText: {
-    fontSize: 13,
-    fontFamily: fonts.extrabold,
-    color: '#2F66EE',
-  },
-  cardPctTextLocked: {
-    fontSize: 13,
-    fontFamily: fonts.bold,
-    color: '#94A3B8',
-  },
-  progressTrack: {
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: '#E8EFF8',
-    marginTop: 8,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 4,
-    backgroundColor: '#2F66EE',
-  },
-  cardFooterRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  cardScoreText: {
-    fontSize: 12,
-    fontFamily: fonts.medium,
-    color: '#64748B',
-  },
-  cardScoreTextLocked: {
-    fontSize: 12,
-    fontFamily: fonts.medium,
-    color: '#94A3B8',
-  },
-  badgeWarning: {
-    backgroundColor: '#FEF9C3',
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-  },
-  badgeWarningText: {
-    fontSize: 11,
-    fontFamily: fonts.bold,
-    color: '#B45309',
-  },
-  badgeMuted: {
-    backgroundColor: '#F1F5F9',
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-  },
-  badgeMutedText: {
-    fontSize: 11,
-    fontFamily: fonts.semibold,
-    color: '#94A3B8',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontFamily: fonts.bold,
-    color: '#0F172A',
-    marginTop: 8,
-    marginBottom: 12,
-  },
-  repeatCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#EEF2F6',
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  repeatList: {
-    flex: 1,
-    paddingRight: 12,
-  },
-  repeatItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  bulletDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: '#FF6B4A',
-    marginRight: 8,
-  },
-  repeatItemText: {
-    fontSize: 13,
-    fontFamily: fonts.bold,
-    color: '#1E293B',
-  },
-  repeatButton: {
-    backgroundColor: '#2F66EE',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#2F66EE',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  repeatButtonText: {
-    color: '#FFFFFF',
-    fontFamily: fonts.bold,
-    fontSize: 13,
-  },
-});
