@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { fonts } from '../constants/theme';
 import { ContentRepository } from '../storage/ContentRepository';
 import { ProgressRepository } from '../storage/ProgressRepository';
-import { CardStatus } from '../constants/enums';
+import { CardStatus, Level, TopicState } from '../constants/enums';
+import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { usePlacementGuard } from '../context/PlacementGuardContext';
 import {
@@ -20,7 +21,6 @@ import {
   MiniRobotNodeIcon,
   CheckIcon,
   LockIcon,
-  CodeBracketsIcon,
   ArrowRightIcon,
   TrophyIcon,
   LightbulbIcon,
@@ -48,134 +48,152 @@ export function setGlobalActiveTopic(topicId) {
   }
 }
 
-export default function HomeScreen({ route, navigation }) {
+// Tampilan tiap topik (warna hero, kartu aktif, dan kartu terkunci).
+const THEMES = {
+  variabel: {
+    bg: '#2554E8',
+    lip: '#1B3FB5',
+    badgeBg: 'rgba(255, 255, 255, 0.16)',
+    badgeDot: '#FACC15',
+    badgeTextColor: '#FFFFFF',
+    titleColor: '#FFFFFF',
+    subColor: 'rgba(255, 255, 255, 0.85)',
+    btnBg: '#FFFFFF',
+    btnTextColor: '#2554E8',
+    robotBadge: '#2554E8',
+    activeBorder: null,
+    activeIconBg: null,
+    activeText: null,
+    lockBg: '#EEF2FF',
+    lockColor: '#2554E8',
+    tips: 'Selesaikan minimal 7 kartu variabel hari ini agar streak belajarmu tetap aktif! 🔥',
+  },
+  tipe_data: {
+    bg: '#F5B82E',
+    lip: '#D99B16',
+    badgeBg: 'rgba(120, 53, 15, 0.14)',
+    badgeDot: '#78350F',
+    badgeTextColor: '#78350F',
+    titleColor: '#1F2A44',
+    subColor: '#78350F',
+    btnBg: '#1E293B',
+    btnTextColor: '#FFFFFF',
+    robotBadge: '#D97706',
+    activeBorder: '#F5B82E',
+    activeIconBg: '#F5B82E',
+    activeText: '#D97706',
+    lockBg: '#FEF6DF',
+    lockColor: '#B7811F',
+    tips: 'Pahami perbedaan Integer, String, dan Boolean agar tidak salah mengolah data! 🔥',
+  },
+  operator: {
+    bg: '#F26B50',
+    lip: '#C94A32',
+    badgeBg: 'rgba(255, 255, 255, 0.2)',
+    badgeDot: '#FACC15',
+    badgeTextColor: '#FFFFFF',
+    titleColor: '#FFFFFF',
+    subColor: 'rgba(255, 255, 255, 0.9)',
+    btnBg: '#FFFFFF',
+    btnTextColor: '#E04F33',
+    robotBadge: '#E04F33',
+    activeBorder: '#F26B50',
+    activeIconBg: '#F26B50',
+    activeText: '#E04F33',
+    lockBg: '#FFF0ED',
+    lockColor: '#F28B76',
+    tips: 'Latih operator aritmatika dan perbandingan untuk membangun logika program! 🔥',
+  },
+};
+
+export default function HomeScreen({ navigation }) {
   const { user } = useAuth();
   const { guardPlacement } = usePlacementGuard();
-  const [studiedCards, setStudiedCards] = useState(3);
-  const [totalCards, setTotalCards] = useState(10);
-  const [activeTopic, setActiveTopic] = useState(() => getGlobalActiveTopic());
+  const displayName = user?.nama || 'Aura';
 
-  useEffect(() => {
-    if (route?.params?.activeTopic) {
-      setGlobalActiveTopic(route.params.activeTopic);
-      setActiveTopic(route.params.activeTopic);
-    }
-  }, [route?.params?.activeTopic]);
-
-  // Level tiap topik dari server (hasil tes awal / kuis).
-  const [levels, setLevels] = useState({});
+  // Satu daftar topik yang dibangun dari data server (progres + kartu).
+  const [infos, setInfos] = useState(() =>
+    ContentRepository.getAllTopics().map((t) => ({
+      id: t.id,
+      title: t.nama,
+      level: Level.MUDAH,
+      done: false,
+      mastered: 0,
+      total: 0,
+      pct: 0,
+    }))
+  );
+  const [notice, setNotice] = useState(null);
 
   useFocusEffect(
     useCallback(() => {
-      // Sinkronkan topik aktif setiap kali kembali ke HomeScreen
-      setActiveTopic(getGlobalActiveTopic());
-
+      let alive = true;
       (async () => {
         try {
-          const current = getGlobalActiveTopic();
-          const all = await ProgressRepository.getAll();
-          setLevels(
-            Object.fromEntries(Object.entries(all.topics || {}).map(([id, t]) => [id, t.level]))
-          );
-          const cards = ContentRepository.getFlashcardsByTopic(current);
-          const count = cards.filter(
-            (c) =>
-              all.cards[c.id]?.status === CardStatus.DIKUASAI ||
-              all.cards[c.id]?.status === CardStatus.SEDANG_DIPELAJARI
-          ).length;
-
-          setStudiedCards(count > 0 ? count : current === 'variabel' ? 3 : 1);
-          setTotalCards(cards.length >= 10 ? cards.length : 10);
+          const topics = ContentRepository.getAllTopics();
+          const [all, ...lists] = await Promise.all([
+            ProgressRepository.getAll(),
+            ...topics.map((t) => api.get(`/topics/${t.id}/cards`)),
+          ]);
+          if (!alive) return;
+          const next = topics.map((t, i) => {
+            const cards = lists[i].cards || [];
+            const mastered = cards.filter(
+              (c) => all.cards?.[c.id]?.status === CardStatus.DIKUASAI
+            ).length;
+            const prog = all.topics?.[t.id];
+            const done = prog?.state === TopicState.DIKUASAI;
+            return {
+              id: t.id,
+              title: t.nama,
+              level: prog?.level || Level.MUDAH,
+              done,
+              mastered,
+              total: cards.length,
+              pct: done ? 100 : cards.length ? Math.round((mastered / cards.length) * 100) : 0,
+            };
+          });
+          setInfos(next);
+          // Samakan topik aktif untuk layar lain (Progres).
+          const current = next.find((t) => !t.done) || next[next.length - 1];
+          if (current) setGlobalActiveTopic(current.id);
         } catch (e) {
           console.warn('Gagal memuat progres:', e);
         }
       })();
+      return () => {
+        alive = false;
+      };
     }, [])
   );
 
-  const updateTopic = (nextTopic) => {
-    setGlobalActiveTopic(nextTopic);
-    setActiveTopic(nextTopic);
-  };
-
-  const cycleActiveTopic = () => {
-    const next =
-      activeTopic === 'variabel'
-        ? 'tipe_data'
-        : activeTopic === 'tipe_data'
-        ? 'operator'
-        : 'variabel';
-    updateTopic(next);
-  };
+  // Topik aktif = topik pertama yang belum dikuasai. Topik setelahnya terkunci
+  // sampai topik sebelumnya dikuasai.
+  const activeIdx = infos.findIndex((t) => !t.done);
+  const featuredIdx = activeIdx === -1 ? infos.length - 1 : activeIdx;
+  const featured = infos[featuredIdx];
+  const statusOf = (i) => (infos[i].done ? 'done' : i === activeIdx ? 'active' : 'locked');
+  const theme = THEMES[featured?.id] || THEMES.variabel;
+  const prevDone = featuredIdx > 0 && infos[featuredIdx - 1].done ? infos[featuredIdx - 1] : null;
+  const startedTopicsCount = infos.filter((_, i) => statusOf(i) !== 'locked').length;
+  const heroSubtitle = featured?.total
+    ? `Flashcard ${featured.mastered} dari ${featured.total}`
+    : 'Belum ada kartu';
 
   const openTopicDetail = (topicId) => {
-    updateTopic(topicId);
+    setGlobalActiveTopic(topicId);
     navigation.navigate('TopicDetail', { topicId });
   };
 
-  const progressPct = Math.round((studiedCards / totalCards) * 100) || 30;
-  const displayName = user?.nama || 'Aura';
-
-  const isVariabelActive = activeTopic === 'variabel';
-  const isTipeDataActive = activeTopic === 'tipe_data';
-  const isOperatorActive = activeTopic === 'operator';
-
-  // Konfigurasi Hero Banner sesuai topik yang sedang aktif (dengan desain HomeScreen awal yang konsisten)
-  const heroConfig = isTipeDataActive
-    ? {
-        bg: '#F5B82E',
-        lip: '#D99B16',
-        badgeText: `Topik saat ini • ${levels.tipe_data || 'Mudah'}`,
-        badgeBg: 'rgba(120, 53, 15, 0.14)',
-        badgeDot: '#78350F',
-        badgeTextColor: '#78350F',
-        title: 'Tipe Data',
-        titleColor: '#1F2A44',
-        subColor: '#78350F',
-        btnBg: '#1E293B',
-        btnTextColor: '#FFFFFF',
-        robotBadge: '#D97706',
-        completedNote: 'Variabel selesai dengan 80% kartu dikuasai',
-        tipsText:
-          'Pahami perbedaan Integer, String, dan Boolean agar tidak salah mengolah data! 🔥',
-      }
-    : isOperatorActive
-    ? {
-        bg: '#F26B50',
-        lip: '#C94A32',
-        badgeText: `Topik saat ini • ${levels.operator || 'Mudah'}`,
-        badgeBg: 'rgba(255, 255, 255, 0.2)',
-        badgeDot: '#FACC15',
-        badgeTextColor: '#FFFFFF',
-        title: 'Operator',
-        titleColor: '#FFFFFF',
-        subColor: 'rgba(255, 255, 255, 0.9)',
-        btnBg: '#FFFFFF',
-        btnTextColor: '#E04F33',
-        robotBadge: '#E04F33',
-        completedNote: 'Tipe Data selesai dengan 80% kartu dikuasai',
-        tipsText:
-          'Latih operator aritmatika dan perbandingan untuk membangun logika program! 🔥',
-      }
-    : {
-        bg: '#2554E8',
-        lip: '#1B3FB5',
-        badgeText: `Topik saat ini • ${levels.variabel || 'Mudah'}`,
-        badgeBg: 'rgba(255, 255, 255, 0.16)',
-        badgeDot: '#FACC15',
-        badgeTextColor: '#FFFFFF',
-        title: 'Variabel',
-        titleColor: '#FFFFFF',
-        subColor: 'rgba(255, 255, 255, 0.85)',
-        btnBg: '#FFFFFF',
-        btnTextColor: '#2554E8',
-        robotBadge: '#2554E8',
-        completedNote: null,
-        tipsText:
-          'Selesaikan minimal 7 kartu variabel hari ini agar streak belajarmu tetap aktif! 🔥',
-      };
-
-  const startedTopicsCount = isOperatorActive ? 3 : isTipeDataActive ? 2 : 1;
+  const handleTopicPress = (i) => {
+    if (statusOf(i) === 'locked') {
+      const prev = infos[i - 1];
+      setNotice(`Kuasai topik ${prev ? prev.title : 'sebelumnya'} dulu untuk membuka ${infos[i].title}.`);
+      setTimeout(() => setNotice(null), 3500);
+      return;
+    }
+    openTopicDetail(infos[i].id);
+  };
 
   return (
     <SafeAreaView style={s.safeArea} edges={['top']}>
@@ -195,15 +213,6 @@ export default function HomeScreen({ route, navigation }) {
           </View>
         </View>
 
-        {/* Tombol < > di kanan atas untuk berpindah fase Variabel / Tipe Data / Operator */}
-        <TouchableOpacity
-          activeOpacity={0.75}
-          onPress={cycleActiveTopic}
-          style={s.codeHeaderButton}
-          accessibilityLabel="Ganti tampilan topik aktif"
-        >
-          <CodeBracketsIcon size={18} color="#2554E8" strokeWidth={2.2} />
-        </TouchableOpacity>
       </View>
 
       {/* Main Content ScrollView */}
@@ -217,74 +226,80 @@ export default function HomeScreen({ route, navigation }) {
           style={[
             s.heroCard,
             {
-              backgroundColor: heroConfig.bg,
-              borderBottomColor: heroConfig.lip,
+              backgroundColor: theme.bg,
+              borderBottomColor: theme.lip,
             },
           ]}
         >
           <View style={s.heroLeft}>
             <View
-              style={[s.heroBadge, { backgroundColor: heroConfig.badgeBg }]}
+              style={[s.heroBadge, { backgroundColor: theme.badgeBg }]}
             >
               <View
                 style={[
                   s.heroBadgeDot,
-                  { backgroundColor: heroConfig.badgeDot },
+                  { backgroundColor: theme.badgeDot },
                 ]}
               />
               <Text
                 style={[
                   s.heroBadgeText,
-                  { color: heroConfig.badgeTextColor },
+                  { color: theme.badgeTextColor },
                 ]}
               >
-                {heroConfig.badgeText}
+                {`Topik saat ini • ${featured?.level}`}
               </Text>
             </View>
 
-            <Text style={[s.heroTitle, { color: heroConfig.titleColor }]}>
-              {heroConfig.title}
+            <Text style={[s.heroTitle, { color: theme.titleColor }]}>
+              {featured?.title}
             </Text>
-            <Text style={[s.heroSubtitle, { color: heroConfig.subColor }]}>
-              Flashcard {studiedCards} dari {totalCards}
+            <Text style={[s.heroSubtitle, { color: theme.subColor }]}>
+              {heroSubtitle}
             </Text>
 
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={() => openTopicDetail(activeTopic)}
-              style={[s.heroButton, { backgroundColor: heroConfig.btnBg }]}
+              onPress={() => openTopicDetail(featured.id)}
+              style={[s.heroButton, { backgroundColor: theme.btnBg }]}
             >
               <Text
                 style={[
                   s.heroButtonText,
-                  { color: heroConfig.btnTextColor },
+                  { color: theme.btnTextColor },
                 ]}
               >
                 Lanjutkan
               </Text>
               <ArrowRightIcon
                 size={15}
-                color={heroConfig.btnTextColor}
+                color={theme.btnTextColor}
                 strokeWidth={2.5}
               />
             </TouchableOpacity>
           </View>
 
           <View style={s.heroRight}>
-            <HeroRobotIllustration badgeColor={heroConfig.robotBadge} />
+            <HeroRobotIllustration badgeColor={theme.robotBadge} />
           </View>
         </View>
 
         {/* Banner Pencapaian Hijau saat topik sebelumnya sudah dikuasai */}
-        {heroConfig.completedNote && (
+        {prevDone && (
           <View style={s.achievementBanner}>
             <View style={s.trophyCircle}>
               <TrophyIcon size={14} color="#10B981" />
             </View>
             <Text style={s.achievementText}>
-              {isTipeDataActive ? 'Variabel' : 'Tipe Data'} selesai dengan{' '}
-              <Text style={s.achievementHighlight}>80%</Text> kartu dikuasai
+              {prevDone.title} <Text style={s.achievementHighlight}>sudah dikuasai</Text>
             </Text>
+          </View>
+        )}
+
+        {notice && (
+          <View style={s.noticeBanner}>
+            <LockIcon size={14} color="#B45309" />
+            <Text style={s.noticeText}>{notice}</Text>
           </View>
         )}
 
@@ -293,14 +308,14 @@ export default function HomeScreen({ route, navigation }) {
           <Text style={s.sectionTitle}>Jalur Belajar</Text>
           <View style={s.sectionCountPill}>
             <Text style={s.sectionCountText}>
-              {startedTopicsCount} dari 3 topik dimulai
+              {startedTopicsCount} dari {infos.length} topik dimulai
             </Text>
           </View>
         </View>
 
-        {/* Zig-Zag Learning Path Cards (Desain HomeScreen awal yang berkesinambungan) */}
+        {/* Zig-Zag Learning Path: dibangun dari status tiap topik di server */}
         <View style={s.pathContainer}>
-          {/* 1. Tes Awal (Left - Selesai) */}
+          {/* Tes Awal */}
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={async () => {
@@ -316,192 +331,96 @@ export default function HomeScreen({ route, navigation }) {
               <Text style={s.stepTitle}>Tes Awal</Text>
               <View style={s.statusRow}>
                 <View style={s.doneDot} />
-                <Text style={s.doneStatusText}>Selesai</Text>
+                <Text style={s.doneStatusText}>
+                  {user?.placementDone ? 'Selesai' : 'Belum dikerjakan'}
+                </Text>
               </View>
             </View>
           </TouchableOpacity>
 
-          {/* Connector 1: Tes Awal (Left) -> Variabel (Right) */}
-          <CurvedConnector fromRight={false} active={true} />
+          {infos.map((t, i) => {
+            const status = statusOf(i);
+            const th = THEMES[t.id] || THEMES.variabel;
+            const sideStyle = i % 2 === 0 ? s.stepCardRight : s.stepCardLeft;
+            // Konektor dari kartu sebelumnya (Tes Awal ada di kiri) ke kartu ini.
+            const fromRight = i > 0 && (i - 1) % 2 === 0;
+            return (
+              <React.Fragment key={t.id}>
+                <CurvedConnector fromRight={fromRight} active={status !== 'locked'} />
 
-          {/* 2. Variabel (Right - Aktif jika activeTopic === 'variabel', Selesai jika 'tipe_data' / 'operator') */}
-          {isVariabelActive ? (
-            <View style={[s.activeCardWrapper, s.stepCardRight]}>
-              <View style={s.hereBadge}>
-                <View style={s.hereBadgeDot} />
-                <Text style={s.hereBadgeText}>Kamu di sini</Text>
-              </View>
+                {status === 'active' ? (
+                  <View style={[s.activeCardWrapper, sideStyle]}>
+                    <View style={s.hereBadge}>
+                      <View style={s.hereBadgeDot} />
+                      <Text style={s.hereBadgeText}>Kamu di sini</Text>
+                    </View>
 
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={() => openTopicDetail('variabel')}
-                style={[s.stepCard, s.stepCardActive]}
-              >
-                <View style={s.activeIconWrapper}>
-                  <View style={s.activeIconBox}>
-                    <MiniRobotNodeIcon />
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      onPress={() => handleTopicPress(i)}
+                      style={[
+                        s.stepCard,
+                        s.stepCardActive,
+                        th.activeBorder && { borderColor: th.activeBorder },
+                      ]}
+                    >
+                      <View style={s.activeIconWrapper}>
+                        <View
+                          style={[
+                            s.activeIconBox,
+                            th.activeIconBg && { backgroundColor: th.activeIconBg },
+                          ]}
+                        >
+                          <MiniRobotNodeIcon />
+                        </View>
+                        <View style={s.stepCountBadge}>
+                          <Text style={s.stepCountBadgeText}>{t.mastered}</Text>
+                        </View>
+                      </View>
+
+                      <View style={s.stepTextCol}>
+                        <Text style={s.stepTitle}>{t.title}</Text>
+                        <Text style={[s.activeStatusText, th.activeText && { color: th.activeText }]}>
+                          Sedang belajar • {t.pct}%
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
                   </View>
-                  <View style={s.stepCountBadge}>
-                    <Text style={s.stepCountBadgeText}>{studiedCards}</Text>
-                  </View>
-                </View>
-
-                <View style={s.stepTextCol}>
-                  <Text style={s.stepTitle}>Variabel</Text>
-                  <Text style={s.activeStatusText}>
-                    Sedang belajar • {progressPct}%
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => openTopicDetail('variabel')}
-              style={[s.stepCard, s.stepCardRight]}
-            >
-              <View style={s.doneIconBox}>
-                <CheckIcon size={22} color="#FFFFFF" strokeWidth={2.8} />
-              </View>
-              <View style={s.stepTextCol}>
-                <Text style={s.stepTitle}>Variabel</Text>
-                <View style={s.statusRow}>
-                  <View style={s.doneDot} />
-                  <Text style={s.doneStatusText}>Selesai • 80%</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          )}
-
-          {/* Connector 2: Variabel (Right) -> Tipe Data (Left) */}
-          <CurvedConnector
-            fromRight={true}
-            active={isTipeDataActive || isOperatorActive}
-          />
-
-          {/* 3. Tipe Data (Left - Terkunci saat 'variabel', Aktif saat 'tipe_data', Selesai saat 'operator') */}
-          {isTipeDataActive ? (
-            <View style={[s.activeCardWrapper, s.stepCardLeft]}>
-              <View style={s.hereBadge}>
-                <View style={s.hereBadgeDot} />
-                <Text style={s.hereBadgeText}>Kamu di sini</Text>
-              </View>
-
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={() => openTopicDetail('tipe_data')}
-                style={[
-                  s.stepCard,
-                  s.stepCardActive,
-                  { borderColor: '#F5B82E' },
-                ]}
-              >
-                <View style={s.activeIconWrapper}>
-                  <View
-                    style={[s.activeIconBox, { backgroundColor: '#F5B82E' }]}
+                ) : status === 'done' ? (
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    onPress={() => handleTopicPress(i)}
+                    style={[s.stepCard, sideStyle]}
                   >
-                    <MiniRobotNodeIcon />
-                  </View>
-                  <View style={s.stepCountBadge}>
-                    <Text style={s.stepCountBadgeText}>{studiedCards}</Text>
-                  </View>
-                </View>
-
-                <View style={s.stepTextCol}>
-                  <Text style={s.stepTitle}>Tipe Data</Text>
-                  <Text style={[s.activeStatusText, { color: '#D97706' }]}>
-                    Sedang belajar • {progressPct}%
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          ) : isOperatorActive ? (
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => openTopicDetail('tipe_data')}
-              style={[s.stepCard, s.stepCardLeft]}
-            >
-              <View style={s.doneIconBox}>
-                <CheckIcon size={22} color="#FFFFFF" strokeWidth={2.8} />
-              </View>
-              <View style={s.stepTextCol}>
-                <Text style={s.stepTitle}>Tipe Data</Text>
-                <View style={s.statusRow}>
-                  <View style={s.doneDot} />
-                  <Text style={s.doneStatusText}>Selesai • 80%</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => openTopicDetail('tipe_data')}
-              style={[s.stepCard, s.stepCardLocked, s.stepCardLeft]}
-            >
-              <View style={[s.lockedIconBox, { backgroundColor: '#FEF6DF' }]}>
-                <LockIcon size={20} color="#B7811F" />
-              </View>
-              <View style={s.stepTextCol}>
-                <Text style={s.lockedTitle}>Tipe Data</Text>
-                <Text style={s.lockedStatusText}>Terkunci</Text>
-              </View>
-            </TouchableOpacity>
-          )}
-
-          {/* Connector 3: Tipe Data (Left) -> Operator (Right) */}
-          <CurvedConnector fromRight={false} active={isOperatorActive} />
-
-          {/* 4. Operator (Right - Aktif saat 'operator', Terkunci selain itu) */}
-          {isOperatorActive ? (
-            <View style={[s.activeCardWrapper, s.stepCardRight]}>
-              <View style={s.hereBadge}>
-                <View style={s.hereBadgeDot} />
-                <Text style={s.hereBadgeText}>Kamu di sini</Text>
-              </View>
-
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={() => openTopicDetail('operator')}
-                style={[
-                  s.stepCard,
-                  s.stepCardActive,
-                  { borderColor: '#F26B50' },
-                ]}
-              >
-                <View style={s.activeIconWrapper}>
-                  <View
-                    style={[s.activeIconBox, { backgroundColor: '#F26B50' }]}
+                    <View style={s.doneIconBox}>
+                      <CheckIcon size={22} color="#FFFFFF" strokeWidth={2.8} />
+                    </View>
+                    <View style={s.stepTextCol}>
+                      <Text style={s.stepTitle}>{t.title}</Text>
+                      <View style={s.statusRow}>
+                        <View style={s.doneDot} />
+                        <Text style={s.doneStatusText}>Dikuasai • {t.level}</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => handleTopicPress(i)}
+                    style={[s.stepCard, s.stepCardLocked, sideStyle]}
                   >
-                    <MiniRobotNodeIcon />
-                  </View>
-                  <View style={s.stepCountBadge}>
-                    <Text style={s.stepCountBadgeText}>{studiedCards}</Text>
-                  </View>
-                </View>
-
-                <View style={s.stepTextCol}>
-                  <Text style={s.stepTitle}>Operator</Text>
-                  <Text style={[s.activeStatusText, { color: '#E04F33' }]}>
-                    Sedang belajar • {progressPct}%
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => openTopicDetail('operator')}
-              style={[s.stepCard, s.stepCardLocked, s.stepCardRight]}
-            >
-              <View style={[s.lockedIconBox, { backgroundColor: '#FFF0ED' }]}>
-                <LockIcon size={20} color="#F28B76" />
-              </View>
-              <View style={s.stepTextCol}>
-                <Text style={s.lockedTitle}>Operator</Text>
-                <Text style={s.lockedStatusText}>Terkunci</Text>
-              </View>
-            </TouchableOpacity>
-          )}
+                    <View style={[s.lockedIconBox, { backgroundColor: th.lockBg }]}>
+                      <LockIcon size={20} color={th.lockColor} />
+                    </View>
+                    <View style={s.stepTextCol}>
+                      <Text style={s.lockedTitle}>{t.title}</Text>
+                      <Text style={s.lockedStatusText}>Terkunci</Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              </React.Fragment>
+            );
+          })}
         </View>
 
         {/* Bottom Tips Card */}
@@ -511,7 +430,7 @@ export default function HomeScreen({ route, navigation }) {
           </View>
           <View style={s.tipsTextCol}>
             <Text style={s.tipsTitle}>Tips Belajar Flip</Text>
-            <Text style={s.tipsBody}>{heroConfig.tipsText}</Text>
+            <Text style={s.tipsBody}>{theme.tips}</Text>
           </View>
         </View>
       </ScrollView>
@@ -520,6 +439,24 @@ export default function HomeScreen({ route, navigation }) {
 }
 
 const s = StyleSheet.create({
+  noticeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 14,
+  },
+  noticeText: {
+    flex: 1,
+    marginLeft: 8,
+    fontFamily: fonts.bold,
+    fontSize: 12.5,
+    color: '#92400E',
+  },
   safeArea: {
     flex: 1,
     backgroundColor: '#FDFCF7',
