@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   View,
   Text,
   ScrollView,
@@ -102,12 +103,23 @@ const FALLBACK_QUESTIONS = [
 ];
 
 export default function PlacementTestScreen({ navigation }) {
-  const questions = useMemo(() => {
-    const loaded = PlacementTest.loadQuestions();
-    const valid = loaded.filter(
-      (item) => item.pertanyaan && item.pertanyaan.trim() !== ''
-    );
-    return valid.length >= 9 ? valid : FALLBACK_QUESTIONS;
+  // Soal diambil dari server (POST /placement/start). Selama belum tersedia
+  // (atau server tidak terjangkau), tampilkan data fallback sesuai wireframe.
+  const [questions, setQuestions] = useState(FALLBACK_QUESTIONS);
+  const [sessionId, setSessionId] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    PlacementTest.start()
+      .then((res) => {
+        if (!alive || !res?.questions?.length) return;
+        setQuestions(res.questions);
+        setSessionId(res.sessionId);
+      })
+      .catch((e) => console.warn('Gagal memuat tes penempatan:', e.message));
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const [idx, setIdx] = useState(0);
@@ -141,8 +153,12 @@ export default function PlacementTestScreen({ navigation }) {
       return;
     }
     const arr = questions.map((_, i) => jawaban[i] ?? -1);
-    const hasil = await PlacementTest.submit(questions, arr);
-    navigation.replace('PlacementResult', { hasil });
+    try {
+      const hasil = await PlacementTest.submit({ sessionId, questions, jawaban: arr });
+      navigation.replace('PlacementResult', { hasil });
+    } catch (e) {
+      Alert.alert('Gagal mengirim jawaban', e.message || 'Coba lagi.');
+    }
   };
 
   return (

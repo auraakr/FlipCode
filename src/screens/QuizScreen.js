@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -142,7 +142,29 @@ export default function QuizScreen({ route, navigation }) {
   const [jawaban, setJawaban] = useState([0]);
   const [showFeedback, setShowFeedback] = useState(false);
 
-  const questions = FALLBACK_QUIZ_QUESTIONS;
+  // Sesi kuis dibuat server (POST /quiz/start); fallback dipakai untuk tampilan
+  // wireframe selama sesi belum tersedia.
+  const [sessionId, setSessionId] = useState(null);
+  const [sessionLevel, setSessionLevel] = useState(Level.MUDAH);
+  const [questions, setQuestions] = useState(FALLBACK_QUIZ_QUESTIONS);
+
+  useEffect(() => {
+    let alive = true;
+    QuizManager.buildSession(topicId)
+      .then((res) => {
+        if (!alive || !res?.questions?.length) return;
+        setSessionId(res.sessionId);
+        setSessionLevel(res.level);
+        setQuestions(res.questions);
+        setIdx(0);
+        setJawaban([]);
+      })
+      .catch((e) => console.warn('Gagal memuat kuis:', e.message));
+    return () => {
+      alive = false;
+    };
+  }, [topicId]);
+
   const q = questions[idx] || questions[1];
   const benar = pilih === q.jawabanBenar;
 
@@ -154,6 +176,12 @@ export default function QuizScreen({ route, navigation }) {
 
   const handleCheckAnswer = () => {
     if (pilih === null) return;
+    // Server tidak mengirim kunci jawaban sebelum sesi dikirim, jadi tidak ada
+    // umpan balik per soal: langsung lanjut. Umpan balik hanya untuk data fallback.
+    if (q.jawabanBenar === undefined) {
+      handleNextQuestion();
+      return;
+    }
     setShowFeedback(true);
   };
 
@@ -169,21 +197,20 @@ export default function QuizScreen({ route, navigation }) {
     } else {
       try {
         const hasil = await QuizManager.submit({
-          topicId,
-          level: Level.MUDAH,
+          sessionId,
           questions,
           jawaban: arr,
         });
         navigation.replace('QuizResult', {
           topicId,
           hasil,
-          level: Level.MUDAH,
+          level: sessionLevel,
         });
       } catch (e) {
         navigation.replace('QuizResult', {
           topicId,
           hasil: { benar: 4, total: 5 },
-          level: Level.MUDAH,
+          level: sessionLevel,
         });
       }
     }
@@ -213,7 +240,7 @@ export default function QuizScreen({ route, navigation }) {
         {/* Center Topic & Level Pill */}
         <View style={s.topicPill}>
           <BookmarkFilledIcon size={12} color="#2554E8" />
-          <Text style={s.topicPillText}>{namaTopik} — Mudah</Text>
+          <Text style={s.topicPillText}>{namaTopik} — {sessionLevel}</Text>
         </View>
 
         <Text style={s.stepFraction}>
@@ -342,7 +369,7 @@ export default function QuizScreen({ route, navigation }) {
         </View>
 
         {/* Yellow Petunjuk Card */}
-        <View style={s.hintCard}>
+        {q.petunjuk ? <View style={s.hintCard}>
           <View style={s.hintIconCircle}>
             <LightbulbIcon size={15} color="#D97706" />
           </View>
@@ -350,7 +377,7 @@ export default function QuizScreen({ route, navigation }) {
             <Text style={s.hintBold}>Petunjuk: </Text>
             {q.petunjuk}
           </Text>
-        </View>
+        </View> : null}
       </ScrollView>
 
       {/* BOTTOM AREA: Either "Periksa Jawaban" (Frames 13 & 14) or Feedback Sheet (Frames 15 & 16) */}

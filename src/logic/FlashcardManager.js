@@ -1,27 +1,25 @@
-// Pengelola flashcard: menyusun urutan kartu untuk satu sesi belajar.
-// Mode:
-//   'semua'  -> semua kartu topik, urutan sesuai JSON
-//   'ulang'  -> hanya kartu dengan status Baru atau Sedang dipelajari
-//
-// Siswa menilai sendiri dengan "Sudah paham" / "Ulangi lagi".
-// "Ulangi lagi" memindahkan kartu ke akhir tumpukan (dipakai di screen).
+// Pengelola flashcard: menyusun urutan kartu satu sesi belajar dan menyimpan
+// status kartu ke server.
+//   'semua' -> semua kartu topik
+//   'ulang' -> hanya kartu berstatus Baru atau Sedang dipelajari
 
+import { api } from '../api/client';
 import { CardStatus } from '../constants/enums';
-import { ContentRepository } from '../storage/ContentRepository';
 import { ProgressRepository } from '../storage/ProgressRepository';
 
 export const FlashcardManager = {
   async buildSession(topicId, mode = 'semua') {
-    const all = ContentRepository.getFlashcardsByTopic(topicId);
-    const progress = await ProgressRepository.getAll();
-    const withStatus = all.map((c) => ({
+    const [{ cards }, progress] = await Promise.all([
+      api.get(`/topics/${topicId}/cards`),
+      ProgressRepository.getAll(),
+    ]);
+    const withStatus = cards.map((c) => ({
       ...c,
       status: progress.cards[c.id]?.status || CardStatus.BARU,
     }));
-    if (mode === 'ulang') {
-      return withStatus.filter((c) => c.status !== CardStatus.DIKUASAI);
-    }
-    return withStatus;
+    return mode === 'ulang'
+      ? withStatus.filter((c) => c.status !== CardStatus.DIKUASAI)
+      : withStatus;
   },
 
   async markPaham(cardId) {
@@ -30,8 +28,7 @@ export const FlashcardManager = {
 
   async markUlangi(cardId) {
     const prev = await ProgressRepository.getCardStatus(cardId);
-    const next =
-      prev === CardStatus.BARU ? CardStatus.SEDANG_DIPELAJARI : prev;
+    const next = prev === CardStatus.BARU ? CardStatus.SEDANG_DIPELAJARI : prev;
     await ProgressRepository.setCardStatus(cardId, next);
   },
 };
