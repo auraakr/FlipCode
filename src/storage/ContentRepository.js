@@ -10,6 +10,9 @@ export const ContentRepository = {
   getAllTopics() {
     return [...topicsJson.topics].sort((a, b) => a.urutan - b.urutan);
   },
+  getTopics() {
+    return this.getAllTopics();
+  },
   getTopicById(id) {
     return topicsJson.topics.find((t) => t.id === id) || null;
   },

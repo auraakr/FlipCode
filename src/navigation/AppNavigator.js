@@ -15,9 +15,14 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import PlacementTestScreen from '../screens/PlacementTestScreen';
 import PlacementResultScreen from '../screens/PlacementResultScreen';
 import HomeScreen from '../screens/HomeScreen';
+import TopicDetailScreen from '../screens/TopicDetailScreen';
+import UpdatedLearningPathScreen from '../screens/UpdatedLearningPathScreen';
 import FlashcardScreen from '../screens/FlashcardScreen';
 import QuizScreen from '../screens/QuizScreen';
 import QuizResultScreen from '../screens/QuizResultScreen';
+import TopicCompletedScreen from '../screens/TopicCompletedScreen';
+import ResetCompletedScreen from '../screens/ResetCompletedScreen';
+import AboutScreen from '../screens/AboutScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import CustomTabBar from '../components/CustomTabBar';
@@ -55,32 +60,30 @@ export default function AppNavigator() {
     );
   }
 
-  // Belum login: hanya layar Login dan Daftar.
-  if (status === 'signedOut') {
-    return (
-      <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-      </Stack.Navigator>
-    );
-  }
-
   return (
     <Stack.Navigator
-      initialRouteName="Welcome"
+      initialRouteName="Login"
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: '#fff',
         headerTitleStyle: { fontFamily: fonts.bold },
+        headerShown: false,
       }}
     >
-      <Stack.Screen name="Welcome" component={WelcomeScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="PlacementTest" component={PlacementTestScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="PlacementResult" component={PlacementResultScreen} options={{ headerShown: false, gestureEnabled: false }} />
-      <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
-      <Stack.Screen name="Flashcard" component={FlashcardScreen} options={{ title: 'Flashcard' }} />
-      <Stack.Screen name="Quiz" component={QuizScreen} options={{ title: 'Kuis' }} />
-      <Stack.Screen name="QuizResult" component={QuizResultScreen} options={{ title: 'Hasil Kuis', headerBackVisible: false }} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="Welcome" component={WelcomeScreen} />
+      <Stack.Screen name="PlacementTest" component={PlacementTestScreen} />
+      <Stack.Screen name="PlacementResult" component={PlacementResultScreen} options={{ gestureEnabled: false }} />
+      <Stack.Screen name="MainTabs" component={MainTabs} />
+      <Stack.Screen name="TopicDetail" component={TopicDetailScreen} />
+      <Stack.Screen name="Flashcard" component={FlashcardScreen} />
+      <Stack.Screen name="Quiz" component={QuizScreen} />
+      <Stack.Screen name="QuizResult" component={QuizResultScreen} options={{ gestureEnabled: false }} />
+      <Stack.Screen name="TopicCompleted" component={TopicCompletedScreen} />
+      <Stack.Screen name="UpdatedLearningPath" component={UpdatedLearningPathScreen} />
+      <Stack.Screen name="ResetCompleted" component={ResetCompletedScreen} />
+      <Stack.Screen name="About" component={AboutScreen} />
     </Stack.Navigator>
   );
 }

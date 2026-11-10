@@ -1,61 +1,169 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, StyleSheet } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { Level } from '../constants/enums';
+import { fonts } from '../constants/theme';
 
-// Ikon per topik (id dari topics.json). Topik lain memakai ikon "variabel".
-const STROKE = { stroke: '#365CFF', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', fill: 'none' };
+const TOPIC_THEME = {
+  variabel: {
+    iconBg: '#EDF2FF',
+    strokeColor: '#365CFF',
+  },
+  tipe_data: {
+    iconBg: '#FFF8E5',
+    strokeColor: '#E5A000',
+  },
+  operator: {
+    iconBg: '#FFF0ED',
+    strokeColor: '#F26B50',
+  },
+};
 
 function TopicIcon({ topicId }) {
+  const theme = TOPIC_THEME[topicId] || TOPIC_THEME.variabel;
+  const strokeProps = {
+    stroke: theme.strokeColor,
+    strokeWidth: 2,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    fill: 'none',
+  };
+
   return (
     <Svg width={22} height={22} viewBox="0 0 24 24">
       {topicId === 'tipe_data' ? (
         <>
-          <Path d="M8 4C6 4 5 5 5 7v2c0 1.5-1 3-2 3 1 0 2 1.5 2 3v2c0 2 1 3 3 3" {...STROKE} />
-          <Path d="M16 4c2 0 3 1 3 3v2c0 1.5 1 3 2 3-1 0-2 1.5-2 3v2c0 2-1 3-3 3" {...STROKE} />
+          <Path
+            d="M8 4C6 4 5 5 5 7v2c0 1.5-1 3-2 3 1 0 2 1.5 2 3v2c0 2 1 3 3 3"
+            {...strokeProps}
+          />
+          <Path
+            d="M16 4c2 0 3 1 3 3v2c0 1.5 1 3 2 3-1 0-2 1.5-2 3v2c0 2-1 3-3 3"
+            {...strokeProps}
+          />
         </>
       ) : topicId === 'operator' ? (
         <>
-          <Rect x={4} y={3} width={16} height={18} rx={3} {...STROKE} />
-          <Path d="M8 8h3M9.5 6.5v3M13.5 8h3M8 15h3M13.5 14.5h3M13.5 17h3" {...STROKE} />
+          <Rect x={4} y={3} width={16} height={18} rx={3} {...strokeProps} />
+          <Path
+            d="M8 8.5h3M9.5 7v3M13.5 8.5h3M8.2 14.2l2.6 2.6M10.8 14.2l-2.6 2.6M13.5 14h3M13.5 16.8h3"
+            {...strokeProps}
+          />
         </>
       ) : (
         <>
-          <Rect x={3} y={4} width={18} height={5} rx={1.5} {...STROKE} />
-          <Path d="M5 9v9a2 2 0 002 2h10a2 2 0 002-2V9M10 13h4" {...STROKE} />
+          <Rect x={3} y={4} width={18} height={5} rx={1.5} {...strokeProps} />
+          <Path
+            d="M5 9v9a2 2 0 002 2h10a2 2 0 002-2V9M10 13h4"
+            {...strokeProps}
+          />
         </>
       )}
     </Svg>
   );
 }
 
-const PILL = {
-  [Level.MUDAH]: { wrap: 'bg-[#E3F6EC]', text: 'text-[#1F9D61]' },
-  [Level.SEDANG]: { wrap: 'bg-[#FFF2CC]', text: 'text-[#B7791F]' },
-  [Level.SULIT]: { wrap: 'bg-[#FDE4E4]', text: 'text-[#D64545]' },
+const LEVEL_CONFIG = {
+  [Level.MUDAH]: {
+    pillBg: '#E3F8EE',
+    pillText: '#22A06B',
+    bars: ['#2ED47A', '#2ED47A', '#2ED47A'],
+  },
+  [Level.SEDANG]: {
+    pillBg: '#FCF3CF',
+    pillText: '#8C5E0A',
+    bars: ['#F5B82E', '#F5B82E', '#CBD5E1'],
+  },
+  [Level.SULIT]: {
+    pillBg: '#FDE4E4',
+    pillText: '#D64545',
+    bars: ['#F26B50', '#F26B50', '#F26B50'],
+  },
 };
 
-// Kartu satu topik: ikon, nama topik, dan label level di kanan.
-export default function TopicLevelCard({ topicId, nama, level, className = '' }) {
-  const pill = PILL[level];
+export default function TopicLevelCard({ topicId, nama, level, style }) {
+  const theme = TOPIC_THEME[topicId] || TOPIC_THEME.variabel;
+  const effectiveLevel = level || Level.MUDAH;
+  const cfg = LEVEL_CONFIG[effectiveLevel] || LEVEL_CONFIG[Level.MUDAH];
+
   return (
-    <View className={`rounded-2xl bg-slate-200 ${className}`}>
-      <View
-        className="flex-row items-center rounded-2xl border border-slate-100 bg-white px-4 py-4"
-        style={{ marginBottom: 3 }}
-      >
-        <View className="h-10 w-10 items-center justify-center rounded-xl bg-[#E8EDFF]">
-          <TopicIcon topicId={topicId} />
+    <View style={[s.card, style]}>
+      {/* Left Topic Icon Box */}
+      <View style={[s.iconBox, { backgroundColor: theme.iconBg }]}>
+        <TopicIcon topicId={topicId} />
+      </View>
+
+      {/* Middle Topic Title & 3 Level Bars */}
+      <View style={s.infoCol}>
+        <Text style={s.topicName}>{nama}</Text>
+        <View style={s.barsRow}>
+          {cfg.bars.map((barColor, idx) => (
+            <View
+              key={idx}
+              style={[s.barItem, { backgroundColor: barColor }]}
+            />
+          ))}
         </View>
-        <Text className="ml-3 flex-1 text-base font-bold text-ink">{nama}</Text>
-        {pill ? (
-          <View className={`rounded-full px-3 py-1 ${pill.wrap}`}>
-            <Text className={`text-xs font-bold ${pill.text}`}>{level}</Text>
-          </View>
-        ) : (
-          <Text className="text-sm font-normal text-slate-400">—</Text>
-        )}
+      </View>
+
+      {/* Right Level Badge Pill */}
+      <View style={[s.levelPill, { backgroundColor: cfg.pillBg }]}>
+        <Text style={[s.levelPillText, { color: cfg.pillText }]}>
+          {effectiveLevel}
+        </Text>
       </View>
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#E6ECF5',
+    borderBottomWidth: 3.5,
+    borderBottomColor: '#DAE2EE',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  iconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoCol: {
+    flex: 1,
+    marginLeft: 14,
+  },
+  topicName: {
+    fontFamily: fonts.extrabold,
+    fontSize: 15,
+    color: '#1F2A44',
+  },
+  barsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 7,
+    gap: 5,
+  },
+  barItem: {
+    width: 16,
+    height: 4.5,
+    borderRadius: 999,
+  },
+  levelPill: {
+    borderRadius: 999,
+    paddingVertical: 5,
+    paddingHorizontal: 13,
+  },
+  levelPillText: {
+    fontFamily: fonts.bold,
+    fontSize: 11.5,
+  },
+});
