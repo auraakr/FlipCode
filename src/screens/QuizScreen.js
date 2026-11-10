@@ -1,15 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fonts } from '../constants/theme';
 import { ContentRepository } from '../storage/ContentRepository';
 import { QuizApi } from '../api/quiz';
+import { api } from '../api/client';
 import { Level } from '../constants/enums';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -27,108 +30,6 @@ import {
 
 const HURUF = ['A', 'B', 'C', 'D'];
 
-// Data fallback 5 soal kuis sesuai wireframe Figma (dimulai pada Soal 2 dari 5)
-const FALLBACK_QUIZ_QUESTIONS = [
-  {
-    id: 'q-var-01',
-    topicId: 'variabel',
-    level: Level.MUDAH,
-    tipe: 'PILIHAN GANDA',
-    pertanyaan: 'Apa fungsi utama variabel di dalam program?',
-    pilihan: [
-      'Menyimpan nilai data',
-      'Menghapus kode program',
-      'Mematikan layar komputer',
-      'Membuat koneksi internet',
-    ],
-    jawabanBenar: 0,
-    petunjuk: 'ingat, variabel bekerja seperti kotak penyimpanan berlabel.',
-    benarHighlight: 'Menyimpan nilai data',
-    benarPenjelasan:
-      ' adalah fungsi utama variabel agar nilai dapat dipanggil dan diolah kembali.',
-    salahPenjelasanPrefix:
-      ' bukan fungsi dari variabel. Variabel digunakan untuk menyimpan data di memori.',
-    relatedCardTitle: 'Pengertian Variabel',
-    relatedCardNumber: 'Kartu 1',
-  },
-  {
-    id: 'q-var-02',
-    topicId: 'variabel',
-    level: Level.MUDAH,
-    tipe: 'PILIHAN GANDA',
-    pertanyaan: 'Manakah nama variabel yang valid?',
-    pilihan: ['1nama', 'nama_siswa', 'nama siswa', 'nama-siswa'],
-    jawabanBenar: 1,
-    petunjuk: 'ingat, tanpa spasi dan tidak diawali angka.',
-    benarHighlight: 'nama_siswa',
-    benarPenjelasan:
-      ' hanya memakai huruf dan garis bawah, tidak diawali angka, dan tanpa spasi.',
-    salahHighlight: 'nama siswa',
-    salahPenjelasanMid:
-      ' mengandung spasi, jadi dibaca sebagai dua nama terpisah. Gunakan ',
-    salahCodeInline: '_',
-    salahPenjelasanSuffix: ' sebagai pemisah.',
-    relatedCardTitle: 'Aturan Nama Variabel',
-    relatedCardNumber: 'Kartu 4',
-  },
-  {
-    id: 'q-var-03',
-    topicId: 'variabel',
-    level: Level.MUDAH,
-    tipe: 'PILIHAN GANDA',
-    pertanyaan: 'Simbol apa yang digunakan untuk mengisi nilai ke variabel?',
-    pilihan: ['==', '=', '!=', '->'],
-    jawabanBenar: 1,
-    petunjuk: 'gunakan satu tanda sama dengan untuk assignment.',
-    benarHighlight: '=',
-    benarPenjelasan:
-      ' adalah operator assignment untuk memasukkan nilai di kanan ke variabel di kiri.',
-    salahPenjelasanPrefix:
-      ' bukan operator pengisian nilai variabel.',
-    relatedCardTitle: 'Assignment (Pengisian Nilai)',
-    relatedCardNumber: 'Kartu 2',
-  },
-  {
-    id: 'q-var-04',
-    topicId: 'variabel',
-    level: Level.MUDAH,
-    tipe: 'PILIHAN GANDA',
-    pertanyaan: 'Jika skor = 70 lalu diubah menjadi skor = 85, berapa nilai skor?',
-    pilihan: ['70', '85', '155', '15'],
-    jawabanBenar: 1,
-    petunjuk: 'nilai terbaru akan menggantikan nilai yang lama.',
-    benarHighlight: '85',
-    benarPenjelasan:
-      ' menggantikan nilai lama 70 karena variabel selalu menyimpan nilai terakhir yang diberikan.',
-    salahPenjelasanPrefix:
-      ' kurang tepat karena nilai lama langsung tertimpa oleh nilai baru.',
-    relatedCardTitle: 'Mengubah Nilai Variabel',
-    relatedCardNumber: 'Kartu 3',
-  },
-  {
-    id: 'q-var-05',
-    topicId: 'variabel',
-    level: Level.MUDAH,
-    tipe: 'PILIHAN GANDA',
-    pertanyaan: 'Manakah penulisan pengisian variabel teks (string) yang tepat?',
-    pilihan: [
-      'nama = "Alya"',
-      'nama = Alya',
-      '"Alya" = nama',
-      'nama == "Alya"',
-    ],
-    jawabanBenar: 0,
-    petunjuk: 'nama variabel di kiri dan nilai teks diapit tanda kutip.',
-    benarHighlight: 'nama = "Alya"',
-    benarPenjelasan:
-      ' menempatkan variabel di sisi kiri dan nilai string di dalam tanda kutip.',
-    salahPenjelasanPrefix:
-      ' tidak sesuai dengan aturan assignment nilai string.',
-    relatedCardTitle: 'Aturan Nama Variabel',
-    relatedCardNumber: 'Kartu 4',
-  },
-];
-
 export default function QuizScreen({ route, navigation }) {
   const { user } = useAuth();
   const topicId = route?.params?.topicId || 'variabel';
@@ -136,83 +37,126 @@ export default function QuizScreen({ route, navigation }) {
   const namaTopik = topik?.nama || 'Variabel';
   const displayName = user?.nama || 'Aura';
 
-  // Mulai pada index 1 ("2/5" — "Manakah nama variabel yang valid?") sesuai gambar Figma
-  const [idx, setIdx] = useState(1);
-  const [pilih, setPilih] = useState(null);
-  const [jawaban, setJawaban] = useState([0]);
-  const [showFeedback, setShowFeedback] = useState(false);
-
-  // Sesi kuis dibuat server (POST /quiz/start); fallback dipakai untuk tampilan
-  // wireframe selama sesi belum tersedia.
+  // Soal, kunci jawaban, dan penjelasan semuanya dari server:
+  // POST /quiz/start (soal), POST /quiz/check (umpan balik per soal), POST /quiz/submit (nilai).
+  const [questions, setQuestions] = useState(null); // null = memuat
   const [sessionId, setSessionId] = useState(null);
   const [sessionLevel, setSessionLevel] = useState(Level.MUDAH);
-  const [questions, setQuestions] = useState(FALLBACK_QUIZ_QUESTIONS);
+  const [loadError, setLoadError] = useState(null);
+  const [idx, setIdx] = useState(0);
+  const [pilih, setPilih] = useState(null);
+  const [jawaban, setJawaban] = useState([]);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [checking, setChecking] = useState(false);
+  // { benar, jawabanBenar, penjelasan, relatedCard }
+  const [feedback, setFeedback] = useState(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     let alive = true;
+    setLoadError(null);
+    setQuestions(null);
     QuizApi.start(topicId)
       .then((res) => {
-        if (!alive || !res?.questions?.length) return;
+        if (!alive) return;
         setSessionId(res.sessionId);
         setSessionLevel(res.level);
         setQuestions(res.questions);
         setIdx(0);
         setJawaban([]);
+        setPilih(null);
+        setShowFeedback(false);
+        setFeedback(null);
       })
-      .catch((e) => console.warn('Gagal memuat kuis:', e.message));
+      .catch((e) => alive && setLoadError(e.message || 'Gagal memuat kuis.'));
     return () => {
       alive = false;
     };
   }, [topicId]);
 
-  const q = questions[idx] || questions[1];
-  const benar = pilih === q.jawabanBenar;
+  useEffect(() => load(), [load]);
+
+  if (loadError || !questions) {
+    const msgStyle = { fontFamily: fonts.bold, fontSize: 15, color: '#1F2A44', textAlign: 'center' };
+    const linkStyle = { fontFamily: fonts.extrabold, fontSize: 14, color: '#2554E8' };
+    return (
+      <SafeAreaView
+        style={[s.safeArea, { alignItems: 'center', justifyContent: 'center', padding: 24 }]}
+      >
+        {loadError ? (
+          <>
+            <Text style={msgStyle}>{loadError}</Text>
+            <TouchableOpacity onPress={load} style={{ marginTop: 16 }}>
+              <Text style={linkStyle}>Coba lagi</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('TopicDetail', { topicId })}
+              style={{ marginTop: 14 }}
+            >
+              <Text style={linkStyle}>Kembali</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <ActivityIndicator size="large" color="#2554E8" />
+        )}
+      </SafeAreaView>
+    );
+  }
+
+  const q = questions[idx];
+  const benar = !!feedback?.benar;
 
   const handleSelectOption = (i) => {
-    setPilih(i);
-    // Jika feedback sedang terbuka dan user klik opsi lain, izinkan berganti
-    // agar mudah melihat tampilan Benar (Frame 15) maupun Salah (Frame 16).
+    if (!showFeedback) setPilih(i);
   };
 
-  const handleCheckAnswer = () => {
-    if (pilih === null) return;
-    // Server tidak mengirim kunci jawaban sebelum sesi dikirim, jadi tidak ada
-    // umpan balik per soal: langsung lanjut. Umpan balik hanya untuk data fallback.
-    if (q.jawabanBenar === undefined) {
-      handleNextQuestion();
-      return;
+  // Periksa jawaban ke server untuk umpan balik soal ini.
+  const handleCheckAnswer = async () => {
+    if (pilih === null || checking) return;
+    setChecking(true);
+    try {
+      const res = await QuizApi.check({ sessionId, questionId: q.id, pilihan: pilih });
+      let relatedCard = null;
+      if (!res.benar && res.relatedCardIds?.length) {
+        try {
+          relatedCard = (await api.get(`/cards/${res.relatedCardIds[0]}`)).card;
+        } catch {
+          /* kartu terkait opsional */
+        }
+      }
+      setFeedback({ ...res, relatedCard });
+      setShowFeedback(true);
+    } catch (e) {
+      Alert.alert('Gagal memeriksa jawaban', e.message || 'Coba lagi.');
+    } finally {
+      setChecking(false);
     }
-    setShowFeedback(true);
   };
+
+  const openRelatedCard = () =>
+    navigation.navigate('Flashcard', {
+      topicId,
+      fromQuiz: true,
+      questionNumber: idx + 1,
+      cardId: feedback?.relatedCard?.id,
+    });
 
   const handleNextQuestion = async () => {
     const arr = [...jawaban];
     arr[idx] = pilih ?? -1;
-    setJawaban(arr);
-    setPilih(null);
-    setShowFeedback(false);
 
     if (idx < questions.length - 1) {
+      setJawaban(arr);
+      setPilih(null);
+      setShowFeedback(false);
+      setFeedback(null);
       setIdx(idx + 1);
-    } else {
-      try {
-        const hasil = await QuizApi.submit({
-          sessionId,
-          questions,
-          jawaban: arr,
-        });
-        navigation.replace('QuizResult', {
-          topicId,
-          hasil,
-          level: sessionLevel,
-        });
-      } catch (e) {
-        navigation.replace('QuizResult', {
-          topicId,
-          hasil: { benar: 4, total: 5 },
-          level: sessionLevel,
-        });
-      }
+      return;
+    }
+    try {
+      const hasil = await QuizApi.submit({ sessionId, questions, jawaban: arr });
+      navigation.replace('QuizResult', { topicId, hasil, level: sessionLevel });
+    } catch (e) {
+      Alert.alert('Gagal mengirim jawaban', e.message || 'Coba lagi.');
     }
   };
 
@@ -281,7 +225,7 @@ export default function QuizScreen({ route, navigation }) {
         <View style={s.questionCard}>
           <View style={s.questionCardLeft}>
             <View style={s.questionTypePill}>
-              <Text style={s.questionTypeText}>{q.tipe}</Text>
+              <Text style={s.questionTypeText}>{String(q.tipe || '').replace(/_/g, ' ').toUpperCase()}</Text>
             </View>
             <Text style={s.questionTitle}>{q.pertanyaan}</Text>
           </View>
@@ -293,7 +237,7 @@ export default function QuizScreen({ route, navigation }) {
         <View style={s.optionsList} accessibilityRole="radiogroup">
           {q.pilihan.map((optText, i) => {
             const isPicked = pilih === i;
-            const isCorrectOption = showFeedback && i === q.jawabanBenar;
+            const isCorrectOption = showFeedback && i === feedback?.jawabanBenar;
             const isWrongPicked = showFeedback && isPicked && !benar;
             const isSelectedPreCheck = !showFeedback && isPicked;
 
@@ -425,8 +369,8 @@ export default function QuizScreen({ route, navigation }) {
             {/* White Explanation Box inside Correct Sheet */}
             <View style={s.correctExplainBox}>
               <Text style={s.correctExplainText}>
-                <Text style={s.inlineCodeGreen}>{` ${q.benarHighlight} `}</Text>
-                {q.benarPenjelasan}
+                <Text style={s.inlineCodeGreen}>{` ${q.pilihan[pilih]} `}</Text>
+                {feedback.penjelasan ? ` ${feedback.penjelasan}` : ''}
               </Text>
             </View>
 
@@ -448,54 +392,34 @@ export default function QuizScreen({ route, navigation }) {
             <View style={s.incorrectTextCol}>
               <Text style={s.incorrectTitle}>Belum tepat, tetap semangat!</Text>
               <Text style={s.incorrectDesc}>
-                {q.salahHighlight ? (
-                  <>
-                    <Text style={s.inlineCodeRed}>
-                      {` ${q.pilihan[pilih] || q.salahHighlight} `}
-                    </Text>
-                    {q.salahPenjelasanMid}
-                    <Text style={s.inlineCodeGrey}>{` ${q.salahCodeInline} `}</Text>
-                    {q.salahPenjelasanSuffix}
-                  </>
-                ) : (
-                  <>
-                    <Text style={s.inlineCodeRed}>
-                      {` ${q.pilihan[pilih]} `}
-                    </Text>
-                    {q.salahPenjelasanPrefix}
-                  </>
-                )}
+                <Text style={s.inlineCodeRed}>{` ${q.pilihan[pilih]} `}</Text>
+                {feedback.penjelasan ? ` ${feedback.penjelasan}` : ''}
+                {` Jawaban yang benar: ${q.pilihan[feedback.jawabanBenar]}.`}
               </Text>
             </View>
 
             <MiniFeedbackRobot happy={false} />
           </View>
 
-          {/* Related Flashcard Card */}
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() =>
-              navigation.navigate('Flashcard', {
-                topicId,
-                fromQuiz: true,
-                questionNumber: idx + 1,
-              })
-            }
-            style={s.relatedCardBox}
-          >
-            <View style={s.relatedIconSquare}>
-              <CodeSlashIcon size={16} color="#FFFFFF" />
-            </View>
+          {/* Related Flashcard Card (dari server, jika ada) */}
+          {feedback.relatedCard ? (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={openRelatedCard}
+              style={s.relatedCardBox}
+            >
+              <View style={s.relatedIconSquare}>
+                <CodeSlashIcon size={16} color="#FFFFFF" />
+              </View>
 
-            <View style={s.relatedInfoCol}>
-              <Text style={s.relatedOverline}>KARTU TERKAIT</Text>
-              <Text style={s.relatedTitle}>{q.relatedCardTitle}</Text>
-            </View>
-
-            <View style={s.relatedBadgePill}>
-              <Text style={s.relatedBadgeText}>{q.relatedCardNumber}</Text>
-            </View>
-          </TouchableOpacity>
+              <View style={s.relatedInfoCol}>
+                <Text style={s.relatedOverline}>KARTU TERKAIT</Text>
+                <Text style={s.relatedTitle} numberOfLines={2}>
+                  {feedback.relatedCard.depan}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ) : null}
 
           {/* Bottom 2 Action Buttons */}
           <View style={s.incorrectActionsRow}>
@@ -507,19 +431,15 @@ export default function QuizScreen({ route, navigation }) {
               <Text style={s.whiteNextBtnText}>Soal Berikutnya</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() =>
-                navigation.navigate('Flashcard', {
-                  topicId,
-                  fromQuiz: true,
-                  questionNumber: idx + 1,
-                })
-              }
-              style={s.blueRelatedBtn}
-            >
-              <Text style={s.blueRelatedBtnText}>Buka Kartu Terkait</Text>
-            </TouchableOpacity>
+            {feedback.relatedCard ? (
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={openRelatedCard}
+                style={s.blueRelatedBtn}
+              >
+                <Text style={s.blueRelatedBtnText}>Buka Kartu Terkait</Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
         </View>
       )}

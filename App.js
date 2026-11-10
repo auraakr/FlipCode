@@ -16,6 +16,7 @@ import {
 } from '@expo-google-fonts/nunito-sans';
 import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/context/AuthContext';
+import { PlacementGuardProvider } from './src/context/PlacementGuardContext';
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
@@ -34,10 +35,12 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <NavigationContainer>
-          <StatusBar style="dark" />
-          <AppNavigator />
-        </NavigationContainer>
+        <PlacementGuardProvider>
+          <NavigationContainer>
+            <StatusBar style="dark" />
+            <AppNavigator />
+          </NavigationContainer>
+        </PlacementGuardProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

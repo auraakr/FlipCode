@@ -17,8 +17,17 @@ function levelFromBenar(benar) {
 }
 
 router.post('/start', wrap(async (req, res) => {
+  // Tes awal hanya sekali, kecuali user sengaja mengulang dari Pengaturan ({ ulang: true }).
+  // Flag placement_done tetap true sampai tes ulang selesai dikirim.
+  const me = await first('SELECT placement_done FROM users WHERE id = $1', [req.userId]);
+  if (me?.placement_done && req.body?.ulang !== true) {
+    return res.status(409).json({
+      error: 'Tes awal sudah dikerjakan. Untuk mengulang, pilih Ulangi Tes Awal di Pengaturan.',
+    });
+  }
   const topics = await rows('SELECT id FROM topics ORDER BY urutan');
-  const all = await rows('SELECT * FROM questions WHERE is_placement = TRUE');
+  // Soal kerangka/kosong (pertanyaan belum diisi) tidak ikut dipilih.
+  const all = await rows("SELECT * FROM questions WHERE is_placement = TRUE AND btrim(pertanyaan) <> ''");
   const picked = topics.flatMap((t) =>
     shuffle(all.filter((q) => q.topic_id === t.id)).slice(0, PER_TOPIC)
   );
@@ -43,7 +52,9 @@ router.post('/submit', wrap(async (req, res) => {
   const ordered = ids.map((id) => qs.find((q) => q.id === id));
   const detail = gradeAnswers(ordered, jawaban);
 
-  const perTopic = {};
+  // Semua topik dimulai dari 0 benar, supaya topik tanpa soal tetap dapat level Mudah.
+  const topicRows = await rows('SELECT id FROM topics ORDER BY urutan');
+  const perTopic = Object.fromEntries(topicRows.map((t) => [t.id, { benar: 0, total: 0 }]));
   detail.forEach((d) => {
     perTopic[d.topicId] ||= { benar: 0, total: 0 };
     perTopic[d.topicId].total += 1;

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fonts } from '../constants/theme';
 import { ContentRepository } from '../storage/ContentRepository';
+import { ProgressRepository } from '../storage/ProgressRepository';
+import { api } from '../api/client';
+import { CardStatus, Level, TopicState } from '../constants/enums';
 import { setGlobalActiveTopic } from './HomeScreen';
 import {
   ArrowLeftIcon,
@@ -36,6 +39,45 @@ export default function TopicDetailScreen({ route, navigation }) {
     setGlobalActiveTopic(topicId);
   }, [topicId]);
 
+  // Level, jumlah kartu, dan progres topik semuanya dari server.
+  const [level, setLevel] = useState(Level.MUDAH);
+  const [stats, setStats] = useState({ total: 0, mastered: 0, learning: 0, baru: 0, pct: 0 });
+  const [quizInfo, setQuizInfo] = useState({ jumlahSoal: 0, jumlahPilihan: 0 });
+  const quizSubtitle = (lv) =>
+    quizInfo.jumlahSoal > 0
+      ? `${quizInfo.jumlahSoal} soal • Level ${lv} • ${quizInfo.jumlahPilihan} pilihan`
+      : `Belum ada soal • Level ${lv}`;
+  useEffect(() => {
+    let alive = true;
+    Promise.all([
+      api.get(`/topics/${topicId}/cards`),
+      ProgressRepository.getAll(),
+      api.get(`/topics/${topicId}/quiz-info`),
+    ])
+      .then(([{ cards }, all, info]) => {
+        if (!alive) return;
+        setQuizInfo(info);
+        const prog = all.topics?.[topicId];
+        const statusOf = (c) => all.cards?.[c.id]?.status;
+        const mastered = cards.filter((c) => statusOf(c) === CardStatus.DIKUASAI).length;
+        const learning = cards.filter((c) => statusOf(c) === CardStatus.SEDANG_DIPELAJARI).length;
+        const total = cards.length;
+        const done = prog?.state === TopicState.DIKUASAI;
+        setLevel(prog?.level || Level.MUDAH);
+        setStats({
+          total,
+          mastered,
+          learning,
+          baru: total - mastered - learning,
+          pct: done ? 100 : total ? Math.round((mastered / total) * 100) : 0,
+        });
+      })
+      .catch((e) => console.warn('Gagal memuat topik:', e.message));
+    return () => {
+      alive = false;
+    };
+  }, [topicId]);
+
   const handleBack = () => {
     setGlobalActiveTopic(topicId);
     navigation.navigate('MainTabs', {
@@ -50,7 +92,7 @@ export default function TopicDetailScreen({ route, navigation }) {
   if (isTipeData || isOperator) {
     const heroBg = isTipeData ? '#F5B82E' : '#F26B50';
     const heroLip = isTipeData ? '#D99B16' : '#C94A32';
-    const levelLabel = isTipeData ? 'Sedang' : 'Mudah';
+    const levelLabel = level;
     const descText = isTipeData
       ? 'Kenali jenis nilai yang bisa disimpan dalam program.'
       : 'Pelajari cara melakukan perhitungan dan perbandingan nilai.';
@@ -203,12 +245,12 @@ export default function TopicDetailScreen({ route, navigation }) {
           <View style={s.bodyContainer}>
             {/* 1. Progres Belajar Card (0%) */}
             <View style={s.card}>
-              <CircularProgress percentage={0} />
+              <CircularProgress percentage={stats.pct} />
               <View style={s.progressTextCol}>
                 <Text style={s.cardTitle}>Progres belajar</Text>
                 <Text style={s.progressSubtitle}>
                   Kuasai <Text style={s.boldInk}>≥70% kartu</Text> &{' '}
-                  <Text style={s.boldInk}>4 benar</Text> di level Sulit untuk
+                  <Text style={s.boldInk}>≥80% benar</Text> di kuis untuk
                   menyelesaikan topik.
                 </Text>
               </View>
@@ -268,7 +310,7 @@ export default function TopicDetailScreen({ route, navigation }) {
                 </View>
 
                 <View style={s.countPillGrey}>
-                  <Text style={s.countPillGreyText}>10 kartu</Text>
+                  <Text style={s.countPillGreyText}>{stats.total} kartu</Text>
                 </View>
               </View>
 
@@ -277,21 +319,21 @@ export default function TopicDetailScreen({ route, navigation }) {
                 <View style={s.legendItem}>
                   <View style={[s.legendDot, { backgroundColor: '#2ED47A' }]} />
                   <Text style={s.legendLabel}>
-                    Dikuasai <Text style={s.legendValue}>0</Text>
+                    Dikuasai <Text style={s.legendValue}>{stats.mastered}</Text>
                   </Text>
                 </View>
 
                 <View style={s.legendItem}>
                   <View style={[s.legendDot, { backgroundColor: '#FACC15' }]} />
                   <Text style={s.legendLabel}>
-                    Dipelajari <Text style={s.legendValue}>0</Text>
+                    Dipelajari <Text style={s.legendValue}>{stats.learning}</Text>
                   </Text>
                 </View>
 
                 <View style={s.legendItem}>
                   <View style={[s.legendDot, { backgroundColor: '#CBD5E1' }]} />
                   <Text style={s.legendLabel}>
-                    Baru <Text style={s.legendValue}>10</Text>
+                    Baru <Text style={s.legendValue}>{stats.baru}</Text>
                   </Text>
                 </View>
               </View>
@@ -310,7 +352,7 @@ export default function TopicDetailScreen({ route, navigation }) {
               <View style={s.quizTextCol}>
                 <Text style={s.cardTitle}>Kuis {namaTopik}</Text>
                 <Text style={s.quizSubtitle}>
-                  5 soal • Level {levelLabel} • 4 pilihan
+                  {quizSubtitle(levelLabel)}
                 </Text>
               </View>
 
@@ -375,7 +417,7 @@ export default function TopicDetailScreen({ route, navigation }) {
                 activeColor="#FFFFFF"
                 inactiveColor="rgba(255,255,255,0.45)"
               />
-              <Text style={s.levelPillText}>Mudah</Text>
+              <Text style={s.levelPillText}>{level}</Text>
             </View>
           </View>
 
@@ -407,12 +449,12 @@ export default function TopicDetailScreen({ route, navigation }) {
         <View style={s.bodyContainer}>
           {/* 1. Progres Belajar Card */}
           <View style={s.card}>
-            <CircularProgress percentage={30} />
+            <CircularProgress percentage={stats.pct} />
             <View style={s.progressTextCol}>
               <Text style={s.cardTitle}>Progres belajar</Text>
               <Text style={s.progressSubtitle}>
-                Kuasai <Text style={s.boldInk}>≥ 70%</Text> kartu & 4 benar di
-                level Sulit untuk menyelesaikan topik.
+                Kuasai <Text style={s.boldInk}>≥ 70%</Text> kartu & benar{' '}
+                <Text style={s.boldInk}>≥ 80%</Text> di kuis untuk menyelesaikan topik.
               </Text>
             </View>
           </View>
@@ -432,15 +474,17 @@ export default function TopicDetailScreen({ route, navigation }) {
               </View>
 
               <View style={s.countPill}>
-                <Text style={s.countPillText}>10 kartu</Text>
+                <Text style={s.countPillText}>{stats.total} kartu</Text>
               </View>
             </View>
 
             {/* 3-Color Segmented Progress Bar */}
             <View style={s.segmentedBar}>
-              <View style={[s.segmentItem, s.segmentGreen]} />
-              <View style={[s.segmentItem, s.segmentYellow]} />
-              <View style={[s.segmentItem, s.segmentBlueGrey]} />
+              <View style={[s.segmentItem, s.segmentGreen, { flex: stats.mastered }]} />
+              <View style={[s.segmentItem, s.segmentYellow, { flex: stats.learning }]} />
+              <View
+                style={[s.segmentItem, s.segmentBlueGrey, { flex: stats.total ? stats.baru : 1 }]}
+              />
             </View>
 
             {/* Legend Row */}
@@ -448,21 +492,21 @@ export default function TopicDetailScreen({ route, navigation }) {
               <View style={s.legendItem}>
                 <View style={[s.legendDot, { backgroundColor: '#2ED47A' }]} />
                 <Text style={s.legendLabel}>
-                  Dikuasai <Text style={s.legendValue}>3</Text>
+                  Dikuasai <Text style={s.legendValue}>{stats.mastered}</Text>
                 </Text>
               </View>
 
               <View style={s.legendItem}>
                 <View style={[s.legendDot, { backgroundColor: '#FACC15' }]} />
                 <Text style={s.legendLabel}>
-                  Dipelajari <Text style={s.legendValue}>2</Text>
+                  Dipelajari <Text style={s.legendValue}>{stats.learning}</Text>
                 </Text>
               </View>
 
               <View style={s.legendItem}>
                 <View style={[s.legendDot, { backgroundColor: '#B8C7FC' }]} />
                 <Text style={s.legendLabel}>
-                  Baru <Text style={s.legendValue}>5</Text>
+                  Baru <Text style={s.legendValue}>{stats.baru}</Text>
                 </Text>
               </View>
             </View>
@@ -481,7 +525,7 @@ export default function TopicDetailScreen({ route, navigation }) {
             <View style={s.quizTextCol}>
               <Text style={s.cardTitle}>Kuis {namaTopik}</Text>
               <Text style={s.quizSubtitle}>
-                5 soal • Level Mudah • 4 pilihan
+                {quizSubtitle(level)}
               </Text>
             </View>
 

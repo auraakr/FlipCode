@@ -54,13 +54,18 @@ export default function SettingsScreen() {
   const handleConfirmRepeatTest = async () => {
     setShowRepeatModal(false);
     setGlobalActiveTopic('variabel');
-    navigation.navigate('PlacementTest');
+    navigation.navigate('PlacementTest', { ulang: true });
   };
 
   // Konfirmasi "Ya, Reset" pada modal Reset semua progres? (Frame 29 -> Frame 30)
   const handleConfirmResetProgress = async () => {
     setShowResetModal(false);
-    await ProgressRepository.reset();
+    try {
+      await ProgressRepository.reset();
+    } catch (e) {
+      Alert.alert('Gagal mereset progres', e.message || 'Coba lagi.');
+      return;
+    }
     await refreshUser().catch(() => {});
     setGlobalActiveTopic('variabel');
     navigation.navigate('ResetCompleted');

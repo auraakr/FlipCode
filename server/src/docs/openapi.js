@@ -203,6 +203,32 @@ export const openapi = {
         },
       },
     },
+    '/topics/{id}/quiz-info': {
+      get: {
+        tags: ['Konten'],
+        summary: 'Info kuis topik pada level user saat ini (jumlah soal & jumlah pilihan)',
+        security: secured,
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' }, example: 'variabel' }],
+        responses: {
+          200: {
+            description: 'OK',
+            content: json(
+              {
+                type: 'object',
+                properties: {
+                  level: ref('Level'),
+                  jumlahSoal: { type: 'integer', description: 'Soal yang akan keluar (maks 5)' },
+                  soalTersedia: { type: 'integer' },
+                  jumlahPilihan: { type: 'integer' },
+                },
+              },
+              { level: 'Mudah', jumlahSoal: 5, soalTersedia: 12, jumlahPilihan: 4 }
+            ),
+          },
+          404: err('Topik tidak ditemukan'),
+        },
+      },
+    },
     '/cards/{id}': {
       get: {
         tags: ['Konten'],
@@ -229,6 +255,7 @@ export const openapi = {
               properties: { sessionId: { type: 'integer' }, questions: { type: 'array', items: ref('Question') } },
             }),
           },
+          409: err('Tes awal sudah dikerjakan (kirim { ulang: true } dari Pengaturan untuk mengulang)'),
         },
       },
     },
@@ -289,13 +316,58 @@ export const openapi = {
         },
       },
     },
+    '/quiz/check': {
+      post: {
+        tags: ['Kuis'],
+        summary: 'Cek satu jawaban untuk umpan balik langsung (benar/salah, kunci, penjelasan)',
+        description:
+          'Kunci dan penjelasan hanya dibuka untuk soal yang baru dijawab. Nilai akhir tetap dihitung di /quiz/submit.',
+        security: secured,
+        requestBody: {
+          required: true,
+          content: json(
+            {
+              type: 'object',
+              required: ['sessionId', 'questionId', 'pilihan'],
+              properties: {
+                sessionId: { type: 'integer' },
+                questionId: { type: 'string' },
+                pilihan: { type: 'integer', description: 'Index pilihan (mulai 0)' },
+              },
+            },
+            { sessionId: 1, questionId: 'q-var-mudah-01', pilihan: 0 }
+          ),
+        },
+        responses: {
+          200: {
+            description: 'OK',
+            content: json(
+              {
+                type: 'object',
+                properties: {
+                  benar: { type: 'boolean' },
+                  jawabanBenar: { type: 'integer' },
+                  penjelasan: { type: 'string' },
+                  relatedCardIds: { type: 'array', items: { type: 'string' } },
+                },
+              },
+              { benar: false, jawabanBenar: 1, penjelasan: '...', relatedCardIds: ['var-02'] }
+            ),
+          },
+          400: err('Soal atau pilihan tidak valid'),
+          404: err('Sesi tidak ditemukan'),
+          409: err('Sesi sudah dikirim'),
+        },
+      },
+    },
     '/quiz/submit': {
       post: {
         tags: ['Kuis'],
         summary: 'Kirim jawaban kuis; server menilai dan menghitung level baru',
         description:
-          'Benar 4-5: level naik. Benar 3: tetap. Benar 0-2: turun dan `saranUlang` bernilai true. ' +
-          'Topik Dikuasai kalau kuis level Sulit benar 4-5 dan minimal 70% kartu topik berstatus Dikuasai.',
+          'Level berikutnya dari persentase benar: <=20% Mudah, 30%-70% Sedang, >=80% Sulit (5 soal: 0-1 / 2-3 / 4-5 benar). ' +
+          '`saranUlang` true jika benar < 60%. ' +
+          'Topik Dikuasai kalau benar >=80% dan minimal 70% kartu topik berstatus Dikuasai.',
         security: secured,
         requestBody: { required: true, content: json(ref('SubmitBody')) },
         responses: {

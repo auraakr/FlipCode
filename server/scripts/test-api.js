@@ -175,9 +175,9 @@ try {
   check('quiz/start -> 201, level Mudah, 5 soal',
     q.start.status === 201 && q.start.data.level === 'Mudah' && q.start.data.questions.length === 5);
   check('quiz/start tidak membocorkan kunci/penjelasan', noLeak(q.start.data?.questions || []));
-  check('5/5 benar: naik ke Sedang',
+  check('5/5 benar (>=80%): level Sulit',
     q.submit.status === 200 && q.submit.data.benar === 5 &&
-    q.submit.data.adapt.nextLevel === 'Sedang' && q.submit.data.adapt.delta === 1 &&
+    q.submit.data.adapt.nextLevel === 'Sulit' && q.submit.data.adapt.delta === 2 &&
     q.submit.data.adapt.saranUlang === false, JSON.stringify(q.submit.data?.adapt));
   check('state menjadi Sedang dipelajari', q.submit.data?.topicState === 'Sedang dipelajari');
   r = await call('POST', '/quiz/submit', { sessionId: q.start.data.sessionId, jawaban: [] });
@@ -186,11 +186,15 @@ try {
   check('quiz/submit sesi asing -> 404', r.status === 404);
 
   q = await runQuiz(3);
-  check('level kuis kedua = Sedang', q.start.data?.level === 'Sedang');
-  check('3 benar: level tetap', q.submit.data?.adapt?.nextLevel === 'Sedang' && q.submit.data.adapt.delta === 0);
+  check('level kuis kedua = Sulit (hasil kuis sebelumnya)', q.start.data?.level === 'Sulit');
+  check('3/5 benar (60%): level Sedang', q.submit.data?.adapt?.nextLevel === 'Sedang' && q.submit.data.adapt.delta === -1);
+
+  q = await runQuiz(2);
+  check('level kuis ketiga = Sedang', q.start.data?.level === 'Sedang');
+  check('2/5 benar (40%): tetap Sedang, saranUlang', q.submit.data?.adapt?.nextLevel === 'Sedang' && q.submit.data.adapt.delta === 0 && q.submit.data.adapt.saranUlang === true);
 
   q = await runQuiz(0);
-  check('0 benar: turun ke Mudah + saranUlang',
+  check('0 benar (<=20%): Mudah + saranUlang',
     q.submit.data?.adapt?.nextLevel === 'Mudah' && q.submit.data.adapt.saranUlang === true,
     JSON.stringify(q.submit.data?.adapt));
   check('jawaban kosong dinilai salah', q.submit.data?.benar === 0);
@@ -212,13 +216,11 @@ try {
   await call('PUT', '/cards/zz-c-01/status', { status: 'Dikuasai' });
 
   section('Kuis sampai topik Dikuasai');
+  q = await runQuiz(1);
+  check('1/5 benar (20%): tetap Mudah', q.start.data?.level === 'Mudah' && q.submit.data?.adapt?.nextLevel === 'Mudah');
   q = await runQuiz(5);
-  check('Mudah -> Sedang', q.submit.data?.adapt?.nextLevel === 'Sedang');
-  q = await runQuiz(5);
-  check('Sedang -> Sulit', q.submit.data?.adapt?.nextLevel === 'Sulit');
-  q = await runQuiz(5);
-  check('kuis Sulit 5/5 + 100% kartu -> Dikuasai',
-    q.start.data?.level === 'Sulit' && q.submit.data?.topicState === 'Dikuasai' && q.submit.data.pct === 1,
+  check('5/5 benar + 100% kartu -> Sulit & Dikuasai',
+    q.submit.data?.adapt?.nextLevel === 'Sulit' && q.submit.data?.topicState === 'Dikuasai' && q.submit.data.pct === 1,
     JSON.stringify({ lv: q.start.data?.level, st: q.submit.data?.topicState, pct: q.submit.data?.pct }));
 
   section('Progres: hasil akhir');

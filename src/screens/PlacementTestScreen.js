@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   View,
   Text,
@@ -11,121 +12,85 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
+import { usePlacementGuard } from '../context/PlacementGuardContext';
 import { PlacementApi } from '../api/placement';
 import { ContentRepository } from '../storage/ContentRepository';
 import { fonts } from '../constants/theme';
 
 const HURUF = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-// Data tampilan sementara (fallback) sesuai desain Figma karena backend/database belum diisi
-const FALLBACK_QUESTIONS = [
-  {
-    id: 'pt-var-01',
-    topicId: 'variabel',
-    tipe: 'pilihan_ganda',
-    pertanyaan: 'Apa fungsi variabel dalam program?',
-    pilihan: [
-      'Menyimpan nilai',
-      'Menghapus program',
-      'Mengubah warna layar',
-      'Menyalakan komputer',
-    ],
-    jawabanBenar: 0,
-  },
-  {
-    id: 'pt-var-02',
-    topicId: 'variabel',
-    tipe: 'pilihan_ganda',
-    pertanyaan: 'Manakah penulisan nama variabel yang benar?',
-    pilihan: ['nama_siswa', '2nama', 'nama siswa', 'nama-siswa'],
-    jawabanBenar: 0,
-  },
-  {
-    id: 'pt-var-03',
-    topicId: 'variabel',
-    tipe: 'pilihan_ganda',
-    pertanyaan: 'Jika x = 5 lalu diubah menjadi x = 10, maka nilai x sekarang adalah...',
-    pilihan: ['10', '5', '15', '0'],
-    jawabanBenar: 0,
-  },
-  {
-    id: 'pt-td-01',
-    topicId: 'tipe_data',
-    tipe: 'pilihan_ganda',
-    pertanyaan: 'Tipe data yang digunakan untuk menyimpan bilangan bulat adalah...',
-    pilihan: ['Integer', 'String', 'Boolean', 'Char'],
-    jawabanBenar: 0,
-  },
-  {
-    id: 'pt-td-02',
-    topicId: 'tipe_data',
-    tipe: 'pilihan_ganda',
-    pertanyaan: 'Nilai "Halo Dunia" termasuk ke dalam tipe data...',
-    pilihan: ['String', 'Integer', 'Float', 'Boolean'],
-    jawabanBenar: 0,
-  },
-  {
-    id: 'pt-td-03',
-    topicId: 'tipe_data',
-    tipe: 'pilihan_ganda',
-    pertanyaan: 'Tipe data Boolean hanya memiliki dua nilai, yaitu...',
-    pilihan: [
-      'True dan False',
-      '0 dan 100',
-      'Huruf dan Angka',
-      'Positif dan Negatif',
-    ],
-    jawabanBenar: 0,
-  },
-  {
-    id: 'pt-op-01',
-    topicId: 'operator',
-    tipe: 'pilihan_ganda',
-    pertanyaan: 'Simbol operator yang digunakan untuk perkalian dalam pemrograman adalah...',
-    pilihan: ['*', 'x', ':', '^'],
-    jawabanBenar: 0,
-  },
-  {
-    id: 'pt-op-02',
-    topicId: 'operator',
-    tipe: 'pilihan_ganda',
-    pertanyaan: 'Hasil dari operasi 10 % 3 (modulo / sisa bagi) adalah...',
-    pilihan: ['1', '3', '0', '2'],
-    jawabanBenar: 0,
-  },
-  {
-    id: 'pt-op-03',
-    topicId: 'operator',
-    tipe: 'pilihan_ganda',
-    pertanyaan: 'Operator perbandingan untuk mengecek apakah dua nilai sama adalah...',
-    pilihan: ['==', '=', '!=', '>='],
-    jawabanBenar: 0,
-  },
-];
-
-export default function PlacementTestScreen({ navigation }) {
-  // Soal diambil dari server (POST /placement/start). Selama belum tersedia
-  // (atau server tidak terjangkau), tampilkan data fallback sesuai wireframe.
+export default function PlacementTestScreen({ navigation, route }) {
+  // Soal & kunci jawaban sepenuhnya dari server (POST /placement/start).
   const { refreshUser } = useAuth();
-  const [questions, setQuestions] = useState(FALLBACK_QUESTIONS);
+  const { showLocked } = usePlacementGuard();
+  const [questions, setQuestions] = useState(null); // null = memuat
   const [sessionId, setSessionId] = useState(null);
+  const [loadError, setLoadError] = useState(null);
 
-  useEffect(() => {
+  // Kirim jawaban ke server lalu buka layar hasil.
+  const submit = useCallback(
+    async (sid, qs, jawab) => {
+      try {
+        const hasil = await PlacementApi.submit({ sessionId: sid, questions: qs, jawaban: jawab });
+        await refreshUser().catch(() => {});
+        navigation.replace('PlacementResult', { hasil });
+      } catch (e) {
+        Alert.alert('Gagal mengirim jawaban', e.message || 'Coba lagi.');
+      }
+    },
+    [navigation, refreshUser]
+  );
+
+  const load = useCallback(() => {
     let alive = true;
-    PlacementApi.start()
+    setLoadError(null);
+    setQuestions(null);
+    PlacementApi.start(route?.params?.ulang === true)
       .then((res) => {
-        if (!alive || !res?.questions?.length) return;
-        setQuestions(res.questions);
+        if (!alive) return;
         setSessionId(res.sessionId);
+        setQuestions(res.questions || []);
+        // Belum ada soal di server: tidak ada yang bisa dijawab, semua topik mulai dari Mudah.
+        if (!res.questions?.length) submit(res.sessionId, [], []);
       })
-      .catch((e) => console.warn('Gagal memuat tes penempatan:', e.message));
+      .catch((e) => {
+        if (!alive) return;
+        if (e.status === 409) {
+          // Server menolak: tes awal sudah pernah dikerjakan.
+          refreshUser().catch(() => {});
+          showLocked();
+          navigation.replace('MainTabs');
+          return;
+        }
+        setLoadError(e.message || 'Gagal memuat soal.');
+      });
     return () => {
       alive = false;
     };
-  }, []);
+  }, [route?.params?.ulang, submit, refreshUser, showLocked, navigation]);
+
+  useEffect(() => load(), [load]);
 
   const [idx, setIdx] = useState(0);
   const [jawaban, setJawaban] = useState({});
+
+  if (loadError || !questions || !questions.length) {
+    return (
+      <SafeAreaView style={[s.safeArea, { alignItems: 'center', justifyContent: 'center', padding: 24 }]}>
+        {loadError ? (
+          <>
+            <Text style={{ fontFamily: fonts.bold, fontSize: 15, color: '#1F2A44', textAlign: 'center' }}>
+              {loadError}
+            </Text>
+            <View style={{ height: 16 }} />
+            <Button title="Coba lagi" onPress={load} />
+          </>
+        ) : (
+          <ActivityIndicator size="large" color="#2554E8" />
+        )}
+      </SafeAreaView>
+    );
+  }
 
   const q = questions[idx];
   const terpilih = jawaban[idx];
@@ -155,13 +120,7 @@ export default function PlacementTestScreen({ navigation }) {
       return;
     }
     const arr = questions.map((_, i) => jawaban[i] ?? -1);
-    try {
-      const hasil = await PlacementApi.submit({ sessionId, questions, jawaban: arr });
-      await refreshUser().catch(() => {});
-      navigation.replace('PlacementResult', { hasil });
-    } catch (e) {
-      Alert.alert('Gagal mengirim jawaban', e.message || 'Coba lagi.');
-    }
+    await submit(sessionId, questions, arr);
   };
 
   return (

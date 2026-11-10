@@ -3,12 +3,11 @@ import { rows, first, withTx } from '../db.js';
 import { requireAuth, wrap } from '../middleware/auth.js';
 import { AdaptiveEngine } from '../services/AdaptiveEngine.js';
 import { shuffle, toClientQuestion, gradeAnswers } from '../services/grading.js';
-import { CardStatus, Level, TopicState } from '../constants/enums.js';
+import { CardStatus, Level, TopicState, QUIZ_SIZE } from '../constants/enums.js';
 
 const router = Router();
 router.use(requireAuth);
 
-const QUIZ_SIZE = 5;
 
 router.post('/start', wrap(async (req, res) => {
   const { topicId } = req.body || {};
@@ -22,7 +21,7 @@ router.post('/start', wrap(async (req, res) => {
   const level = prog?.level || Level.MUDAH;
 
   const candidates = await rows(
-    'SELECT * FROM questions WHERE topic_id = $1 AND level = $2 AND is_placement = FALSE',
+    "SELECT * FROM questions WHERE topic_id = $1 AND level = $2 AND is_placement = FALSE AND btrim(pertanyaan) <> ''",
     [topicId, level]
   );
   const picked = shuffle(candidates).slice(0, QUIZ_SIZE);
@@ -38,6 +37,28 @@ router.post('/start', wrap(async (req, res) => {
     topicId,
     level,
     questions: picked.map(toClientQuestion),
+  });
+}));
+
+// Cek satu jawaban untuk umpan balik langsung (Benar / Belum tepat). Membuka kunci dan
+// penjelasan HANYA untuk soal yang baru dijawab. Nilai akhir tetap dihitung di /submit.
+router.post('/check', wrap(async (req, res) => {
+  const { sessionId, questionId, pilihan } = req.body || {};
+  const session = await first(
+    'SELECT * FROM quiz_sessions WHERE id = $1 AND user_id = $2',
+    [sessionId, req.userId]
+  );
+  if (!session) return res.status(404).json({ error: 'Sesi tidak ditemukan' });
+  if (session.submitted_at) return res.status(409).json({ error: 'Sesi sudah dikirim' });
+  if (!session.question_ids.includes(questionId) || !Number.isInteger(pilihan)) {
+    return res.status(400).json({ error: 'Soal atau pilihan tidak valid' });
+  }
+  const q = await first('SELECT * FROM questions WHERE id = $1', [questionId]);
+  res.json({
+    benar: pilihan === q.jawaban_benar,
+    jawabanBenar: q.jawaban_benar,
+    penjelasan: q.penjelasan || '',
+    relatedCardIds: q.related_card_ids || [],
   });
 }));
 
@@ -57,7 +78,7 @@ router.post('/submit', wrap(async (req, res) => {
   const benar = detail.filter((d) => d.benar).length;
   const total = ordered.length;
 
-  const adapt = AdaptiveEngine.evaluateQuiz({ currentLevel: session.level, benar });
+  const adapt = AdaptiveEngine.evaluateQuiz({ currentLevel: session.level, benar, total });
 
   const { n: totalCards } = await first(
     'SELECT COUNT(*) AS n FROM cards WHERE topic_id = $1',
@@ -76,8 +97,8 @@ router.post('/submit', wrap(async (req, res) => {
   );
   const nextState = AdaptiveEngine.nextTopicState({
     currentState: cur?.state || TopicState.BELUM_MULAI,
-    levelKuis: session.level,
     benar,
+    total,
     pctDikuasai: pct,
   });
 

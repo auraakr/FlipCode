@@ -34,10 +34,11 @@ export default function QuizResultScreen({ route, navigation }) {
 
   // Tentukan mode awal berdasarkan skor kuis ('up' = Frame 18, 'same' = Frame 19, 'down' = Frame 20)
   const initialMode = () => {
-    const b = hasil?.benar;
-    if (typeof b === 'number') {
-      if (b >= 4) return 'up';
-      if (b === 3) return 'same';
+    // Arah perubahan level ditentukan server (adapt.delta).
+    const d = hasil?.adapt?.delta;
+    if (typeof d === 'number') {
+      if (d > 0) return 'up';
+      if (d === 0) return 'same';
       return 'down';
     }
     return 'up';
@@ -115,7 +116,7 @@ export default function QuizResultScreen({ route, navigation }) {
           </View>
 
           {/* Overlapping Score Ring: 4/5 */}
-          <ScoreBadgeRing score={4} total={5} mode="up" onPress={cycleMode} />
+          <ScoreBadgeRing score={hasil?.benar ?? 4} total={hasil?.total ?? 5} mode="up" onPress={cycleMode} />
 
           {/* Main Content */}
           <View style={s.bodyWrap}>
@@ -244,7 +245,7 @@ export default function QuizResultScreen({ route, navigation }) {
           </View>
 
           {/* Overlapping Score Ring: 3/5 */}
-          <ScoreBadgeRing score={3} total={5} mode="same" onPress={cycleMode} />
+          <ScoreBadgeRing score={hasil?.benar ?? 3} total={hasil?.total ?? 5} mode="same" onPress={cycleMode} />
 
           <View style={s.bodyWrap}>
             <Text style={s.title}>Levelmu tetap Mudah</Text>
@@ -381,7 +382,7 @@ export default function QuizResultScreen({ route, navigation }) {
         </View>
 
         {/* Overlapping Score Ring: 2/5 */}
-        <ScoreBadgeRing score={2} total={5} mode="down" onPress={cycleMode} />
+        <ScoreBadgeRing score={hasil?.benar ?? 2} total={hasil?.total ?? 5} mode="down" onPress={cycleMode} />
 
         <View style={s.bodyWrap}>
           <Text style={s.title}>Kita ulang pelan-pelan, ya</Text>

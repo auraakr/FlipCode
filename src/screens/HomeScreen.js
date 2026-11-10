@@ -14,6 +14,7 @@ import { ContentRepository } from '../storage/ContentRepository';
 import { ProgressRepository } from '../storage/ProgressRepository';
 import { CardStatus } from '../constants/enums';
 import { useAuth } from '../context/AuthContext';
+import { usePlacementGuard } from '../context/PlacementGuardContext';
 import {
   WavingHandIcon,
   MiniRobotNodeIcon,
@@ -49,6 +50,7 @@ export function setGlobalActiveTopic(topicId) {
 
 export default function HomeScreen({ route, navigation }) {
   const { user } = useAuth();
+  const { guardPlacement } = usePlacementGuard();
   const [studiedCards, setStudiedCards] = useState(3);
   const [totalCards, setTotalCards] = useState(10);
   const [activeTopic, setActiveTopic] = useState(() => getGlobalActiveTopic());
@@ -60,6 +62,9 @@ export default function HomeScreen({ route, navigation }) {
     }
   }, [route?.params?.activeTopic]);
 
+  // Level tiap topik dari server (hasil tes awal / kuis).
+  const [levels, setLevels] = useState({});
+
   useFocusEffect(
     useCallback(() => {
       // Sinkronkan topik aktif setiap kali kembali ke HomeScreen
@@ -69,11 +74,14 @@ export default function HomeScreen({ route, navigation }) {
         try {
           const current = getGlobalActiveTopic();
           const all = await ProgressRepository.getAll();
+          setLevels(
+            Object.fromEntries(Object.entries(all.topics || {}).map(([id, t]) => [id, t.level]))
+          );
           const cards = ContentRepository.getFlashcardsByTopic(current);
           const count = cards.filter(
             (c) =>
               all.cards[c.id]?.status === CardStatus.DIKUASAI ||
-              all.cards[c.id]?.status === CardStatus.SEDANG
+              all.cards[c.id]?.status === CardStatus.SEDANG_DIPELAJARI
           ).length;
 
           setStudiedCards(count > 0 ? count : current === 'variabel' ? 3 : 1);
@@ -117,7 +125,7 @@ export default function HomeScreen({ route, navigation }) {
     ? {
         bg: '#F5B82E',
         lip: '#D99B16',
-        badgeText: 'Topik saat ini • Sedang',
+        badgeText: `Topik saat ini • ${levels.tipe_data || 'Mudah'}`,
         badgeBg: 'rgba(120, 53, 15, 0.14)',
         badgeDot: '#78350F',
         badgeTextColor: '#78350F',
@@ -135,7 +143,7 @@ export default function HomeScreen({ route, navigation }) {
     ? {
         bg: '#F26B50',
         lip: '#C94A32',
-        badgeText: 'Topik saat ini • Mudah',
+        badgeText: `Topik saat ini • ${levels.operator || 'Mudah'}`,
         badgeBg: 'rgba(255, 255, 255, 0.2)',
         badgeDot: '#FACC15',
         badgeTextColor: '#FFFFFF',
@@ -152,7 +160,7 @@ export default function HomeScreen({ route, navigation }) {
     : {
         bg: '#2554E8',
         lip: '#1B3FB5',
-        badgeText: 'Topik saat ini • Mudah',
+        badgeText: `Topik saat ini • ${levels.variabel || 'Mudah'}`,
         badgeBg: 'rgba(255, 255, 255, 0.16)',
         badgeDot: '#FACC15',
         badgeTextColor: '#FFFFFF',
@@ -295,7 +303,10 @@ export default function HomeScreen({ route, navigation }) {
           {/* 1. Tes Awal (Left - Selesai) */}
           <TouchableOpacity
             activeOpacity={0.85}
-            onPress={() => navigation.navigate('Welcome')}
+            onPress={async () => {
+              if (await guardPlacement()) return;
+              navigation.navigate('Welcome');
+            }}
             style={[s.stepCard, s.stepCardLeft]}
           >
             <View style={s.doneIconBox}>

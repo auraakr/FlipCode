@@ -23,5 +23,8 @@ export const QuestionType = Object.freeze({
   PILIHAN_GANDA: 'pilihan_ganda',
 });
 
+// Jumlah soal dalam satu sesi kuis.
+export const QUIZ_SIZE = 5;
+
 // Urutan level untuk perhitungan naik/turun di AdaptiveEngine.
 export const LEVEL_ORDER = [Level.MUDAH, Level.SEDANG, Level.SULIT];

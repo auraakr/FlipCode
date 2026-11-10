@@ -11,7 +11,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { fonts } from '../constants/theme';
 import { ContentRepository } from '../storage/ContentRepository';
 import { ProgressRepository } from '../storage/ProgressRepository';
-import { CardStatus } from '../constants/enums';
+import { CardStatus, Level, TopicState } from '../constants/enums';
 import { getGlobalActiveTopic } from './HomeScreen';
 import {
   TrophyIcon,
@@ -30,196 +30,140 @@ import {
 } from '../../assets/illustrations/MascotIllustrations';
 
 // ============================================================================
-// DEFAULT VIEW-MODEL DATA (Backend-Friendly Fallback)
-// Ketika backend / database belum memiliki data riil, struktur di bawah ini
-// otomatis dipakai agar tampilan 100% sesuai wireframe FlipCode - 25 & 26.
+// VIEW-MODEL: dibentuk dari data progres di server (GET /progress).
+// Level per topik berasal dari hasil tes awal, lalu berubah mengikuti hasil kuis.
 // ============================================================================
-const DEFAULT_DASHBOARD_DATA = {
-  statusLabel: 'Berkembang',
-  totalProgressPct: 25,
-  activeSegments: 1,
-  totalSegments: 4,
-  topics: [
-    {
-      id: 'variabel',
-      title: 'Variabel',
-      pct: 75,
-      levelLabel: 'Sedang',
-      unlocked: true,
-      accentColor: '#2554E8',
-      levelColor: '#D97706',
-    },
-    {
-      id: 'tipe_data',
-      title: 'Tipe Data',
-      pct: 0,
-      levelLabel: '0%',
-      unlocked: false,
-      lockBg: '#FFF7ED',
-      lockBorder: '#FFEDD5',
-      lockColor: '#F59E0B',
-    },
-    {
-      id: 'operator',
-      title: 'Operator',
-      pct: 0,
-      levelLabel: '0%',
-      unlocked: false,
-      lockBg: '#FFF1F2',
-      lockBorder: '#FFE4E6',
-      lockColor: '#F43F5E',
-    },
-  ],
-  quizPerformance: {
-    averagePct: 65,
-    levelBadge: 'Level Sedang',
-    history: [
-      {
-        id: 'q1',
-        label: 'Kuis 1',
-        score: 3,
-        total: 5,
-        trackBg: '#FEF9E7',
-        fillBg: '#FCD34D',
-      },
-      {
-        id: 'q2',
-        label: 'Kuis 2',
-        score: 2,
-        total: 5,
-        trackBg: '#FFF1EE',
-        fillBg: '#FB9274',
-      },
-      {
-        id: 'q3',
-        label: 'Kuis 3',
-        score: 4,
-        total: 5,
-        trackBg: '#E8FBF0',
-        fillBg: '#34D399',
-      },
-      {
-        id: 'q4',
-        label: 'Kuis 4',
-        score: 4,
-        total: 5,
-        trackBg: '#E8FBF0',
-        fillBg: '#34D399',
-      },
-    ],
-  },
-  flashcardSummary: {
-    mastered: 6,
-    learning: 3,
-    total: 30,
-  },
-  repeatConcept: {
-    topicId: 'variabel',
-    title: 'Nilai lama tertimpa',
-    countLabel: '1 konsep',
-  },
+const TOPIC_STYLE = {
+  variabel: { color: '#2554E8', iconText: 'x=' },
+  tipe_data: { color: '#F59E0B', iconText: '123' },
+  operator: { color: '#F26B50', iconText: '+ -' },
 };
-
-const DEFAULT_BY_TOPIC_DATA = {
-  completedBadgeLabel: '1 topik selesai',
-  totalProgressPct: 47,
-  legend: [
-    {
-      id: 'variabel',
-      title: 'Variabel',
-      meta: '100% • Selesai',
-      pct: 100,
-      color: '#2554E8',
-      unlocked: true,
-    },
-    {
-      id: 'tipe_data',
-      title: 'Tipe Data',
-      meta: '40% • Berjalan',
-      pct: 40,
-      color: '#F59E0B',
-      unlocked: true,
-    },
-    {
-      id: 'operator',
-      title: 'Operator',
-      meta: '0% • Terkunci',
-      pct: 0,
-      color: '#CBD5E1',
-      unlocked: false,
-    },
-  ],
-  masteredTopic: {
-    id: 'variabel',
-    title: 'Variabel',
-    cardsPill: '8/10 kartu',
-    quizPill: '4/5 di Sulit',
-  },
-  activeTopicCard: {
-    id: 'tipe_data',
-    iconText: '123',
-    title: 'Tipe Data',
-    levelBadge: 'SEDANG',
-    subtitle: 'Flashcard 4 dari 10',
-    pct: 40,
-  },
-  summaryCards: {
-    masteredCards: 12,
-    totalCards: 30,
-    quizAveragePct: 72,
-  },
+const LEVEL_COLOR = {
+  [Level.MUDAH]: '#16A34A',
+  [Level.SEDANG]: '#D97706',
+  [Level.SULIT]: '#DC2626',
 };
+const EMPTY_PROGRESS = { topics: {}, cards: {}, quizSessions: [] };
 
-// Helper pemetaan data dari ProgressRepository / API ke struktur View-Model
-function mapRepositoryToProgressModels(rawAll, activeTopicId) {
-  const dashboard = JSON.parse(JSON.stringify(DEFAULT_DASHBOARD_DATA));
-  const byTopic = JSON.parse(JSON.stringify(DEFAULT_BY_TOPIC_DATA));
+function barColors(ratio) {
+  if (ratio >= 0.8) return { trackBg: '#E8FBF0', fillBg: '#34D399' };
+  if (ratio >= 0.6) return { trackBg: '#FEF9E7', fillBg: '#FCD34D' };
+  return { trackBg: '#FFF1EE', fillBg: '#FB9274' };
+}
 
-  if (!rawAll) {
-    return { dashboard, byTopic };
-  }
+// Memetakan data progres dari server ke struktur tampilan.
+function mapRepositoryToProgressModels(rawAll) {
+  const raw = { ...EMPTY_PROGRESS, ...(rawAll || {}) };
 
-  // Hitung kartu yang sudah dikuasai dari repository bila sudah ada interaksi nyata
-  const varCards = ContentRepository.getFlashcardsByTopic('variabel') || [];
-  const tdCards = ContentRepository.getFlashcardsByTopic('tipe_data') || [];
-  const opCards = ContentRepository.getFlashcardsByTopic('operator') || [];
-
-  const countMastered = (cards) =>
-    cards.filter((c) => rawAll.cards?.[c.id]?.status === CardStatus.DIKUASAI)
-      .length;
-
-  const varMastered = countMastered(varCards);
-  const tdMastered = countMastered(tdCards);
-  const opMastered = countMastered(opCards);
-  const totalMastered = varMastered + tdMastered + opMastered;
-
-  if (totalMastered > 0) {
-    const varTotal = varCards.length || 10;
-    const varPct = Math.round((varMastered / varTotal) * 100);
-    dashboard.topics[0].pct = varPct > 0 ? varPct : 75;
-    dashboard.flashcardSummary.mastered = totalMastered;
-  }
-
-  // Jika sudah di fase Operator, sesuaikan kartu aktif pada tampilan Progress by Topic
-  if (activeTopicId === 'operator') {
-    byTopic.completedBadgeLabel = '2 topik selesai';
-    byTopic.totalProgressPct = 70;
-    byTopic.legend[1].meta = '100% • Selesai';
-    byTopic.legend[1].pct = 100;
-    byTopic.legend[2].meta = '10% • Berjalan';
-    byTopic.legend[2].pct = 10;
-    byTopic.legend[2].color = '#F26B50';
-    byTopic.legend[2].unlocked = true;
-    byTopic.activeTopicCard = {
-      id: 'operator',
-      iconText: '+ -',
-      title: 'Operator',
-      levelBadge: 'MUDAH',
-      subtitle: 'Flashcard 1 dari 10',
-      pct: 10,
+  const infos = ContentRepository.getAllTopics().map((t) => {
+    const cards = ContentRepository.getFlashcardsByTopic(t.id) || [];
+    const statusOf = (c) => raw.cards?.[c.id]?.status;
+    const mastered = cards.filter((c) => statusOf(c) === CardStatus.DIKUASAI).length;
+    const learning = cards.filter((c) => statusOf(c) === CardStatus.SEDANG_DIPELAJARI).length;
+    const prog = raw.topics?.[t.id];
+    const level = prog?.level || Level.MUDAH;
+    const done = prog?.state === TopicState.DIKUASAI;
+    const cardPct = cards.length ? Math.round((mastered / cards.length) * 100) : 0;
+    const style = TOPIC_STYLE[t.id] || { color: '#2554E8', iconText: '' };
+    return {
+      id: t.id,
+      title: t.nama,
+      cards: cards.length,
+      mastered,
+      learning,
+      level,
+      done,
+      pct: done ? 100 : cardPct,
+      ...style,
     };
-    byTopic.summaryCards.masteredCards = 18;
-  }
+  });
+
+  const totalPct = infos.length
+    ? Math.round(infos.reduce((sum, t) => sum + t.pct, 0) / infos.length)
+    : 0;
+  const doneCount = infos.filter((t) => t.done).length;
+  const totalCards = infos.reduce((sum, t) => sum + t.cards, 0);
+  const totalMastered = infos.reduce((sum, t) => sum + t.mastered, 0);
+  const totalLearning = infos.reduce((sum, t) => sum + t.learning, 0);
+  const activeInfo = infos.find((t) => !t.done) || null;
+
+  // Riwayat kuis dari server (terbaru dulu) -> 4 terakhir, urut lama ke baru.
+  const sessions = raw.quizSessions || [];
+  const history = sessions
+    .slice(0, 4)
+    .reverse()
+    .map((q, i) => ({
+      id: String(q.id ?? i),
+      label: `Kuis ${i + 1}`,
+      score: q.benar,
+      total: q.total || 5,
+      ...barColors(q.total ? q.benar / q.total : 0),
+    }));
+  const sumBenar = sessions.reduce((sum, q) => sum + (q.benar || 0), 0);
+  const sumTotal = sessions.reduce((sum, q) => sum + (q.total || 0), 0);
+  const quizAveragePct = sumTotal ? Math.round((sumBenar / sumTotal) * 100) : 0;
+
+  const repeatTopic = infos.find((t) => t.learning > 0) || infos[0];
+
+  const dashboard = {
+    statusLabel: totalPct >= 60 ? 'Mahir' : totalPct >= 25 ? 'Berkembang' : 'Baru mulai',
+    totalProgressPct: totalPct,
+    activeSegments: Math.min(4, Math.round(totalPct / 25)),
+    totalSegments: 4,
+    topics: infos.map((t) => ({
+      id: t.id,
+      title: t.title,
+      pct: t.pct,
+      levelLabel: t.level,
+      unlocked: true,
+      accentColor: t.color,
+      levelColor: LEVEL_COLOR[t.level],
+    })),
+    quizPerformance: {
+      averagePct: quizAveragePct,
+      levelBadge: `Level ${(activeInfo || infos[infos.length - 1] || { level: Level.MUDAH }).level}`,
+      history,
+    },
+    flashcardSummary: { mastered: totalMastered, learning: totalLearning, total: totalCards },
+    repeatConcept: {
+      topicId: repeatTopic?.id || 'variabel',
+      title: totalLearning > 0 ? 'Kartu yang masih dipelajari' : 'Belum ada kartu',
+      countLabel: `${totalLearning} kartu`,
+    },
+  };
+
+  const masteredInfo = infos.find((t) => t.done) || null;
+  const lastSession = masteredInfo && sessions.find((q) => q.topicId === masteredInfo.id);
+
+  const byTopic = {
+    completedBadgeLabel: `${doneCount} topik selesai`,
+    totalProgressPct: totalPct,
+    legend: infos.map((t) => ({
+      id: t.id,
+      title: t.title,
+      meta: `${t.pct}% • ${t.done ? 'Selesai' : t.pct > 0 ? 'Berjalan' : 'Belum mulai'}`,
+      pct: t.pct,
+      color: t.color,
+      unlocked: true,
+    })),
+    masteredTopic: masteredInfo && {
+      id: masteredInfo.id,
+      title: masteredInfo.title,
+      cardsPill: `${masteredInfo.mastered}/${masteredInfo.cards} kartu`,
+      quizPill: lastSession
+        ? `${lastSession.benar}/${lastSession.total} di ${lastSession.level}`
+        : 'Dikuasai di tes awal',
+    },
+    activeTopicCard: activeInfo && {
+      id: activeInfo.id,
+      iconText: activeInfo.iconText,
+      title: activeInfo.title,
+      levelBadge: activeInfo.level.toUpperCase(),
+      subtitle: `${activeInfo.mastered} dari ${activeInfo.cards} kartu dikuasai`,
+      pct: activeInfo.pct,
+    },
+    summaryCards: { masteredCards: totalMastered, totalCards, quizAveragePct },
+  };
 
   return { dashboard, byTopic };
 }
@@ -230,9 +174,7 @@ function mapRepositoryToProgressModels(rawAll, activeTopicId) {
 export default function ProgressScreen({ route, navigation }) {
   // Mode tampilan: 'dashboard' (FlipCode - 25) | 'by_topic' (FlipCode - 26)
   const [viewMode, setViewMode] = useState('dashboard');
-  const [models, setModels] = useState(() =>
-    mapRepositoryToProgressModels(null, 'variabel')
-  );
+  const [models, setModels] = useState(() => mapRepositoryToProgressModels(null));
 
   useFocusEffect(
     useCallback(() => {
@@ -250,7 +192,7 @@ export default function ProgressScreen({ route, navigation }) {
       (async () => {
         try {
           const all = await ProgressRepository.getAll();
-          setModels(mapRepositoryToProgressModels(all, currentTopic));
+          setModels(mapRepositoryToProgressModels(all));
         } catch (e) {
           console.warn('Gagal memuat progres:', e);
         }
@@ -326,7 +268,8 @@ export default function ProgressScreen({ route, navigation }) {
             </View>
           </View>
 
-          {/* 2. Green Mastered Topic Banner: Variabel */}
+          {/* 2. Green Mastered Topic Banner (hanya jika ada topik dikuasai) */}
+          {byTopic.masteredTopic && (
           <TouchableOpacity
             activeOpacity={0.88}
             onPress={() =>
@@ -362,8 +305,10 @@ export default function ProgressScreen({ route, navigation }) {
               <IsometricBoxIcon />
             </View>
           </TouchableOpacity>
+          )}
 
-          {/* 3. Active Topic Row Card: Tipe Data */}
+          {/* 3. Active Topic Row Card (topik yang sedang dipelajari) */}
+          {byTopic.activeTopicCard && (
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={() =>
@@ -399,6 +344,7 @@ export default function ProgressScreen({ route, navigation }) {
               {byTopic.activeTopicCard.pct}%
             </Text>
           </TouchableOpacity>
+          )}
 
           {/* 4. Bottom 2-Column Summary Cards */}
           <View style={s.bottomTwoCols}>

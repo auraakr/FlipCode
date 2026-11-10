@@ -6,9 +6,12 @@ import Button from '../components/Button';
 import WelcomeIllustration from '../../assets/splash.svg';
 import { ProgressRepository } from '../storage/ProgressRepository';
 import { fonts } from '../constants/theme';
+import { usePlacementGuard } from '../context/PlacementGuardContext';
 
 export default function WelcomeScreen({ navigation }) {
-  const mulai = () => {
+  const { guardPlacement } = usePlacementGuard();
+  const mulai = async () => {
+    if (await guardPlacement()) return;
     navigation.navigate('PlacementTest');
   };
 

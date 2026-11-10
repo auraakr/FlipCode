@@ -14,13 +14,6 @@ import { ContentRepository } from '../storage/ContentRepository';
 import { Level } from '../constants/enums';
 import { fonts } from '../constants/theme';
 
-// Default level untuk preview UI sesuai wireframe Figma
-const DEFAULT_PREVIEW_LEVELS = {
-  variabel: Level.MUDAH,
-  tipe_data: Level.SEDANG,
-  operator: Level.MUDAH,
-};
-
 function ResultBannerIllustration() {
   return (
     <Svg width="100%" height="100%" viewBox="0 0 340 196" fill="none">
@@ -182,15 +175,8 @@ export default function PlacementResultScreen({ route, navigation }) {
   const { hasil } = route.params || {};
   const topics = ContentRepository.getAllTopics();
 
-  const getLevelForTopic = (topicId) => {
-    const benar = hasil?.perTopic?.[topicId]?.benar;
-    // Jika pengguna menjawab >= 2 soal dengan benar, gunakan hasil evaluasi asli;
-    // jika hanya klik lanjut (preview UI), tampilkan level sesuai desain Figma.
-    if (typeof benar === 'number' && benar >= 2) {
-      return hasil.perTopicLevel[topicId];
-    }
-    return DEFAULT_PREVIEW_LEVELS[topicId] || Level.MUDAH;
-  };
+  // Level dari hasil server; topik tanpa data (mis. belum ada soal) mulai dari Mudah.
+  const getLevelForTopic = (topicId) => hasil?.perTopicLevel?.[topicId] || Level.MUDAH;
 
   const handleBack = () => {
     if (navigation.canGoBack()) {

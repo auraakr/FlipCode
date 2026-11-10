@@ -5,7 +5,8 @@ import { toApiAnswers } from './answers';
 
 export const PlacementApi = {
   // Mengembalikan { sessionId, questions }
-  start: () => api.post('/placement/start'),
+  // ulang: true hanya dikirim dari Pengaturan > Ulangi Tes Awal.
+  start: (ulang = false) => api.post('/placement/start', ulang ? { ulang: true } : {}),
 
   // Mengembalikan { perTopic, perTopicLevel, detail }
   submit: ({ sessionId, questions, jawaban }) =>

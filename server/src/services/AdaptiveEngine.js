@@ -1,58 +1,58 @@
 // AdaptiveEngine: aturan adaptif FlipCode.
-// Semua keputusan naik/turun level ada di sini supaya mudah diubah dan diuji.
+// Semua keputusan level & status topik ada di sini supaya mudah diubah dan diuji.
 //
-// Aturan kuis (5 soal per sesi):
-//   benar 4-5 -> level NAIK
-//   benar 3   -> level TETAP
-//   benar 0-2 -> level TURUN + saran ulang flashcard
+// Level kuis berikutnya ditentukan oleh PERSENTASE benar pada kuis yang baru selesai
+// (bukan naik/turun satu tingkat dari level sekarang):
+//   benar <= 20%        -> level MUDAH   (tidak membuka level Sedang)
+//   benar 30% - 70%     -> level SEDANG  (Mudah tidak diberikan lagi; flashcard boleh dilewati)
+//   benar >= 80%        -> level SULIT
+// Contoh untuk 5 soal: 0-1 benar = Mudah, 2-3 benar = Sedang, 4-5 benar = Sulit.
+// Di antara batas (mis. 20%-30%, 70%-80%) nilai dibulatkan ke level Sedang.
+//
+// Karena kuis selalu diambil dari level user sekarang, user hanya bisa mengakses
+// kuis pada level yang diberikan hasil kuis terakhirnya.
 //
 // Topik dinyatakan DIKUASAI kalau:
-//   kuis level Sulit benar 4-5, DAN
+//   benar >= 80% pada kuis, DAN
 //   minimal 70% kartu di topik itu berstatus Dikuasai.
 
 import { Level, LEVEL_ORDER, TopicState } from '../constants/enums.js';
 
-const THRESHOLD_NAIK = 4;
-const THRESHOLD_TETAP = 3;
+const BATAS_MUDAH = 0.2; // <= 20% -> Mudah
+const BATAS_SULIT = 0.8; // >= 80% -> Sulit
+const BATAS_SARAN_ULANG = 0.6; // < 60% benar -> sarankan ulang flashcard
 const PCT_KUASAI = 0.7;
 
-function nextLevel(level) {
-  const idx = LEVEL_ORDER.indexOf(level);
-  return LEVEL_ORDER[Math.min(idx + 1, LEVEL_ORDER.length - 1)];
-}
-function prevLevel(level) {
-  const idx = LEVEL_ORDER.indexOf(level);
-  return LEVEL_ORDER[Math.max(idx - 1, 0)];
-}
+const EPS = 1e-9;
 
 export const AdaptiveEngine = {
-  // Mengembalikan { nextLevel, delta, saranUlang }
-  evaluateQuiz({ currentLevel, benar }) {
-    let next = currentLevel;
-    if (benar >= THRESHOLD_NAIK) next = nextLevel(currentLevel);
-    else if (benar < THRESHOLD_TETAP) next = prevLevel(currentLevel);
+  // Level berikutnya dari persentase benar (0..1).
+  levelFromRatio(ratio) {
+    if (ratio <= BATAS_MUDAH + EPS) return Level.MUDAH;
+    if (ratio >= BATAS_SULIT - EPS) return Level.SULIT;
+    return Level.SEDANG;
+  },
 
+  // Mengembalikan { nextLevel, delta, saranUlang }
+  evaluateQuiz({ currentLevel, benar, total = 5 }) {
+    const ratio = total > 0 ? benar / total : 0;
+    const next = this.levelFromRatio(ratio);
     return {
       nextLevel: next,
       delta: LEVEL_ORDER.indexOf(next) - LEVEL_ORDER.indexOf(currentLevel),
-      saranUlang: benar < THRESHOLD_TETAP,
+      saranUlang: ratio < BATAS_SARAN_ULANG - EPS,
     };
   },
 
   // Menentukan apakah topik sudah dikuasai.
-  // pctDikuasai: angka 0..1
-  // levelKuis: level sesi kuis yang baru saja dikerjakan
-  // benar: jumlah benar dari 5 soal
-  isTopicMastered({ levelKuis, benar, pctDikuasai }) {
-    return (
-      levelKuis === Level.SULIT &&
-      benar >= THRESHOLD_NAIK &&
-      pctDikuasai >= PCT_KUASAI
-    );
+  // pctDikuasai: angka 0..1 (kartu dikuasai per topik)
+  isTopicMastered({ benar, total = 5, pctDikuasai }) {
+    const ratio = total > 0 ? benar / total : 0;
+    return ratio >= BATAS_SULIT - EPS && pctDikuasai >= PCT_KUASAI;
   },
 
-  nextTopicState({ currentState, levelKuis, benar, pctDikuasai }) {
-    if (this.isTopicMastered({ levelKuis, benar, pctDikuasai })) {
+  nextTopicState({ currentState, benar, total = 5, pctDikuasai }) {
+    if (this.isTopicMastered({ benar, total, pctDikuasai })) {
       return TopicState.DIKUASAI;
     }
     return currentState === TopicState.BELUM_MULAI
@@ -60,7 +60,8 @@ export const AdaptiveEngine = {
       : currentState;
   },
 
-  THRESHOLD_NAIK,
-  THRESHOLD_TETAP,
+  BATAS_MUDAH,
+  BATAS_SULIT,
+  BATAS_SARAN_ULANG,
   PCT_KUASAI,
 };
