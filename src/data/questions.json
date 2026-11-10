@@ -6,11 +6,810 @@
       "topicId": "variabel",
       "level": "Mudah",
       "tipe": "pilihan_ganda",
-      "pertanyaan": "",
-      "pilihan": ["", "", "", ""],
+      "pertanyaan": "Pada kode skor = 90, apa nama variabelnya?",
+      "pilihan": [
+        "print",
+        "skor",
+        "90",
+        "="
+      ],
+      "jawabanBenar": 1,
+      "penjelasan": "Nama variabel ada di sebelah kiri tanda =. 90 adalah nilainya, sedangkan = adalah operator penugasan.",
+      "relatedCardIds": [
+        "var-02"
+      ]
+    },
+    {
+      "id": "q-var-mudah-02",
+      "topicId": "variabel",
+      "level": "Mudah",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Manakah nama variabel yang valid?",
+      "pilihan": [
+        "1nama",
+        "nama-siswa",
+        "nama_siswa",
+        "nama siswa"
+      ],
+      "jawabanBenar": 2,
+      "penjelasan": "Nama variabel tidak boleh diawali angka, memakai tanda minus, atau mengandung spasi. Gunakan garis bawah (_) untuk memisahkan kata.",
+      "relatedCardIds": [
+        "var-03"
+      ]
+    },
+    {
+      "id": "q-var-mudah-03",
+      "topicId": "variabel",
+      "level": "Mudah",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Pada kode umur = 16, tanda = berarti ...",
+      "pilihan": [
+        "Membandingkan umur dengan 16",
+        "Menghapus nilai umur",
+        "Sama dengan seperti dalam matematika",
+        "Menyimpan nilai 16 ke variabel umur"
+      ],
+      "jawabanBenar": 3,
+      "penjelasan": "Tanda = adalah penugasan: nilai di kanan disimpan ke variabel di kiri.",
+      "relatedCardIds": [
+        "var-02"
+      ]
+    },
+    {
+      "id": "q-var-mudah-04",
+      "topicId": "variabel",
+      "level": "Mudah",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa yang tampil dari kode berikut?\n\nkota = \"Bandung\"\nprint(kota)",
+      "pilihan": [
+        "Bandung",
+        "Error",
+        "kota",
+        "\"Bandung\""
+      ],
       "jawabanBenar": 0,
-      "penjelasan": "",
-      "relatedCardIds": []
+      "penjelasan": "print(kota) menampilkan isi variabel kota, yaitu teks Bandung (tanpa tanda kutip).",
+      "relatedCardIds": [
+        "var-08"
+      ]
+    },
+    {
+      "id": "q-var-mudah-05",
+      "topicId": "variabel",
+      "level": "Mudah",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa yang tampil dari kode berikut?\n\nskor = 70\nskor = 85\nprint(skor)",
+      "pilihan": [
+        "Error",
+        "85",
+        "155",
+        "70"
+      ],
+      "jawabanBenar": 1,
+      "penjelasan": "Nilai baru menggantikan nilai lama, sehingga skor berisi 85.",
+      "relatedCardIds": [
+        "var-06"
+      ]
+    },
+    {
+      "id": "q-var-sedang-01",
+      "topicId": "variabel",
+      "level": "Sedang",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa yang tampil dari kode berikut?\n\nnama = \"Alya\"\nNama = \"Budi\"\nprint(nama)",
+      "pilihan": [
+        "Error",
+        "Budi",
+        "Alya",
+        "AlyaBudi"
+      ],
+      "jawabanBenar": 2,
+      "penjelasan": "Python membedakan huruf besar dan kecil. nama dan Nama adalah dua variabel berbeda, jadi print(nama) menampilkan Alya.",
+      "relatedCardIds": [
+        "var-04"
+      ]
+    },
+    {
+      "id": "q-var-sedang-02",
+      "topicId": "variabel",
+      "level": "Sedang",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Nama variabel yang paling tepat untuk menyimpan umur siswa adalah ...",
+      "pilihan": [
+        "x",
+        "a1",
+        "data",
+        "umur_siswa"
+      ],
+      "jawabanBenar": 3,
+      "penjelasan": "Nama yang bermakna membuat kode mudah dipahami. umur_siswa langsung menjelaskan isinya.",
+      "relatedCardIds": [
+        "var-07"
+      ]
+    },
+    {
+      "id": "q-var-sedang-03",
+      "topicId": "variabel",
+      "level": "Sedang",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Manakah yang TIDAK boleh dipakai sebagai nama variabel?",
+      "pilihan": [
+        "while",
+        "total_1",
+        "_hasil",
+        "jumlah"
+      ],
+      "jawabanBenar": 0,
+      "penjelasan": "while adalah kata kunci Python yang sudah punya arti khusus. Nama lainnya valid.",
+      "relatedCardIds": [
+        "var-05"
+      ]
+    },
+    {
+      "id": "q-var-sedang-04",
+      "topicId": "variabel",
+      "level": "Sedang",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa yang tampil dari kode berikut?\n\nx = 10\ny = x + 5\nprint(y)",
+      "pilihan": [
+        "x + 5",
+        "15",
+        "Error",
+        "10"
+      ],
+      "jawabanBenar": 1,
+      "penjelasan": "y diisi hasil x + 5, yaitu 10 + 5 = 15.",
+      "relatedCardIds": [
+        "var-09"
+      ]
+    },
+    {
+      "id": "q-var-sedang-05",
+      "topicId": "variabel",
+      "level": "Sedang",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Pernyataan yang benar tentang variabel adalah ...",
+      "pilihan": [
+        "Nama variabel boleh diawali angka",
+        "Variabel hanya bisa menyimpan angka",
+        "Variabel menyimpan data di memori dan nilainya bisa berubah",
+        "Nilai variabel tidak bisa diubah"
+      ],
+      "jawabanBenar": 2,
+      "penjelasan": "Variabel adalah wadah bernama di memori. Nilainya boleh berubah dan bisa berupa angka, teks, atau tipe lain.",
+      "relatedCardIds": [
+        "var-01"
+      ]
+    },
+    {
+      "id": "q-var-sulit-01",
+      "topicId": "variabel",
+      "level": "Sulit",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa yang tampil dari kode berikut?\n\na = 3\nb = 7\na = b\nb = a\nprint(a, b)",
+      "pilihan": [
+        "7 3",
+        "3 3",
+        "3 7",
+        "7 7"
+      ],
+      "jawabanBenar": 3,
+      "penjelasan": "Setelah a = b, a berisi 7. Lalu b = a, sehingga b juga 7. Nilai awal a (3) sudah hilang.",
+      "relatedCardIds": [
+        "var-09"
+      ]
+    },
+    {
+      "id": "q-var-sulit-02",
+      "topicId": "variabel",
+      "level": "Sulit",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa yang tampil dari kode berikut?\n\ntotal = 10\ntotal = total + 5\nprint(total)",
+      "pilihan": [
+        "15",
+        "10",
+        "5",
+        "Error"
+      ],
+      "jawabanBenar": 0,
+      "penjelasan": "Ruas kanan dihitung lebih dulu (10 + 5 = 15), lalu hasilnya disimpan kembali ke total.",
+      "relatedCardIds": [
+        "var-06"
+      ]
+    },
+    {
+      "id": "q-var-sulit-03",
+      "topicId": "variabel",
+      "level": "Sulit",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Manakah kelompok nama variabel yang SEMUANYA valid?",
+      "pilihan": [
+        "1data, nilai, total",
+        "data_1, _nilai, total",
+        "nilai-akhir, total, data",
+        "for, nilai, total"
+      ],
+      "jawabanBenar": 1,
+      "penjelasan": "data_1, _nilai, dan total sesuai aturan. Opsi lain memuat nama diawali angka, tanda minus, atau kata kunci for.",
+      "relatedCardIds": [
+        "var-03"
+      ]
+    },
+    {
+      "id": "q-var-sulit-04",
+      "topicId": "variabel",
+      "level": "Sulit",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Penulisan PI = 3.14 dengan huruf kapital menandakan bahwa ...",
+      "pilihan": [
+        "Variabel itu tidak bisa dipakai",
+        "Nilainya harus sering diubah",
+        "Nilainya dimaksudkan tidak diubah (konstanta)",
+        "Variabel itu bertipe teks"
+      ],
+      "jawabanBenar": 2,
+      "penjelasan": "Huruf kapital adalah kesepakatan (konvensi) untuk konstanta. Python tidak mengunci nilainya, tetapi programmer sepakat tidak mengubahnya.",
+      "relatedCardIds": [
+        "var-10"
+      ]
+    },
+    {
+      "id": "q-var-sulit-05",
+      "topicId": "variabel",
+      "level": "Sulit",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa yang tampil dari kode berikut?\n\nnilai = 80\nNilai = 90\nprint(nilai + Nilai)",
+      "pilihan": [
+        "180",
+        "Error",
+        "160",
+        "170"
+      ],
+      "jawabanBenar": 3,
+      "penjelasan": "nilai dan Nama berbeda karena case-sensitive: nilai = 80 dan Nilai = 90, sehingga hasilnya 170.",
+      "relatedCardIds": [
+        "var-04"
+      ]
+    },
+    {
+      "id": "q-tipe-mudah-01",
+      "topicId": "tipe_data",
+      "level": "Mudah",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Tipe data variabel jumlah pada kode jumlah = 25 adalah ...",
+      "pilihan": [
+        "int",
+        "str",
+        "bool",
+        "float"
+      ],
+      "jawabanBenar": 0,
+      "penjelasan": "25 adalah bilangan bulat sehingga bertipe int.",
+      "relatedCardIds": [
+        "tipe-02"
+      ]
+    },
+    {
+      "id": "q-tipe-mudah-02",
+      "topicId": "tipe_data",
+      "level": "Mudah",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Tipe data variabel sapaan pada kode sapaan = \"Halo\" adalah ...",
+      "pilihan": [
+        "bool",
+        "str",
+        "int",
+        "float"
+      ],
+      "jawabanBenar": 1,
+      "penjelasan": "Nilai di dalam tanda kutip adalah teks, yaitu string (str).",
+      "relatedCardIds": [
+        "tipe-04"
+      ]
+    },
+    {
+      "id": "q-tipe-mudah-03",
+      "topicId": "tipe_data",
+      "level": "Mudah",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Manakah yang merupakan nilai bertipe boolean?",
+      "pilihan": [
+        "\"Benar\"",
+        "1.5",
+        "True",
+        "25"
+      ],
+      "jawabanBenar": 2,
+      "penjelasan": "Boolean hanya True atau False (huruf awal kapital, tanpa kutip).",
+      "relatedCardIds": [
+        "tipe-05"
+      ]
+    },
+    {
+      "id": "q-tipe-mudah-04",
+      "topicId": "tipe_data",
+      "level": "Mudah",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Manakah yang merupakan bilangan bulat (int)?",
+      "pilihan": [
+        "3.5",
+        "\"12\"",
+        "True",
+        "12"
+      ],
+      "jawabanBenar": 3,
+      "penjelasan": "12 tanpa kutip dan tanpa titik desimal adalah int. 3.5 adalah float, \"12\" adalah string.",
+      "relatedCardIds": [
+        "tipe-02"
+      ]
+    },
+    {
+      "id": "q-tipe-mudah-05",
+      "topicId": "tipe_data",
+      "level": "Mudah",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Fungsi yang dipakai untuk mengecek tipe data suatu nilai adalah ...",
+      "pilihan": [
+        "type()",
+        "print()",
+        "input()",
+        "len()"
+      ],
+      "jawabanBenar": 0,
+      "penjelasan": "type() menampilkan tipe data dari nilai atau variabel yang dimasukkan.",
+      "relatedCardIds": [
+        "tipe-07"
+      ]
+    },
+    {
+      "id": "q-tipe-sedang-01",
+      "topicId": "tipe_data",
+      "level": "Sedang",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari print(\"7\" + \"3\")?",
+      "pilihan": [
+        "\"73\"",
+        "73",
+        "10",
+        "Error"
+      ],
+      "jawabanBenar": 1,
+      "penjelasan": "Keduanya string, sehingga + menyambung teks menjadi 73. Hasil 10 baru muncul jika keduanya integer.",
+      "relatedCardIds": [
+        "tipe-06"
+      ]
+    },
+    {
+      "id": "q-tipe-sedang-02",
+      "topicId": "tipe_data",
+      "level": "Sedang",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari int(3.9)?",
+      "pilihan": [
+        "Error",
+        "4",
+        "3",
+        "3.9"
+      ],
+      "jawabanBenar": 2,
+      "penjelasan": "int() membuang bagian desimal, tidak membulatkan. Jadi 3.9 menjadi 3.",
+      "relatedCardIds": [
+        "tipe-08"
+      ]
+    },
+    {
+      "id": "q-tipe-sedang-03",
+      "topicId": "tipe_data",
+      "level": "Sedang",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Hasil dari float(\"2.5\") bertipe ...",
+      "pilihan": [
+        "str",
+        "int",
+        "bool",
+        "float"
+      ],
+      "jawabanBenar": 3,
+      "penjelasan": "float() mengubah teks \"2.5\" menjadi bilangan desimal bertipe float.",
+      "relatedCardIds": [
+        "tipe-09"
+      ]
+    },
+    {
+      "id": "q-tipe-sedang-04",
+      "topicId": "tipe_data",
+      "level": "Sedang",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari str(100)?",
+      "pilihan": [
+        "Teks \"100\"",
+        "Bilangan 100.0",
+        "Error",
+        "Bilangan bulat 100"
+      ],
+      "jawabanBenar": 0,
+      "penjelasan": "str() mengubah angka 100 menjadi teks \"100\".",
+      "relatedCardIds": [
+        "tipe-09"
+      ]
+    },
+    {
+      "id": "q-tipe-sedang-05",
+      "topicId": "tipe_data",
+      "level": "Sedang",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari print(type(True))?",
+      "pilihan": [
+        "<class 'float'>",
+        "<class 'bool'>",
+        "<class 'int'>",
+        "<class 'str'>"
+      ],
+      "jawabanBenar": 1,
+      "penjelasan": "True dan False bertipe bool (boolean).",
+      "relatedCardIds": [
+        "tipe-05"
+      ]
+    },
+    {
+      "id": "q-tipe-sulit-01",
+      "topicId": "tipe_data",
+      "level": "Sulit",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Pengguna mengetik 17 pada kode berikut. Apa yang terjadi?\n\numur = input(\"Umur: \")\nprint(umur + 1)",
+      "pilihan": [
+        "Tampil 18",
+        "Tampil 171",
+        "Muncul Error karena teks tidak bisa dijumlah dengan angka",
+        "Tampil 17 + 1"
+      ],
+      "jawabanBenar": 2,
+      "penjelasan": "input() menghasilkan string. Menjumlahkan string dengan integer menimbulkan error (TypeError).",
+      "relatedCardIds": [
+        "tipe-10"
+      ]
+    },
+    {
+      "id": "q-tipe-sulit-02",
+      "topicId": "tipe_data",
+      "level": "Sulit",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Agar umur + 1 menghasilkan 18 saat pengguna mengetik 17, isi bagian kosong:\n\numur = ___(input(\"Umur: \"))",
+      "pilihan": [
+        "str",
+        "print",
+        "type",
+        "int"
+      ],
+      "jawabanBenar": 3,
+      "penjelasan": "int() mengubah teks \"17\" menjadi bilangan bulat 17 sehingga bisa dijumlahkan.",
+      "relatedCardIds": [
+        "tipe-10"
+      ]
+    },
+    {
+      "id": "q-tipe-sulit-03",
+      "topicId": "tipe_data",
+      "level": "Sulit",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari print(type(5 / 2))?",
+      "pilihan": [
+        "float",
+        "int",
+        "str",
+        "bool"
+      ],
+      "jawabanBenar": 0,
+      "penjelasan": "Operator / selalu menghasilkan float (2.5), walaupun hasilnya bulat seperti 4 / 2 = 2.0.",
+      "relatedCardIds": [
+        "tipe-03"
+      ]
+    },
+    {
+      "id": "q-tipe-sulit-04",
+      "topicId": "tipe_data",
+      "level": "Sulit",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari print(\"5\" * 3)?",
+      "pilihan": [
+        "15",
+        "555",
+        "Error",
+        "5 * 3"
+      ],
+      "jawabanBenar": 1,
+      "penjelasan": "Pada string, * mengulang teks. \"5\" diulang 3 kali menjadi 555.",
+      "relatedCardIds": [
+        "tipe-06"
+      ]
+    },
+    {
+      "id": "q-tipe-sulit-05",
+      "topicId": "tipe_data",
+      "level": "Sulit",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari kode berikut?\n\nx = 7\ny = \"7\"\nprint(x == y)",
+      "pilihan": [
+        "Error",
+        "True",
+        "False",
+        "7"
+      ],
+      "jawabanBenar": 2,
+      "penjelasan": "x berupa integer, y berupa string. Tipenya berbeda sehingga tidak dianggap sama dan hasilnya False.",
+      "relatedCardIds": [
+        "tipe-06"
+      ]
+    },
+    {
+      "id": "q-op-mudah-01",
+      "topicId": "operator",
+      "level": "Mudah",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari print(7 + 2)?",
+      "pilihan": [
+        "5",
+        "14",
+        "72",
+        "9"
+      ],
+      "jawabanBenar": 3,
+      "penjelasan": "Keduanya integer, sehingga + menjumlahkan: 7 + 2 = 9.",
+      "relatedCardIds": [
+        "op-02"
+      ]
+    },
+    {
+      "id": "q-op-mudah-02",
+      "topicId": "operator",
+      "level": "Mudah",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Simbol operator perkalian di Python adalah ...",
+      "pilihan": [
+        "*",
+        "x",
+        "#",
+        "%"
+      ],
+      "jawabanBenar": 0,
+      "penjelasan": "Perkalian memakai tanda bintang (*). Huruf x tidak dikenali sebagai operator.",
+      "relatedCardIds": [
+        "op-02"
+      ]
+    },
+    {
+      "id": "q-op-mudah-03",
+      "topicId": "operator",
+      "level": "Mudah",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari 7 / 2?",
+      "pilihan": [
+        "3",
+        "3.5",
+        "4",
+        "1"
+      ],
+      "jawabanBenar": 1,
+      "penjelasan": "Operator / menghasilkan pembagian desimal: 7 / 2 = 3.5.",
+      "relatedCardIds": [
+        "op-02"
+      ]
+    },
+    {
+      "id": "q-op-mudah-04",
+      "topicId": "operator",
+      "level": "Mudah",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari 2 ** 3?",
+      "pilihan": [
+        "5",
+        "23",
+        "8",
+        "6"
+      ],
+      "jawabanBenar": 2,
+      "penjelasan": "** adalah pangkat: 2 pangkat 3 = 2 x 2 x 2 = 8.",
+      "relatedCardIds": [
+        "op-04"
+      ]
+    },
+    {
+      "id": "q-op-mudah-05",
+      "topicId": "operator",
+      "level": "Mudah",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Pada ekspresi a + b, nilai a dan b disebut ...",
+      "pilihan": [
+        "Fungsi",
+        "Konstanta",
+        "Operator",
+        "Operand"
+      ],
+      "jawabanBenar": 3,
+      "penjelasan": "Operator adalah simbolnya (+), sedangkan nilai yang dioperasikan disebut operand.",
+      "relatedCardIds": [
+        "op-01"
+      ]
+    },
+    {
+      "id": "q-op-sedang-01",
+      "topicId": "operator",
+      "level": "Sedang",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari 7 // 2?",
+      "pilihan": [
+        "3",
+        "3.5",
+        "4",
+        "1"
+      ],
+      "jawabanBenar": 0,
+      "penjelasan": "// adalah pembagian bulat: 7 dibagi 2 = 3 (sisa diabaikan).",
+      "relatedCardIds": [
+        "op-03"
+      ]
+    },
+    {
+      "id": "q-op-sedang-02",
+      "topicId": "operator",
+      "level": "Sedang",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari 10 % 3?",
+      "pilihan": [
+        "3.33",
+        "1",
+        "3",
+        "0"
+      ],
+      "jawabanBenar": 1,
+      "penjelasan": "% menghasilkan sisa bagi. 10 dibagi 3 = 3 sisa 1.",
+      "relatedCardIds": [
+        "op-03"
+      ]
+    },
+    {
+      "id": "q-op-sedang-03",
+      "topicId": "operator",
+      "level": "Sedang",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari (2 + 3) * 4?",
+      "pilihan": [
+        "9",
+        "14",
+        "20",
+        "24"
+      ],
+      "jawabanBenar": 2,
+      "penjelasan": "Tanda kurung dihitung lebih dulu: 2 + 3 = 5, lalu 5 * 4 = 20.",
+      "relatedCardIds": [
+        "op-05"
+      ]
+    },
+    {
+      "id": "q-op-sedang-04",
+      "topicId": "operator",
+      "level": "Sedang",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa yang tampil dari kode berikut?\n\nskor = 10\nskor += 5\nprint(skor)",
+      "pilihan": [
+        "10",
+        "5",
+        "105",
+        "15"
+      ],
+      "jawabanBenar": 3,
+      "penjelasan": "skor += 5 sama dengan skor = skor + 5, jadi 10 + 5 = 15.",
+      "relatedCardIds": [
+        "op-06"
+      ]
+    },
+    {
+      "id": "q-op-sedang-05",
+      "topicId": "operator",
+      "level": "Sedang",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari 5 == 5?",
+      "pilihan": [
+        "True",
+        "False",
+        "Error",
+        "5"
+      ],
+      "jawabanBenar": 0,
+      "penjelasan": "== membandingkan dua nilai. Keduanya sama sehingga hasilnya True.",
+      "relatedCardIds": [
+        "op-07"
+      ]
+    },
+    {
+      "id": "q-op-sulit-01",
+      "topicId": "operator",
+      "level": "Sulit",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari print(2 + 3 * 4 ** 2)?",
+      "pilihan": [
+        "38",
+        "50",
+        "80",
+        "100"
+      ],
+      "jawabanBenar": 1,
+      "penjelasan": "Urutan: 4 ** 2 = 16, lalu 3 * 16 = 48, lalu 2 + 48 = 50.",
+      "relatedCardIds": [
+        "op-05"
+      ]
+    },
+    {
+      "id": "q-op-sulit-02",
+      "topicId": "operator",
+      "level": "Sulit",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari kode berikut?\n\numur = 20\nprint(umur >= 17 and umur < 20)",
+      "pilihan": [
+        "Error",
+        "True",
+        "False",
+        "20"
+      ],
+      "jawabanBenar": 2,
+      "penjelasan": "umur >= 17 bernilai True, tetapi umur < 20 bernilai False. Karena memakai and, hasilnya False.",
+      "relatedCardIds": [
+        "op-08"
+      ]
+    },
+    {
+      "id": "q-op-sulit-03",
+      "topicId": "operator",
+      "level": "Sulit",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari print(not (5 > 3) or 2 == 2)?",
+      "pilihan": [
+        "None",
+        "False",
+        "Error",
+        "True"
+      ],
+      "jawabanBenar": 3,
+      "penjelasan": "5 > 3 True, not menjadikannya False. 2 == 2 True. False or True menghasilkan True.",
+      "relatedCardIds": [
+        "op-09"
+      ]
+    },
+    {
+      "id": "q-op-sulit-04",
+      "topicId": "operator",
+      "level": "Sulit",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Ekspresi yang bernilai True jika n adalah bilangan genap adalah ...",
+      "pilihan": [
+        "n % 2 == 0",
+        "n // 2 == 0",
+        "n / 2 == 0",
+        "n ** 2 == 0"
+      ],
+      "jawabanBenar": 0,
+      "penjelasan": "Bilangan genap habis dibagi 2, sehingga sisa baginya 0. Itulah yang dicek oleh n % 2 == 0.",
+      "relatedCardIds": [
+        "op-03"
+      ]
+    },
+    {
+      "id": "q-op-sulit-05",
+      "topicId": "operator",
+      "level": "Sulit",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa yang tampil dari kode berikut?\n\nx = 5\nx = x * 2 + 1\nx -= 3\nprint(x)",
+      "pilihan": [
+        "6",
+        "8",
+        "11",
+        "13"
+      ],
+      "jawabanBenar": 1,
+      "penjelasan": "x = 5 * 2 + 1 = 11, lalu x -= 3 membuat x = 8.",
+      "relatedCardIds": [
+        "op-06"
+      ]
     }
   ]
 }

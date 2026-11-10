@@ -16,14 +16,14 @@ const placement = read('placementTest.json').questions;
 const upsertQuestion = (db, q, isPlacement) =>
   db.query(
     `INSERT INTO questions (id, topic_id, level, is_placement, tipe, pertanyaan, pilihan,
-       jawaban_benar, penjelasan, related_card_ids)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       jawaban_benar, penjelasan, petunjuk, related_card_ids)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
      ON CONFLICT (id) DO UPDATE SET topic_id = EXCLUDED.topic_id, level = EXCLUDED.level,
        pertanyaan = EXCLUDED.pertanyaan, pilihan = EXCLUDED.pilihan,
        jawaban_benar = EXCLUDED.jawaban_benar, penjelasan = EXCLUDED.penjelasan,
-       related_card_ids = EXCLUDED.related_card_ids`,
+       petunjuk = EXCLUDED.petunjuk, related_card_ids = EXCLUDED.related_card_ids`,
     [q.id, q.topicId, isPlacement ? null : q.level, isPlacement, q.tipe || 'pilihan_ganda',
-     q.pertanyaan, JSON.stringify(q.pilihan), q.jawabanBenar, q.penjelasan || '', j(q.relatedCardIds)]
+     q.pertanyaan, JSON.stringify(q.pilihan), q.jawabanBenar, q.penjelasan || '', q.petunjuk || null, j(q.relatedCardIds)]
   );
 
 await withTx(async (db) => {

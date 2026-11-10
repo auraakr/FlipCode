@@ -16,6 +16,8 @@ export const toClientQuestion = (q) => ({
   tipe: q.tipe,
   pertanyaan: q.pertanyaan,
   pilihan: q.pilihan,
+  // Petunjuk boleh dikirim sebelum menjawab (tidak boleh berisi jawabannya).
+  petunjuk: q.petunjuk || null,
 });
 
 // jawaban: [{ questionId, pilihan }]. Soal tanpa jawaban dihitung salah.

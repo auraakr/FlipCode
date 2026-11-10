@@ -4,11 +4,403 @@
     {
       "id": "var-01",
       "topicId": "variabel",
-      "depan": "",
+      "depan": "Apa itu variabel?",
       "belakang": {
-        "penjelasan": "",
-        "contohKode": "",
-        "analogi": ""
+        "penjelasan": "Variabel adalah wadah bernama untuk menyimpan data di memori komputer. Nilainya boleh berubah selama program berjalan.",
+        "contohKode": "umur = 16",
+        "analogi": "Seperti kotak berlabel di lemari: label adalah nama variabel, isi kotak adalah nilainya."
+      },
+      "relatedQuestionIds": [
+        "q-var-sedang-05"
+      ]
+    },
+    {
+      "id": "var-02",
+      "topicId": "variabel",
+      "depan": "Bagaimana cara membuat variabel?",
+      "belakang": {
+        "penjelasan": "Tulis nama variabel, tanda =, lalu nilainya. Tanda = berarti 'simpan nilai di kanan ke variabel di kiri' (penugasan), bukan 'sama dengan' seperti di matematika.",
+        "contohKode": "nama = \"Alya\"\nskor = 90",
+        "analogi": "Seperti memasukkan barang ke dalam kotak berlabel."
+      },
+      "relatedQuestionIds": [
+        "q-var-mudah-01",
+        "q-var-mudah-03"
+      ]
+    },
+    {
+      "id": "var-03",
+      "topicId": "variabel",
+      "depan": "Apa aturan penamaan variabel?",
+      "belakang": {
+        "penjelasan": "Nama boleh berisi huruf, angka, dan garis bawah (_). Nama tidak boleh diawali angka dan tidak boleh mengandung spasi atau tanda minus. Gunakan garis bawah untuk memisahkan kata (snake_case).",
+        "contohKode": "nama_siswa = \"Alya\"  # valid\n1nama = \"Alya\"  # tidak valid",
+        "analogi": "Seperti nama file di komputer: tidak boleh sembarang karakter, dan spasi diganti garis bawah agar rapi."
+      },
+      "relatedQuestionIds": [
+        "q-var-mudah-02",
+        "q-var-sulit-03"
+      ]
+    },
+    {
+      "id": "var-04",
+      "topicId": "variabel",
+      "depan": "Apakah huruf besar dan kecil dianggap berbeda?",
+      "belakang": {
+        "penjelasan": "Ya. Python bersifat case-sensitive, jadi nama dan Nama adalah dua variabel yang berbeda.",
+        "contohKode": "nama = \"Alya\"\nNama = \"Budi\"\nprint(nama)  # Alya",
+        "analogi": "Seperti dua kotak dengan label yang ejaannya mirip tetapi tidak sama: isinya terpisah."
+      },
+      "relatedQuestionIds": [
+        "q-var-sedang-01",
+        "q-var-sulit-05"
+      ]
+    },
+    {
+      "id": "var-05",
+      "topicId": "variabel",
+      "depan": "Kata apa yang tidak boleh jadi nama variabel?",
+      "belakang": {
+        "penjelasan": "Kata kunci (keyword) Python seperti if, for, while, class, dan True sudah punya arti khusus, sehingga tidak boleh dipakai sebagai nama variabel.",
+        "contohKode": "for = 5  # Error\nulang = 5  # Valid",
+        "analogi": "Seperti kata STOP pada rambu lalu lintas: artinya sudah tetap, jadi tidak bisa dipakai untuk hal lain."
+      },
+      "relatedQuestionIds": [
+        "q-var-sedang-03"
+      ]
+    },
+    {
+      "id": "var-06",
+      "topicId": "variabel",
+      "depan": "Bagaimana mengubah nilai variabel?",
+      "belakang": {
+        "penjelasan": "Beri nilai baru dengan tanda = yang sama. Nilai lama otomatis diganti nilai baru.",
+        "contohKode": "skor = 70\nskor = 85\nprint(skor)  # 85",
+        "analogi": "Seperti mengganti isi kotak: isi lama dikeluarkan, isi baru dimasukkan."
+      },
+      "relatedQuestionIds": [
+        "q-var-mudah-05",
+        "q-var-sulit-02"
+      ]
+    },
+    {
+      "id": "var-07",
+      "topicId": "variabel",
+      "depan": "Seperti apa nama variabel yang baik?",
+      "belakang": {
+        "penjelasan": "Pilih nama yang menjelaskan isinya agar kode mudah dibaca, misalnya umur_siswa, bukan x. Nama yang jelas membantu kita dan orang lain memahami program.",
+        "contohKode": "x = 17  # kurang jelas\numur_siswa = 17  # jelas",
+        "analogi": "Seperti label toples di dapur: 'Gula' jauh lebih jelas daripada 'Toples 1'."
+      },
+      "relatedQuestionIds": [
+        "q-var-sedang-02"
+      ]
+    },
+    {
+      "id": "var-08",
+      "topicId": "variabel",
+      "depan": "Bagaimana menampilkan isi variabel?",
+      "belakang": {
+        "penjelasan": "Gunakan print() dengan nama variabel di dalam tanda kurung. Jangan beri tanda kutip pada nama variabel, karena akan dianggap teks biasa.",
+        "contohKode": "kota = \"Bandung\"\nprint(kota)  # Bandung\nprint(\"kota\")  # kota",
+        "analogi": "Seperti membuka kotak untuk melihat isinya (tanpa kutip), bukan sekadar membaca tulisan pada labelnya (dengan kutip)."
+      },
+      "relatedQuestionIds": [
+        "q-var-mudah-04"
+      ]
+    },
+    {
+      "id": "var-09",
+      "topicId": "variabel",
+      "depan": "Apa yang terjadi saat variabel disalin ke variabel lain?",
+      "belakang": {
+        "penjelasan": "Nilai saat itu disalin ke variabel baru. Mengubah variabel asal sesudahnya tidak ikut mengubah salinan.",
+        "contohKode": "a = 5\nb = a\na = 9\nprint(b)  # 5",
+        "analogi": "Seperti memfotokopi catatan lalu mencoret catatan asli: fotokopinya tetap utuh."
+      },
+      "relatedQuestionIds": [
+        "q-var-sedang-04",
+        "q-var-sulit-01"
+      ]
+    },
+    {
+      "id": "var-10",
+      "topicId": "variabel",
+      "depan": "Apa itu konstanta?",
+      "belakang": {
+        "penjelasan": "Konstanta adalah variabel yang nilainya tidak dimaksudkan untuk diubah. Python tidak mengunci nilainya, tetapi programmer menandainya dengan HURUF KAPITAL sebagai kesepakatan (konvensi).",
+        "contohKode": "PI = 3.14\nMAKS_NILAI = 100",
+        "analogi": "Seperti tulisan JANGAN DIUBAH di papan pengumuman: tidak ada gembok, tetapi semua orang sepakat tidak mengubahnya."
+      },
+      "relatedQuestionIds": [
+        "q-var-sulit-04"
+      ]
+    },
+    {
+      "id": "tipe-01",
+      "topicId": "tipe_data",
+      "depan": "Apa itu tipe data?",
+      "belakang": {
+        "penjelasan": "Tipe data adalah jenis nilai yang disimpan variabel: bilangan bulat, desimal, teks, atau benar/salah. Tipe menentukan operasi apa yang boleh dilakukan.",
+        "contohKode": "print(type(5))  # <class 'int'>",
+        "analogi": "Seperti wadah berbeda untuk barang berbeda: gelas untuk air, kotak untuk buku."
+      },
+      "relatedQuestionIds": []
+    },
+    {
+      "id": "tipe-02",
+      "topicId": "tipe_data",
+      "depan": "Apa itu integer (int)?",
+      "belakang": {
+        "penjelasan": "Integer adalah bilangan bulat tanpa titik desimal, bisa positif, negatif, atau nol. Cocok untuk data yang dihitung, seperti jumlah siswa.",
+        "contohKode": "jumlah = 25\nsuhu = -3",
+        "analogi": "Seperti jumlah kursi di kelas: 25 kursi, tidak mungkin 25,5 kursi."
+      },
+      "relatedQuestionIds": [
+        "q-tipe-mudah-01",
+        "q-tipe-mudah-04"
+      ]
+    },
+    {
+      "id": "tipe-03",
+      "topicId": "tipe_data",
+      "depan": "Apa itu float?",
+      "belakang": {
+        "penjelasan": "Float adalah bilangan desimal yang ditulis dengan titik (bukan koma). Cocok untuk data hasil pengukuran, seperti tinggi badan atau rata-rata nilai.",
+        "contohKode": "tinggi = 1.65\nrata_rata = 82.5",
+        "analogi": "Seperti hasil meteran atau timbangan: 1,65 meter, ada angka pecahannya."
+      },
+      "relatedQuestionIds": [
+        "q-tipe-sulit-03"
+      ]
+    },
+    {
+      "id": "tipe-04",
+      "topicId": "tipe_data",
+      "depan": "Apa itu string (str)?",
+      "belakang": {
+        "penjelasan": "String adalah teks yang ditulis di antara tanda kutip, tunggal maupun ganda. Angka di dalam kutip tetap dianggap teks.",
+        "contohKode": "sapaan = \"Halo\"\nkelas = '10 TKJ'",
+        "analogi": "Seperti tulisan pada papan nama: isinya untuk dibaca, bukan untuk dihitung."
+      },
+      "relatedQuestionIds": [
+        "q-tipe-mudah-02"
+      ]
+    },
+    {
+      "id": "tipe-05",
+      "topicId": "tipe_data",
+      "depan": "Apa itu boolean (bool)?",
+      "belakang": {
+        "penjelasan": "Boolean hanya punya dua nilai: True (benar) dan False (salah), huruf awalnya kapital dan tanpa kutip. Sering dipakai untuk menyimpan hasil pengecekan.",
+        "contohKode": "lulus = True\nsudah_login = False",
+        "analogi": "Seperti saklar lampu: hanya hidup atau mati."
+      },
+      "relatedQuestionIds": [
+        "q-tipe-mudah-03",
+        "q-tipe-sedang-05"
+      ]
+    },
+    {
+      "id": "tipe-06",
+      "topicId": "tipe_data",
+      "depan": "Apa beda 5 dan \"5\"?",
+      "belakang": {
+        "penjelasan": "5 adalah integer yang bisa dihitung, sedangkan \"5\" adalah teks. Operator + pada angka menjumlahkan, pada teks menyambung.",
+        "contohKode": "print(5 + 5)  # 10\nprint(\"5\" + \"5\")  # 55",
+        "analogi": "Seperti angka 5 di layar kalkulator dan angka 5 yang tertulis di papan nama: tampak sama, tetapi yang satu dihitung dan yang satu hanya dibaca."
+      },
+      "relatedQuestionIds": [
+        "q-tipe-sedang-01",
+        "q-tipe-sulit-04",
+        "q-tipe-sulit-05"
+      ]
+    },
+    {
+      "id": "tipe-07",
+      "topicId": "tipe_data",
+      "depan": "Bagaimana mengecek tipe data?",
+      "belakang": {
+        "penjelasan": "Gunakan fungsi type() dengan nilai atau variabel di dalam kurung. Berguna saat hasil program tidak sesuai harapan.",
+        "contohKode": "x = 3.5\nprint(type(x))  # <class 'float'>",
+        "analogi": "Seperti membaca label kemasan untuk mengetahui isi di dalamnya."
+      },
+      "relatedQuestionIds": [
+        "q-tipe-mudah-05"
+      ]
+    },
+    {
+      "id": "tipe-08",
+      "topicId": "tipe_data",
+      "depan": "Bagaimana mengubah nilai menjadi integer?",
+      "belakang": {
+        "penjelasan": "Gunakan int(). Teks berisi angka bulat bisa diubah menjadi integer. Jika yang diubah adalah float, bagian desimalnya dibuang (bukan dibulatkan).",
+        "contohKode": "print(int(\"12\"))  # 12\nprint(int(3.9))  # 3",
+        "analogi": "Seperti menghitung kue utuh: potongan sisanya dibuang, bukan dibulatkan ke atas."
+      },
+      "relatedQuestionIds": [
+        "q-tipe-sedang-02"
+      ]
+    },
+    {
+      "id": "tipe-09",
+      "topicId": "tipe_data",
+      "depan": "Bagaimana mengubah nilai menjadi float atau string?",
+      "belakang": {
+        "penjelasan": "float() mengubah ke bilangan desimal, str() mengubah ke teks. Perubahan tipe seperti ini disebut konversi (type casting).",
+        "contohKode": "print(float(\"2.5\"))  # 2.5 (float)\nprint(str(100))  # 100 (teks)",
+        "analogi": "Seperti menuang air ke wadah lain: isinya sama, hanya bentuk wadahnya yang berubah."
+      },
+      "relatedQuestionIds": [
+        "q-tipe-sedang-03",
+        "q-tipe-sedang-04"
+      ]
+    },
+    {
+      "id": "tipe-10",
+      "topicId": "tipe_data",
+      "depan": "Apa tipe data hasil input()?",
+      "belakang": {
+        "penjelasan": "input() selalu menghasilkan string, walaupun pengguna mengetik angka. Ubah dulu dengan int() atau float() sebelum dipakai menghitung.",
+        "contohKode": "umur = int(input(\"Umur: \"))\nprint(umur + 1)",
+        "analogi": "Seperti mengisi formulir kertas: apa pun yang ditulis tetap berupa tulisan, harus diterjemahkan dulu menjadi angka sebelum dihitung."
+      },
+      "relatedQuestionIds": [
+        "q-tipe-sulit-01",
+        "q-tipe-sulit-02"
+      ]
+    },
+    {
+      "id": "op-01",
+      "topicId": "operator",
+      "depan": "Apa itu operator?",
+      "belakang": {
+        "penjelasan": "Operator adalah simbol yang memerintahkan komputer melakukan suatu operasi. Nilai yang dioperasikan disebut operand. Pada 3 + 4, tanda + adalah operator, sedangkan 3 dan 4 adalah operand.",
+        "contohKode": "hasil = 3 + 4\nprint(hasil)  # 7",
+        "analogi": "Seperti kalkulator: tombol + adalah operator, angka di layar adalah operand."
+      },
+      "relatedQuestionIds": [
+        "q-op-mudah-05"
+      ]
+    },
+    {
+      "id": "op-02",
+      "topicId": "operator",
+      "depan": "Apa saja operator aritmetika dasar?",
+      "belakang": {
+        "penjelasan": "+ (tambah), - (kurang), * (kali), / (bagi). Perhatikan bahwa pembagian dengan / selalu menghasilkan float.",
+        "contohKode": "print(7 + 2)  # 9\nprint(7 * 2)  # 14\nprint(7 / 2)  # 3.5",
+        "analogi": "Seperti tombol dasar pada kalkulator: tambah, kurang, kali, bagi."
+      },
+      "relatedQuestionIds": [
+        "q-op-mudah-01",
+        "q-op-mudah-02",
+        "q-op-mudah-03"
+      ]
+    },
+    {
+      "id": "op-03",
+      "topicId": "operator",
+      "depan": "Apa fungsi // dan %?",
+      "belakang": {
+        "penjelasan": "// adalah pembagian bulat (hasil tanpa desimal), % adalah modulus (sisa bagi). Contoh: n % 2 == 0 untuk mengecek bilangan genap.",
+        "contohKode": "print(7 // 2)  # 3\nprint(7 % 2)  # 1",
+        "analogi": "7 permen dibagi untuk 2 anak: tiap anak dapat 3 (//) dan sisa 1 permen (%)."
+      },
+      "relatedQuestionIds": [
+        "q-op-sedang-01",
+        "q-op-sedang-02",
+        "q-op-sulit-04"
+      ]
+    },
+    {
+      "id": "op-04",
+      "topicId": "operator",
+      "depan": "Bagaimana menghitung pangkat?",
+      "belakang": {
+        "penjelasan": "Gunakan operator **. Angka di kiri adalah bilangan dasar dan angka di kanan adalah pangkatnya.",
+        "contohKode": "print(2 ** 3)  # 8\nprint(5 ** 2)  # 25",
+        "analogi": "Seperti luas persegi: sisi 5 dikalikan dengan dirinya sendiri menjadi 25."
+      },
+      "relatedQuestionIds": [
+        "q-op-mudah-04"
+      ]
+    },
+    {
+      "id": "op-05",
+      "topicId": "operator",
+      "depan": "Operator mana yang dihitung lebih dulu?",
+      "belakang": {
+        "penjelasan": "Urutannya: tanda kurung (), lalu **, lalu * / // %, terakhir + -. Seperti di matematika, kali dan bagi didahulukan sebelum tambah dan kurang. Pakai kurung agar maksudnya jelas.",
+        "contohKode": "print(2 + 3 * 4)  # 14\nprint((2 + 3) * 4)  # 20",
+        "analogi": "Seperti aturan antrean di jalan: ada yang harus didahulukan, dan tanda kurung adalah jalur prioritas buatan kita."
+      },
+      "relatedQuestionIds": [
+        "q-op-sedang-03",
+        "q-op-sulit-01"
+      ]
+    },
+    {
+      "id": "op-06",
+      "topicId": "operator",
+      "depan": "Apa itu operator penugasan?",
+      "belakang": {
+        "penjelasan": "= menyimpan nilai ke variabel. Bentuk singkat seperti +=, -=, *= mengubah nilai variabel berdasarkan nilai sebelumnya. skor += 5 sama dengan skor = skor + 5.",
+        "contohKode": "skor = 10\nskor += 5\nprint(skor)  # 15",
+        "analogi": "Seperti celengan: skor += 5 berarti menambah 5 ke isi celengan yang sudah ada."
+      },
+      "relatedQuestionIds": [
+        "q-op-sedang-04",
+        "q-op-sulit-05"
+      ]
+    },
+    {
+      "id": "op-07",
+      "topicId": "operator",
+      "depan": "Apa itu operator perbandingan?",
+      "belakang": {
+        "penjelasan": "Dipakai membandingkan dua nilai dan menghasilkan True atau False: == (sama dengan), != (tidak sama), >, <, >=, <=. Jangan tertukar: = menyimpan nilai, == membandingkan nilai.",
+        "contohKode": "print(5 == 5)  # True\nprint(5 != 5)  # False\nprint(7 >= 10)  # False",
+        "analogi": "Seperti wasit yang memeriksa dua hal: jawabannya hanya ya (True) atau tidak (False)."
+      },
+      "relatedQuestionIds": [
+        "q-op-sedang-05"
+      ]
+    },
+    {
+      "id": "op-08",
+      "topicId": "operator",
+      "depan": "Apa fungsi operator and?",
+      "belakang": {
+        "penjelasan": "and menghasilkan True hanya jika kedua syarat bernilai True.",
+        "contohKode": "umur = 17\npunya_ktp = False\nprint(umur >= 17 and punya_ktp)  # False",
+        "analogi": "Masuk gedung wajib punya tiket DAN membawa KTP; kurang satu, ditolak."
+      },
+      "relatedQuestionIds": [
+        "q-op-sulit-02"
+      ]
+    },
+    {
+      "id": "op-09",
+      "topicId": "operator",
+      "depan": "Apa fungsi or dan not?",
+      "belakang": {
+        "penjelasan": "or bernilai True jika salah satu syarat True. not membalik nilai: True menjadi False dan sebaliknya.",
+        "contohKode": "print(True or False)  # True\nprint(not True)  # False",
+        "analogi": "or: boleh bayar tunai ATAU kartu, salah satu cukup. not: seperti tombol balik yang menukar hidup menjadi mati."
+      },
+      "relatedQuestionIds": [
+        "q-op-sulit-03"
+      ]
+    },
+    {
+      "id": "op-10",
+      "topicId": "operator",
+      "depan": "Apa fungsi + dan * pada teks?",
+      "belakang": {
+        "penjelasan": "Pada string, + menyambung teks (konkatenasi) dan * mengulang teks. Syaratnya tipe cocok: teks + teks, atau teks * bilangan bulat.",
+        "contohKode": "print(\"Halo \" + \"Alya\")  # Halo Alya\nprint(\"ha\" * 3)  # hahaha",
+        "analogi": "Seperti menempel dua potongan kertas bertulisan (+), atau memfotokopi satu tulisan berkali-kali (*)."
       },
       "relatedQuestionIds": []
     }

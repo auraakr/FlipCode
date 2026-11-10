@@ -34,8 +34,11 @@ CREATE TABLE IF NOT EXISTS questions (
   pilihan JSONB NOT NULL,
   jawaban_benar SMALLINT NOT NULL,
   penjelasan TEXT,
+  petunjuk TEXT,
   related_card_ids JSONB
 );
+-- Migrasi untuk database yang sudah ada: petunjuk (hint) soal kuis, tampil sebelum menjawab.
+ALTER TABLE questions ADD COLUMN IF NOT EXISTS petunjuk TEXT;
 CREATE INDEX IF NOT EXISTS idx_questions_pick ON questions (topic_id, level, is_placement);
 
 CREATE TABLE IF NOT EXISTS user_topic_progress (

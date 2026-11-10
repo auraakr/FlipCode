@@ -154,7 +154,7 @@ export default function QuizScreen({ route, navigation }) {
     }
     try {
       const hasil = await QuizApi.submit({ sessionId, questions, jawaban: arr });
-      navigation.replace('QuizResult', { topicId, hasil, level: sessionLevel });
+      navigation.replace('QuizResult', { topicId, hasil, level: sessionLevel, questions });
     } catch (e) {
       Alert.alert('Gagal mengirim jawaban', e.message || 'Coba lagi.');
     }
@@ -313,7 +313,7 @@ export default function QuizScreen({ route, navigation }) {
         </View>
 
         {/* Yellow Petunjuk Card */}
-        {q.petunjuk ? <View style={s.hintCard}>
+        {q.petunjuk && !showFeedback ? <View style={s.hintCard}>
           <View style={s.hintIconCircle}>
             <LightbulbIcon size={15} color="#D97706" />
           </View>

@@ -74,6 +74,7 @@ export const openapi = {
           tipe: { type: 'string', example: 'pilihan_ganda' },
           pertanyaan: { type: 'string' },
           pilihan: { type: 'array', items: { type: 'string' } },
+          petunjuk: { type: 'string', nullable: true, description: 'Hint opsional, tampil sebelum menjawab' },
         },
       },
       AnswerInput: {

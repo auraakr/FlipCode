@@ -1429,7 +1429,6 @@ const s = StyleSheet.create({
   },
   completedHeroBanner: {
     backgroundColor: '#2554E8',
-    borderRadius: 28,
     height: 245,
     alignItems: 'center',
     justifyContent: 'center',

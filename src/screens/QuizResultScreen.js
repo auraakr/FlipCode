@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fonts } from '../constants/theme';
 import { ContentRepository } from '../storage/ContentRepository';
+import { Level, TopicState } from '../constants/enums';
 import {
   CloseIcon,
   LightningBoltIcon,
@@ -32,26 +33,116 @@ export default function QuizResultScreen({ route, navigation }) {
   const topik = ContentRepository.getTopicById(topicId);
   const namaTopik = topik?.nama || 'Variabel';
 
-  // Tentukan mode awal berdasarkan skor kuis ('up' = Frame 18, 'same' = Frame 19, 'down' = Frame 20)
-  const initialMode = () => {
-    // Arah perubahan level ditentukan server (adapt.delta).
-    const d = hasil?.adapt?.delta;
-    if (typeof d === 'number') {
-      if (d > 0) return 'up';
-      if (d === 0) return 'same';
-      return 'down';
-    }
-    return 'up';
+  const [showReview, setShowReview] = useState(false);
+
+  if (!hasil) {
+    return (
+      <SafeAreaView style={[s.safeArea, { alignItems: 'center', justifyContent: 'center', padding: 24 }]}>
+        <Text style={{ fontFamily: fonts.bold, fontSize: 15, color: '#1F2A44', textAlign: 'center' }}>
+          Hasil kuis tidak tersedia.
+        </Text>
+        <TouchableOpacity onPress={() => navigation.replace('MainTabs')} style={{ marginTop: 16 }}>
+          <Text style={{ fontFamily: fonts.extrabold, fontSize: 14, color: '#2554E8' }}>Kembali</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
+  // Semua nilai di bawah ini berasal dari respons POST /quiz/submit.
+  const total = hasil.total ?? 0;
+  const benarCount = hasil.benar ?? 0;
+  const pctBenar = total ? Math.round((benarCount / total) * 100) : 0;
+  const prevLevel = route?.params?.level || Level.MUDAH;
+  const nextLevel = hasil.adapt?.nextLevel || prevLevel;
+  const detail = hasil.detail || [];
+  const questions = route?.params?.questions || [];
+  const mastered = hasil.topicState === TopicState.DIKUASAI;
+  const resultDots = detail.length
+    ? detail.map((d) => !!d.benar)
+    : Array.from({ length: total }, (_, i) => i < benarCount);
+  const scoreNote = `Benar ${benarCount} dari ${total} • ${pctBenar}%`;
+
+  // Arah perubahan level ditentukan server (adapt.delta).
+  const delta = hasil.adapt?.delta ?? 0;
+  const mode = delta > 0 ? 'up' : delta === 0 ? 'same' : 'down';
+
+  // Syarat naik level: >20% benar -> Sedang, >=80% benar -> Sulit.
+  const needSedang = Math.floor(total * 0.2 + 1e-9) + 1;
+  const needSulit = Math.ceil(total * 0.8 - 1e-9);
+  const targetText =
+    nextLevel === Level.MUDAH
+      ? `Jawab minimal ${needSedang} soal dengan benar untuk naik ke Sedang.`
+      : nextLevel === Level.SEDANG
+      ? `Jawab minimal ${needSulit} soal dengan benar untuk naik ke Sulit.`
+      : mastered
+      ? 'Topik ini sudah kamu kuasai.'
+      : 'Pertahankan nilai ≥80% dan kuasai ≥70% kartu untuk menguasai topik.';
+
+  // Kartu terkait soal yang salah (dari server) -> saran ulang flashcard.
+  const repeatIds = new Set();
+  detail.forEach((d) => !d.benar && (d.relatedCardIds || []).forEach((id) => repeatIds.add(id)));
+  const repeatText = repeatIds.size
+    ? `Ulangi ${repeatIds.size} kartu terkait soal yang salah dulu.`
+    : 'Ulangi flashcard topik ini dulu.';
+
+  const toggleReview = () => setShowReview((v) => !v);
+  const continueAction = () =>
+    mastered
+      ? navigation.navigate('TopicCompleted', { topicId })
+      : navigation.replace('Quiz', { topicId });
+
+  // Kotak level (Sebelumnya / Sekarang) sesuai level asli.
+  const LEVEL_BOX = {
+    [Level.MUDAH]: { soft: s.levelBoxGreenSoft, text: s.levelTextGreen, solid: '#10B981' },
+    [Level.SEDANG]: { soft: s.levelBoxYellowSoft, text: s.levelTextYellow, solid: '#F59E0B' },
+    [Level.SULIT]: {
+      soft: [s.levelBoxYellowSoft, { backgroundColor: '#FFE4E6' }],
+      text: [s.levelTextYellow, { color: '#E11D48' }],
+      solid: '#EF4444',
+    },
   };
-
-  const [mode, setMode] = useState(initialMode);
-
-  // Memudahkan berganti antara Frame 18 (up), Frame 19 (same), dan Frame 20 (down)
-  const cycleMode = () => {
-    setMode((prev) =>
-      prev === 'up' ? 'same' : prev === 'same' ? 'down' : 'up'
+  const levelBox = (level, solid) => {
+    const cfg = LEVEL_BOX[level] || LEVEL_BOX[Level.MUDAH];
+    return solid ? (
+      <View style={[s.levelBoxGreenSolid, { backgroundColor: cfg.solid }]}>
+        <Text style={s.levelTextWhite}>{level}</Text>
+      </View>
+    ) : (
+      <View style={cfg.soft}>
+        <Text style={cfg.text}>{level}</Text>
+      </View>
     );
   };
+
+  // Pembahasan tiap soal (soal dikirim dari layar kuis, kunci & penjelasan dari server).
+  const reviewList = showReview ? (
+    <View style={s.reviewList}>
+      {questions.map((q, i) => {
+        const d = detail.find((x) => x.questionId === q.id) || {};
+        return (
+          <View key={q.id} style={s.reviewItem}>
+            <Text style={s.reviewQ}>
+              {i + 1}. {q.pertanyaan}
+            </Text>
+            <Text style={[s.reviewA, { color: d.benar ? '#10B981' : '#EF4444' }]}>
+              Jawabanmu: {q.pilihan?.[d.dipilih] ?? '—'}
+            </Text>
+            {!d.benar && (
+              <Text style={[s.reviewA, { color: '#10B981' }]}>
+                Jawaban benar: {q.pilihan?.[d.jawabanBenar]}
+              </Text>
+            )}
+            {d.penjelasan ? <Text style={s.reviewExp}>{d.penjelasan}</Text> : null}
+          </View>
+        );
+      })}
+    </View>
+  ) : null;
+  const reviewToggle = (
+    <TouchableOpacity activeOpacity={0.75} onPress={toggleReview} style={s.reviewToggle}>
+      <Text style={s.secondaryLinkText}>{showReview ? 'Sembunyikan Pembahasan' : 'Lihat Pembahasan'}</Text>
+    </TouchableOpacity>
+  );
 
   const handleClose = () => {
     navigation.replace('MainTabs');
@@ -61,7 +152,7 @@ export default function QuizResultScreen({ route, navigation }) {
   // FRAME 18: LEVEL INCREASED (mode === 'up')
   // ============================================================================
   if (mode === 'up') {
-    const dots = [true, true, false, true, true];
+    const dots = resultDots;
     return (
       <SafeAreaView style={s.safeArea} edges={['top', 'bottom']}>
         <ScrollView
@@ -83,7 +174,6 @@ export default function QuizResultScreen({ route, navigation }) {
 
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={cycleMode}
                 style={s.quizPillTranslucent}
               >
                 <LightningBoltIcon size={12} color="#FFFFFF" />
@@ -116,13 +206,13 @@ export default function QuizResultScreen({ route, navigation }) {
           </View>
 
           {/* Overlapping Score Ring: 4/5 */}
-          <ScoreBadgeRing score={hasil?.benar ?? 4} total={hasil?.total ?? 5} mode="up" onPress={cycleMode} />
+          <ScoreBadgeRing score={benarCount} total={total} mode="up" />
 
           {/* Main Content */}
           <View style={s.bodyWrap}>
             <Text style={s.title}>Level naik! 🚀</Text>
             <Text style={s.subtitle}>
-              Kamu siap untuk tantangan berikutnya.
+              {mastered ? 'Topik ini sudah kamu kuasai! 🎉' : 'Kamu siap untuk tantangan berikutnya.'}
             </Text>
 
             {/* Level Transition & Score Dots Card */}
@@ -130,9 +220,7 @@ export default function QuizResultScreen({ route, navigation }) {
               <View style={s.levelRow}>
                 <View style={s.levelCol}>
                   <Text style={s.levelColLabel}>SEBELUMNYA</Text>
-                  <View style={s.levelBoxGreenSoft}>
-                    <Text style={s.levelTextGreen}>Mudah</Text>
-                  </View>
+                  {levelBox(prevLevel)}
                 </View>
 
                 <View style={s.arrowCircleBlue}>
@@ -141,9 +229,7 @@ export default function QuizResultScreen({ route, navigation }) {
 
                 <View style={s.levelCol}>
                   <Text style={s.levelColLabel}>SEKARANG</Text>
-                  <View style={s.levelBoxYellowSoft}>
-                    <Text style={s.levelTextYellow}>Sedang</Text>
-                  </View>
+                  {levelBox(nextLevel)}
                 </View>
               </View>
 
@@ -167,22 +253,23 @@ export default function QuizResultScreen({ route, navigation }) {
                     </View>
                   ))}
                 </View>
-                <Text style={s.ruleNoteText}>Skor 4–5 menaikkan level</Text>
+                <Text style={s.ruleNoteText}>{scoreNote}</Text>
               </View>
             </View>
           </View>
+        {reviewList}
         </ScrollView>
 
         {/* Bottom Actions */}
         <View style={s.footer}>
           <TouchableOpacity
             activeOpacity={0.85}
-            onPress={() => navigation.navigate('TopicCompleted', { topicId })}
+            onPress={continueAction}
             style={s.primaryBtnOuter}
           >
             <View style={s.primaryBtnInner}>
               <Text style={[s.primaryBtnText, { marginRight: 8 }]}>
-                Lanjut ke Level Sedang
+                {mastered ? 'Selesaikan Topik' : `Lanjut ke Level ${nextLevel}`}
               </Text>
               <ArrowRightIcon size={17} color="#FFFFFF" strokeWidth={2.5} />
             </View>
@@ -190,10 +277,10 @@ export default function QuizResultScreen({ route, navigation }) {
 
           <TouchableOpacity
             activeOpacity={0.75}
-            onPress={cycleMode}
+            onPress={toggleReview}
             style={s.secondaryLinkBtn}
           >
-            <Text style={s.secondaryLinkText}>Lihat Pembahasan</Text>
+            <Text style={s.secondaryLinkText}>{showReview ? 'Sembunyikan Pembahasan' : 'Lihat Pembahasan'}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -204,7 +291,7 @@ export default function QuizResultScreen({ route, navigation }) {
   // FRAME 19: LEVEL MAINTAINED (mode === 'same')
   // ============================================================================
   if (mode === 'same') {
-    const dots = [true, true, true, false, false];
+    const dots = resultDots;
     return (
       <SafeAreaView style={s.safeArea} edges={['top', 'bottom']}>
         <ScrollView
@@ -225,7 +312,6 @@ export default function QuizResultScreen({ route, navigation }) {
 
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={cycleMode}
                 style={s.quizPillYellow}
               >
                 <View
@@ -245,10 +331,10 @@ export default function QuizResultScreen({ route, navigation }) {
           </View>
 
           {/* Overlapping Score Ring: 3/5 */}
-          <ScoreBadgeRing score={hasil?.benar ?? 3} total={hasil?.total ?? 5} mode="same" onPress={cycleMode} />
+          <ScoreBadgeRing score={benarCount} total={total} mode="same" />
 
           <View style={s.bodyWrap}>
-            <Text style={s.title}>Levelmu tetap Mudah</Text>
+            <Text style={s.title}>{`Levelmu tetap ${nextLevel}`}</Text>
             <Text style={s.subtitle}>Bagus! Pemahamanmu sudah stabil.</Text>
 
             {/* Card 1: Level Comparison */}
@@ -256,9 +342,7 @@ export default function QuizResultScreen({ route, navigation }) {
               <View style={s.levelRow}>
                 <View style={s.levelCol}>
                   <Text style={s.levelColLabel}>SEBELUMNYA</Text>
-                  <View style={s.levelBoxGreenSoft}>
-                    <Text style={s.levelTextGreen}>Mudah</Text>
-                  </View>
+                  {levelBox(prevLevel)}
                 </View>
 
                 <View style={s.equalCircleYellow}>
@@ -267,9 +351,7 @@ export default function QuizResultScreen({ route, navigation }) {
 
                 <View style={s.levelCol}>
                   <Text style={s.levelColLabel}>SEKARANG</Text>
-                  <View style={s.levelBoxGreenSolid}>
-                    <Text style={s.levelTextWhite}>Mudah</Text>
-                  </View>
+                  {levelBox(nextLevel, true)}
                 </View>
               </View>
             </View>
@@ -294,7 +376,7 @@ export default function QuizResultScreen({ route, navigation }) {
                 ))}
               </View>
               <Text style={[s.ruleNoteText, { marginTop: 8 }]}>
-                Skor 3 mempertahankan level
+                {scoreNote}
               </Text>
             </View>
 
@@ -303,12 +385,11 @@ export default function QuizResultScreen({ route, navigation }) {
               <View style={s.targetIconBox}>
                 <TargetBullseyeIcon size={18} color="#FFFFFF" />
               </View>
-              <Text style={s.targetInfoText}>
-                Sedikit lagi! Jawab 4 soal dengan benar untuk naik ke{' '}
-                <Text style={s.boldInk}>Sedang.</Text>
-              </Text>
+              <Text style={s.targetInfoText}>{targetText}</Text>
             </View>
           </View>
+        {reviewToggle}
+          {reviewList}
         </ScrollView>
 
         {/* Bottom Actions */}
@@ -341,7 +422,7 @@ export default function QuizResultScreen({ route, navigation }) {
   // ============================================================================
   // FRAME 20: LEVEL DECREASED (mode === 'down')
   // ============================================================================
-  const downDots = [true, true, false, false, false];
+  const downDots = resultDots;
   return (
     <SafeAreaView style={s.safeArea} edges={['top', 'bottom']}>
       <ScrollView
@@ -362,7 +443,6 @@ export default function QuizResultScreen({ route, navigation }) {
 
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={cycleMode}
               style={s.quizPillPink}
             >
               <View
@@ -382,7 +462,7 @@ export default function QuizResultScreen({ route, navigation }) {
         </View>
 
         {/* Overlapping Score Ring: 2/5 */}
-        <ScoreBadgeRing score={hasil?.benar ?? 2} total={hasil?.total ?? 5} mode="down" onPress={cycleMode} />
+        <ScoreBadgeRing score={benarCount} total={total} mode="down" />
 
         <View style={s.bodyWrap}>
           <Text style={s.title}>Kita ulang pelan-pelan, ya</Text>
@@ -395,9 +475,7 @@ export default function QuizResultScreen({ route, navigation }) {
             <View style={s.levelRow}>
               <View style={s.levelCol}>
                 <Text style={s.levelColLabel}>Sebelumnya</Text>
-                <View style={s.levelBoxYellowSoft}>
-                  <Text style={s.levelTextYellow}>Sedang</Text>
-                </View>
+                {levelBox(prevLevel)}
               </View>
 
               <View style={s.arrowCircleRed}>
@@ -406,9 +484,7 @@ export default function QuizResultScreen({ route, navigation }) {
 
               <View style={s.levelCol}>
                 <Text style={s.levelColLabel}>Sekarang</Text>
-                <View style={s.levelBoxGreenSoft}>
-                  <Text style={s.levelTextGreen}>Mudah</Text>
-                </View>
+                {levelBox(nextLevel)}
               </View>
             </View>
 
@@ -435,7 +511,7 @@ export default function QuizResultScreen({ route, navigation }) {
                 ))}
               </View>
               <Text style={[s.ruleNoteText, { marginTop: 8 }]}>
-                Skor 0–2 menurunkan level
+                {scoreNote}
               </Text>
             </View>
           </View>
@@ -450,11 +526,12 @@ export default function QuizResultScreen({ route, navigation }) {
               <RotateCcwIcon size={16} color="#FFFFFF" />
             </View>
             <Text style={s.repeatCardsBannerText}>
-              Ulangi <Text style={{ fontFamily: fonts.extrabold, color: '#2554E8' }}>3 kartu</Text> yang masih{' '}
-              <Text style={{ fontFamily: fonts.extrabold, color: '#D97706' }}>Sedang</Text> dipelajari dulu.
+              {repeatText}
             </Text>
           </TouchableOpacity>
         </View>
+      {reviewToggle}
+      {reviewList}
       </ScrollView>
 
       {/* Bottom Actions */}
@@ -485,6 +562,40 @@ export default function QuizResultScreen({ route, navigation }) {
 }
 
 const s = StyleSheet.create({
+  reviewToggle: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  reviewList: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+    gap: 12,
+  },
+  reviewItem: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E8ECF4',
+    padding: 14,
+  },
+  reviewQ: {
+    fontFamily: fonts.extrabold,
+    fontSize: 13.5,
+    color: '#1F2A44',
+    marginBottom: 6,
+  },
+  reviewA: {
+    fontFamily: fonts.bold,
+    fontSize: 12.5,
+    marginTop: 2,
+  },
+  reviewExp: {
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#64748B',
+    marginTop: 8,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: '#FDFCF7',
@@ -499,7 +610,10 @@ const s = StyleSheet.create({
   heroBanner: {
     width: '100%',
     height: 235,
-    borderRadius: 28,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',

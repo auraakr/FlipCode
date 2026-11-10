@@ -5,10 +5,127 @@
       "id": "pt-var-01",
       "topicId": "variabel",
       "tipe": "pilihan_ganda",
-      "pertanyaan": "",
-      "pilihan": ["", "", "", ""],
+      "pertanyaan": "Apa fungsi variabel dalam program?",
+      "pilihan": [
+        "Menyimpan data agar bisa dipakai kembali",
+        "Mempercepat koneksi internet",
+        "Mengubah warna layar",
+        "Menghapus data dari komputer"
+      ],
       "jawabanBenar": 0,
-      "penjelasan": ""
+      "penjelasan": "Variabel berfungsi menyimpan data di memori agar bisa dipakai dan diubah di bagian lain program."
+    },
+    {
+      "id": "pt-var-02",
+      "topicId": "variabel",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Manakah nama variabel yang valid?",
+      "pilihan": [
+        "nama siswa",
+        "nama_siswa",
+        "for",
+        "1nama"
+      ],
+      "jawabanBenar": 1,
+      "penjelasan": "Nama variabel tidak boleh diawali angka, mengandung spasi, atau memakai kata kunci seperti for. nama_siswa memenuhi semua aturan."
+    },
+    {
+      "id": "pt-var-03",
+      "topicId": "variabel",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari program berikut?\n\na = 5\nb = a\na = 9\nprint(b)",
+      "pilihan": [
+        "14",
+        "Error",
+        "5",
+        "9"
+      ],
+      "jawabanBenar": 2,
+      "penjelasan": "b menyalin nilai a saat itu (5). Mengubah a menjadi 9 sesudahnya tidak mengubah b."
+    },
+    {
+      "id": "pt-tipe-01",
+      "topicId": "tipe_data",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Tipe data yang tepat untuk menyimpan nilai 3.14 adalah ...",
+      "pilihan": [
+        "str",
+        "bool",
+        "int",
+        "float"
+      ],
+      "jawabanBenar": 3,
+      "penjelasan": "3.14 memiliki titik desimal sehingga bertipe float."
+    },
+    {
+      "id": "pt-tipe-02",
+      "topicId": "tipe_data",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari print(\"5\" + \"5\")?",
+      "pilihan": [
+        "55",
+        "10",
+        "Error",
+        "5"
+      ],
+      "jawabanBenar": 0,
+      "penjelasan": "Karena \"5\" berada di dalam tanda kutip, keduanya string. Operator + menyambung teks sehingga hasilnya 55, bukan 10."
+    },
+    {
+      "id": "pt-tipe-03",
+      "topicId": "tipe_data",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Pada kode umur = input(\"Umur: \"), apa tipe data variabel umur?",
+      "pilihan": [
+        "float",
+        "str",
+        "bool",
+        "int"
+      ],
+      "jawabanBenar": 1,
+      "penjelasan": "input() selalu menghasilkan string, walaupun pengguna mengetik angka."
+    },
+    {
+      "id": "pt-op-01",
+      "topicId": "operator",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari 7 % 2?",
+      "pilihan": [
+        "3",
+        "3.5",
+        "1",
+        "0"
+      ],
+      "jawabanBenar": 2,
+      "penjelasan": "% adalah modulus (sisa bagi). 7 dibagi 2 = 3 sisa 1."
+    },
+    {
+      "id": "pt-op-02",
+      "topicId": "operator",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari 2 + 3 * 4?",
+      "pilihan": [
+        "24",
+        "9",
+        "20",
+        "14"
+      ],
+      "jawabanBenar": 3,
+      "penjelasan": "Perkalian didahulukan: 3 * 4 = 12, lalu 2 + 12 = 14."
+    },
+    {
+      "id": "pt-op-03",
+      "topicId": "operator",
+      "tipe": "pilihan_ganda",
+      "pertanyaan": "Apa hasil dari program berikut?\n\numur = 17\npunya_ktp = False\nprint(umur >= 17 and punya_ktp)",
+      "pilihan": [
+        "False",
+        "17",
+        "Error",
+        "True"
+      ],
+      "jawabanBenar": 0,
+      "penjelasan": "and hanya True jika kedua syarat True. umur >= 17 bernilai True, tetapi punya_ktp False, jadi hasilnya False."
     }
   ]
 }

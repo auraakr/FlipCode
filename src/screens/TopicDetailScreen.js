@@ -589,7 +589,10 @@ const s = StyleSheet.create({
   },
   heroBanner: {
     backgroundColor: '#2554E8',
-    borderRadius: 28,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
     borderBottomWidth: 4,
     borderBottomColor: '#1B3FB5',
     paddingHorizontal: 22,

@@ -197,7 +197,10 @@ const s = StyleSheet.create({
   },
   heroBanner: {
     backgroundColor: '#2554E8',
-    borderRadius: 28,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
     height: 245,
     alignItems: 'center',
     justifyContent: 'center',
