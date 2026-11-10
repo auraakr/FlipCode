@@ -40,9 +40,10 @@ export default function LoginScreen({ navigation }) {
 
     setLoading(true);
     try {
-      await login(email, password);
+      const u = await login(email, password);
       setLoading(false);
-      navigation.replace('Welcome');
+      // Sudah pernah mengerjakan tes awal -> langsung ke beranda.
+      navigation.replace(u.placementDone ? 'MainTabs' : 'Welcome');
     } catch (e) {
       setErrors({ form: e.message || 'Gagal masuk. Periksa kembali akunmu.' });
       setLoading(false);

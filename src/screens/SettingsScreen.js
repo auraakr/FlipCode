@@ -37,7 +37,7 @@ import {
 // ============================================================================
 export default function SettingsScreen() {
   const navigation = useNavigation();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [jenjang, setJenjang] = useState('SMA');
   const [showRepeatModal, setShowRepeatModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -61,6 +61,7 @@ export default function SettingsScreen() {
   const handleConfirmResetProgress = async () => {
     setShowResetModal(false);
     await ProgressRepository.reset();
+    await refreshUser().catch(() => {});
     setGlobalActiveTopic('variabel');
     navigation.navigate('ResetCompleted');
   };
@@ -79,12 +80,8 @@ export default function SettingsScreen() {
         {/* Top Page Title */}
         <Text style={s.pageTitle}>Pengaturan</Text>
 
-        {/* Blue Profile Hero Card (Frame 27) - Ketuk untuk preview halaman Login/Register */}
-        <TouchableOpacity
-          activeOpacity={0.88}
-          onPress={() => navigation.navigate('Login')}
-          style={s.heroProfileCard}
-        >
+        {/* Blue Profile Hero Card (Frame 27) */}
+        <View style={s.heroProfileCard}>
           <View style={s.heroLeftRow}>
             <View style={s.avatarOuterRing}>
               <Image
@@ -108,7 +105,7 @@ export default function SettingsScreen() {
           <View style={s.heroRightRobot}>
             <SettingsHeroRobot />
           </View>
-        </TouchableOpacity>
+        </View>
 
         {/* ====================================================================
             SECTION 1: PROFIL

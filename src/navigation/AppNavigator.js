@@ -49,7 +49,7 @@ function MainTabs() {
 }
 
 export default function AppNavigator() {
-  const { status } = useAuth();
+  const { status, user } = useAuth();
 
   // Memeriksa token tersimpan.
   if (status === 'loading') {
@@ -62,7 +62,9 @@ export default function AppNavigator() {
 
   return (
     <Stack.Navigator
-      initialRouteName="Login"
+      initialRouteName={
+        status === 'signedIn' ? (user?.placementDone ? 'MainTabs' : 'Welcome') : 'Login'
+      }
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: '#fff',

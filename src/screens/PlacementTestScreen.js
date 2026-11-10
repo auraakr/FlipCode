@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
 import Button from '../components/Button';
+import { useAuth } from '../context/AuthContext';
 import { PlacementApi } from '../api/placement';
 import { ContentRepository } from '../storage/ContentRepository';
 import { fonts } from '../constants/theme';
@@ -105,6 +106,7 @@ const FALLBACK_QUESTIONS = [
 export default function PlacementTestScreen({ navigation }) {
   // Soal diambil dari server (POST /placement/start). Selama belum tersedia
   // (atau server tidak terjangkau), tampilkan data fallback sesuai wireframe.
+  const { refreshUser } = useAuth();
   const [questions, setQuestions] = useState(FALLBACK_QUESTIONS);
   const [sessionId, setSessionId] = useState(null);
 
@@ -155,6 +157,7 @@ export default function PlacementTestScreen({ navigation }) {
     const arr = questions.map((_, i) => jawaban[i] ?? -1);
     try {
       const hasil = await PlacementApi.submit({ sessionId, questions, jawaban: arr });
+      await refreshUser().catch(() => {});
       navigation.replace('PlacementResult', { hasil });
     } catch (e) {
       Alert.alert('Gagal mengirim jawaban', e.message || 'Coba lagi.');

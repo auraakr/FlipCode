@@ -51,13 +51,26 @@ export function AuthProvider({ children }) {
     () => ({
       status,
       user,
+      // login/register mengembalikan user (berisi placementDone) untuk menentukan layar tujuan.
       async login(email, password) {
-        await startSession(await api.post('/auth/login', { email: email.trim(), password }));
+        const res = await api.post('/auth/login', { email: email.trim(), password });
+        await startSession(res);
+        return res.user;
       },
       async register(nama, email, password) {
-        await startSession(
-          await api.post('/auth/register', { nama: nama.trim(), email: email.trim(), password })
-        );
+        const res = await api.post('/auth/register', {
+          nama: nama.trim(),
+          email: email.trim(),
+          password,
+        });
+        await startSession(res);
+        return res.user;
+      },
+      // Muat ulang data user (mis. placementDone setelah tes awal selesai / progres direset).
+      async refreshUser() {
+        const { user: u } = await api.get('/auth/me');
+        setUser(u);
+        return u;
       },
       logout: clearSession,
     }),
