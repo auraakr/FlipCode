@@ -219,15 +219,25 @@ try {
   q = await runQuiz(1);
   check('1/5 benar (20%): tetap Mudah', q.start.data?.level === 'Mudah' && q.submit.data?.adapt?.nextLevel === 'Mudah');
   q = await runQuiz(5);
-  check('5/5 benar + 100% kartu -> Sulit & Dikuasai',
-    q.submit.data?.adapt?.nextLevel === 'Sulit' && q.submit.data?.topicState === 'Dikuasai' && q.submit.data.pct === 1,
+  check('5/5 di level Mudah + 100% kartu -> Sulit tapi BELUM Dikuasai',
+    q.start.data?.level === 'Mudah' && q.submit.data?.adapt?.nextLevel === 'Sulit' && q.submit.data?.topicState !== 'Dikuasai',
+    JSON.stringify({ lv: q.start.data?.level, st: q.submit.data?.topicState }));
+  q = await runQuiz(5);
+  check('5/5 di level Sulit + 100% kartu -> Dikuasai',
+    q.start.data?.level === 'Sulit' && q.submit.data?.topicState === 'Dikuasai' && q.submit.data.pct === 1,
     JSON.stringify({ lv: q.start.data?.level, st: q.submit.data?.topicState, pct: q.submit.data?.pct }));
+
+  q = await runQuiz(2);
+  check('turun dari Sulit (2/5): level Sedang & status Dikuasai dicabut',
+    q.start.data?.level === 'Sulit' && q.submit.data?.adapt?.nextLevel === 'Sedang' &&
+    q.submit.data?.topicState === 'Sedang dipelajari',
+    JSON.stringify({ lv: q.start.data?.level, nx: q.submit.data?.adapt?.nextLevel, st: q.submit.data?.topicState }));
 
   section('Progres: hasil akhir');
   r = await call('GET', '/progress');
   check('progress: 10 kartu Dikuasai',
     Object.values(r.data?.cards || {}).filter((c) => c.status === 'Dikuasai').length === 10);
-  check('progress: riwayat kuis tercatat (6 sesi)', (r.data?.quizSessions || []).length === 6,
+  check('progress: riwayat kuis tercatat (8 sesi)', (r.data?.quizSessions || []).length === 8,
     `dapat ${(r.data?.quizSessions || []).length}`);
   check('progress: skor terakhir tersimpan', typeof r.data?.topics?.[TOPIC]?.lastQuizScore === 'string');
 } catch (e) {

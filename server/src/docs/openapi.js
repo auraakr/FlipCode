@@ -368,7 +368,7 @@ export const openapi = {
         description:
           'Level berikutnya dari persentase benar: <=20% Mudah, 30%-70% Sedang, >=80% Sulit (5 soal: 0-1 / 2-3 / 4-5 benar). ' +
           '`saranUlang` true jika benar < 60%. ' +
-          'Topik Dikuasai kalau benar >=80% dan minimal 70% kartu topik berstatus Dikuasai.',
+          'Topik Dikuasai hanya kalau kuis dikerjakan di level Sulit dengan benar >=80% dan minimal 70% kartu topik berstatus Dikuasai.',
         security: secured,
         requestBody: { required: true, content: json(ref('SubmitBody')) },
         responses: {

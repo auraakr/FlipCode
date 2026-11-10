@@ -133,7 +133,7 @@ export default function QuizScreen({ route, navigation }) {
   };
 
   const openRelatedCard = () =>
-    navigation.navigate('Flashcard', {
+    navigation.push('Flashcard', {
       topicId,
       fromQuiz: true,
       questionNumber: idx + 1,

@@ -250,7 +250,7 @@ export default function TopicDetailScreen({ route, navigation }) {
                 <Text style={s.cardTitle}>Progres belajar</Text>
                 <Text style={s.progressSubtitle}>
                   Kuasai <Text style={s.boldInk}>≥70% kartu</Text> &{' '}
-                  <Text style={s.boldInk}>≥80% benar</Text> di kuis untuk
+                  <Text style={s.boldInk}>≥80% benar</Text> di kuis level Sulit untuk
                   menyelesaikan topik.
                 </Text>
               </View>
@@ -454,7 +454,7 @@ export default function TopicDetailScreen({ route, navigation }) {
               <Text style={s.cardTitle}>Progres belajar</Text>
               <Text style={s.progressSubtitle}>
                 Kuasai <Text style={s.boldInk}>≥ 70%</Text> kartu & benar{' '}
-                <Text style={s.boldInk}>≥ 80%</Text> di kuis untuk menyelesaikan topik.
+                <Text style={s.boldInk}>≥ 80%</Text> di kuis level Sulit untuk menyelesaikan topik.
               </Text>
             </View>
           </View>

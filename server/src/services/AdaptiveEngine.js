@@ -13,8 +13,12 @@
 // kuis pada level yang diberikan hasil kuis terakhirnya.
 //
 // Topik dinyatakan DIKUASAI kalau:
-//   benar >= 80% pada kuis, DAN
+//   kuis dikerjakan DI LEVEL SULIT dengan benar >= 80%, DAN
 //   minimal 70% kartu di topik itu berstatus Dikuasai.
+// Jadi lolos level Sulit dulu; mencapai level Sulit saja (dari kuis Mudah/Sedang) belum cukup.
+// Topik berikutnya baru terbuka setelah topik ini Dikuasai.
+// Kalau hasil kuis menurunkan level di bawah Sulit, status Dikuasai dicabut (kembali
+// Sedang dipelajari) sehingga topik berikutnya terkunci lagi.
 
 import { Level, LEVEL_ORDER, TopicState } from '../constants/enums.js';
 
@@ -46,14 +50,27 @@ export const AdaptiveEngine = {
 
   // Menentukan apakah topik sudah dikuasai.
   // pctDikuasai: angka 0..1 (kartu dikuasai per topik)
-  isTopicMastered({ benar, total = 5, pctDikuasai }) {
+  isTopicMastered({ levelKuis, benar, total = 5, pctDikuasai }) {
     const ratio = total > 0 ? benar / total : 0;
-    return ratio >= BATAS_SULIT - EPS && pctDikuasai >= PCT_KUASAI;
+    return (
+      levelKuis === Level.SULIT &&
+      ratio >= BATAS_SULIT - EPS &&
+      pctDikuasai >= PCT_KUASAI
+    );
   },
 
-  nextTopicState({ currentState, benar, total = 5, pctDikuasai }) {
-    if (this.isTopicMastered({ benar, total, pctDikuasai })) {
+  // nextLevel: level hasil kuis ini (dari evaluateQuiz).
+  nextTopicState({ currentState, levelKuis, nextLevel, benar, total = 5, pctDikuasai }) {
+    if (this.isTopicMastered({ levelKuis, benar, total, pctDikuasai })) {
       return TopicState.DIKUASAI;
+    }
+    // Dikuasai hanya bertahan kalau kuis dikerjakan di Sulit dan levelnya tetap Sulit.
+    // (Juga membersihkan status Dikuasai yang tidak sah, mis. dari aturan lama.)
+    if (
+      currentState === TopicState.DIKUASAI &&
+      (levelKuis !== Level.SULIT || nextLevel !== Level.SULIT)
+    ) {
+      return TopicState.SEDANG_DIPELAJARI;
     }
     return currentState === TopicState.BELUM_MULAI
       ? TopicState.SEDANG_DIPELAJARI

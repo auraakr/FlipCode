@@ -97,6 +97,8 @@ router.post('/submit', wrap(async (req, res) => {
   );
   const nextState = AdaptiveEngine.nextTopicState({
     currentState: cur?.state || TopicState.BELUM_MULAI,
+    levelKuis: session.level,
+    nextLevel: adapt.nextLevel,
     benar,
     total,
     pctDikuasai: pct,
