@@ -56,6 +56,29 @@ router.put('/cards/:id/status', wrap(async (req, res) => {
   res.json({ ok: true });
 }));
 
+// Penilaian diri siswa. 'paham' -> Dikuasai. 'ulangi' -> kartu Baru jadi
+// Sedang dipelajari; status lain (mis. Dikuasai) tidak diturunkan.
+router.post('/cards/:id/review', wrap(async (req, res) => {
+  const { hasil } = req.body || {};
+  if (hasil !== 'paham' && hasil !== 'ulangi') {
+    return res.status(400).json({ error: "Hasil harus 'paham' atau 'ulangi'" });
+  }
+  const card = await first('SELECT id FROM cards WHERE id = $1', [req.params.id]);
+  if (!card) return res.status(404).json({ error: 'Kartu tidak ditemukan' });
+
+  const initial = hasil === 'paham' ? CardStatus.DIKUASAI : CardStatus.SEDANG_DIPELAJARI;
+  const onConflict = hasil === 'paham'
+    ? 'status = EXCLUDED.status'
+    : `status = CASE WHEN user_card_status.status = '${CardStatus.BARU}' THEN EXCLUDED.status ELSE user_card_status.status END`;
+  const row = await first(
+    `INSERT INTO user_card_status (user_id, card_id, status) VALUES ($1, $2, $3)
+     ON CONFLICT (user_id, card_id) DO UPDATE SET ${onConflict}, last_seen_at = now()
+     RETURNING status`,
+    [req.userId, req.params.id, initial]
+  );
+  res.json({ ok: true, status: row.status });
+}));
+
 router.delete('/progress', wrap(async (req, res) => {
   await withTx(async (db) => {
     await db.query('DELETE FROM user_topic_progress WHERE user_id = $1', [req.userId]);

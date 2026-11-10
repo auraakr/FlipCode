@@ -9,7 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fonts } from '../constants/theme';
 import { ContentRepository } from '../storage/ContentRepository';
-import { QuizManager } from '../logic/QuizManager';
+import { QuizApi } from '../api/quiz';
 import { Level } from '../constants/enums';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -150,7 +150,7 @@ export default function QuizScreen({ route, navigation }) {
 
   useEffect(() => {
     let alive = true;
-    QuizManager.buildSession(topicId)
+    QuizApi.start(topicId)
       .then((res) => {
         if (!alive || !res?.questions?.length) return;
         setSessionId(res.sessionId);
@@ -196,7 +196,7 @@ export default function QuizScreen({ route, navigation }) {
       setIdx(idx + 1);
     } else {
       try {
-        const hasil = await QuizManager.submit({
+        const hasil = await QuizApi.submit({
           sessionId,
           questions,
           jawaban: arr,

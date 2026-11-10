@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fonts } from '../constants/theme';
 import { ContentRepository } from '../storage/ContentRepository';
-import { FlashcardManager } from '../logic/FlashcardManager';
+import { FlashcardApi } from '../api/flashcards';
 import {
   FlipArrowsIcon,
   FaceEmojiIcon,
@@ -217,9 +217,9 @@ export default function FlashcardScreen({ route, navigation }) {
   const handleSaveAssessment = async () => {
     try {
       if (rating === 'mudah') {
-        await FlashcardManager.markPaham(current.id);
+        await FlashcardApi.markPaham(current.id);
       } else {
-        await FlashcardManager.markUlangi(current.id);
+        await FlashcardApi.markUlangi(current.id);
       }
     } catch (e) {
       // Abaikan jika penyimpanan lokal gagal pada mode preview

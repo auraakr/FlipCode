@@ -366,6 +366,26 @@ export const openapi = {
         responses: { 200: { description: 'OK', content: json({ type: 'object' }, { ok: true }) } },
       },
     },
+    '/cards/{id}/review': {
+      post: {
+        tags: ['Progres'],
+        summary: "Penilaian diri kartu: 'paham' -> Dikuasai, 'ulangi' -> Sedang dipelajari (jika masih Baru)",
+        security: secured,
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' }, example: 'var-01' }],
+        requestBody: {
+          required: true,
+          content: json(
+            { type: 'object', required: ['hasil'], properties: { hasil: { type: 'string', enum: ['paham', 'ulangi'] } } },
+            { hasil: 'paham' }
+          ),
+        },
+        responses: {
+          200: { description: 'OK', content: json({ type: 'object' }, { ok: true, status: 'Dikuasai' }) },
+          400: err("Hasil harus 'paham' atau 'ulangi'"),
+          404: err('Kartu tidak ditemukan'),
+        },
+      },
+    },
     '/cards/{id}/status': {
       put: {
         tags: ['Progres'],
