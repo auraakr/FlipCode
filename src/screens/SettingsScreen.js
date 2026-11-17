@@ -14,8 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { fonts } from '../constants/theme';
 import { ProgressRepository } from '../storage/ProgressRepository';
-import { useAuth } from '../context/AuthContext';
 import { setGlobalActiveTopic } from './HomeScreen';
+import { useUserProfile, updateGlobalProfile } from './ProfileScreen';
 import {
   ChevronRightIcon,
   GraduationCapIcon,
@@ -37,15 +37,17 @@ import {
 // ============================================================================
 export default function SettingsScreen() {
   const navigation = useNavigation();
-  const { user } = useAuth();
-  const [jenjang, setJenjang] = useState('SMA');
+  const profile = useUserProfile();
   const [showRepeatModal, setShowRepeatModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
 
-  const displayName = user?.nama || 'Aura';
+  const displayName = profile.nama;
+  const jenjang = profile.jenjang;
 
   const handleToggleJenjang = () => {
-    setJenjang((prev) => (prev === 'SMA' ? 'SMK' : 'SMA'));
+    updateGlobalProfile({
+      jenjang: jenjang === 'SMA' ? 'SMK' : 'SMA',
+    });
   };
 
   // Konfirmasi "Ya, Ulangi" pada modal Ulangi Tes Awal (Frame 28)
@@ -54,7 +56,7 @@ export default function SettingsScreen() {
   const handleConfirmRepeatTest = async () => {
     setShowRepeatModal(false);
     setGlobalActiveTopic('variabel');
-    navigation.navigate('PlacementTest');
+    navigation.navigate('PlacementIntro');
   };
 
   // Konfirmasi "Ya, Reset" pada modal Reset semua progres? (Frame 29 -> Frame 30)
@@ -79,10 +81,10 @@ export default function SettingsScreen() {
         {/* Top Page Title */}
         <Text style={s.pageTitle}>Pengaturan</Text>
 
-        {/* Blue Profile Hero Card (Frame 27) - Ketuk untuk preview halaman Login/Register */}
+        {/* Blue Profile Hero Card (Frame 27) - Ketuk untuk membuka halaman Profil (Frame 42) */}
         <TouchableOpacity
           activeOpacity={0.88}
-          onPress={() => navigation.navigate('Login')}
+          onPress={() => navigation.navigate('Profile')}
           style={s.heroProfileCard}
         >
           <View style={s.heroLeftRow}>

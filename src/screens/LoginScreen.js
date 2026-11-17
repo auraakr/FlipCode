@@ -50,10 +50,7 @@ export default function LoginScreen({ navigation }) {
   };
 
   const handleForgotPassword = () => {
-    Alert.alert(
-      'Lupa Password?',
-      'Silakan hubungi guru atau administrator FlipCode sekolahmu untuk mereset password akun.'
-    );
+    navigation.navigate('ForgotPassword');
   };
 
   return (

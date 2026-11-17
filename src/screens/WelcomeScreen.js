@@ -1,192 +1,225 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import Svg, { Path, Circle, Rect, G } from 'react-native-svg';
 import Button from '../components/Button';
-import WelcomeIllustration from '../../assets/splash.svg';
-import { ProgressRepository } from '../storage/ProgressRepository';
 import { fonts } from '../constants/theme';
 
-export default function WelcomeScreen({ navigation }) {
-  const mulai = () => {
-    navigation.navigate('PlacementTest');
-  };
+function WelcomeRobotHero() {
+  return (
+    <View style={s.heroBox}>
+      {/* Top Center Brand Pill (FlipCode - 01) */}
+      <View style={s.brandPill}>
+        <View style={s.brandIconSmall}>
+          <Text style={s.brandCodeSymbol}>{'</>'}</Text>
+        </View>
+        <Text style={s.brandTitle}>FlipCode</Text>
+      </View>
 
-  const handleBack = () => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    } else {
-      navigation.navigate('Login');
-    }
+      {/* Floating Badges */}
+      {/* 1. Upper Left: { } */}
+      <View style={s.badgeBraces}>
+        <Text style={s.badgeBracesText}>{'{ }'}</Text>
+      </View>
+
+      {/* 2. Upper Right: </> */}
+      <View style={s.badgeCode}>
+        <Text style={s.badgeCodeText}>{'</>'}</Text>
+      </View>
+
+      {/* 3. Middle Right Sparkle */}
+      <View style={s.badgeSparkle}>
+        <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
+          <Path
+            d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4L12 2z"
+            fill="#FACC15"
+          />
+        </Svg>
+      </View>
+
+      {/* 4. Lower Left: true */}
+      <View style={s.badgeTrue}>
+        <Text style={s.badgeTrueText}>true</Text>
+      </View>
+
+      {/* 5. Lower Right: x = 5 */}
+      <View style={s.badgeVar}>
+        <Text style={s.badgeVarText}>x = 5</Text>
+      </View>
+
+      {/* Center Mascot: 3D Blue Robot Waving */}
+      <View style={s.robotContainer}>
+        <Svg width={230} height={240} viewBox="0 0 230 240" fill="none">
+          {/* Subtle Glow Behind Robot */}
+          <Circle cx="115" cy="125" r="95" fill="rgba(255, 255, 255, 0.08)" />
+          <Circle cx="115" cy="125" r="70" fill="rgba(255, 255, 255, 0.1)" />
+
+          {/* Golden Yellow Antenna */}
+          <Rect x="112" y="18" width="6" height="18" rx="3" fill="#93C5FD" />
+          <Circle cx="115" cy="12" r="14" fill="rgba(250, 204, 21, 0.28)" />
+          <Circle cx="115" cy="12" r="9.5" fill="#FACC15" />
+
+          {/* Left Ear Spheres */}
+          <Circle cx="44" cy="94" r="14" fill="#60A5FA" />
+          <Circle cx="44" cy="94" r="10" fill="#FFFFFF" />
+
+          {/* Right Ear Spheres */}
+          <Circle cx="186" cy="94" r="14" fill="#60A5FA" />
+          <Circle cx="186" cy="94" r="10" fill="#FFFFFF" />
+
+          {/* Robot Torso */}
+          <Rect
+            x="72"
+            y="148"
+            width="86"
+            height="68"
+            rx="26"
+            fill="#2563EB"
+            stroke="#60A5FA"
+            strokeWidth={1.5}
+          />
+          {/* Torso Screen / Belly Core Light */}
+          <Circle cx="115" cy="180" r="12" fill="#1E3A8A" />
+          <Circle cx="115" cy="180" r="8" fill="#38BDF8" />
+          <Circle cx="115" cy="180" r="4" fill="#E0F2FE" />
+
+          {/* Left Arm / Hand (Resting) */}
+          <G transform="rotate(18 64 164)">
+            <Rect x="44" y="148" width="22" height="42" rx="11" fill="#3B82F6" />
+            <Circle cx="55" cy="192" r="12" fill="#FFFFFF" />
+          </G>
+
+          {/* Right Arm / Hand (Raised High Waving) */}
+          <G transform="rotate(-32 170 140)">
+            <Rect x="166" y="104" width="22" height="52" rx="11" fill="#3B82F6" />
+            <Circle cx="177" cy="100" r="15" fill="#FFFFFF" />
+          </G>
+
+          {/* Left Foot */}
+          <Rect x="82" y="210" width="26" height="24" rx="12" fill="#3B82F6" />
+          <Circle cx="95" cy="226" r="10" fill="#FFFFFF" />
+
+          {/* Right Foot */}
+          <Rect x="122" y="210" width="26" height="24" rx="12" fill="#3B82F6" />
+          <Circle cx="135" cy="226" r="10" fill="#FFFFFF" />
+
+          {/* Big Rounded Robot Head Outer Helmet */}
+          <Rect
+            x="48"
+            y="36"
+            width="134"
+            height="116"
+            rx="42"
+            fill="#2563EB"
+            stroke="#93C5FD"
+            strokeWidth={2.5}
+          />
+
+          {/* Head Visor / Dark Glossy Screen */}
+          <Rect
+            x="60"
+            y="48"
+            width="110"
+            height="90"
+            rx="32"
+            fill="#0F172A"
+          />
+
+          {/* Screen Gloss Reflection */}
+          <Path
+            d="M74 54h82c8 0 14 6 14 14v4c-32-8-66-8-96 0v-4c0-8 6-14 14-14z"
+            fill="rgba(255, 255, 255, 0.12)"
+          />
+
+          {/* Cute Cyan Smiling Curved Eyes (^  ^) */}
+          {/* Left Eye */}
+          <Path
+            d="M78 94c2-12 18-12 20 0"
+            stroke="#38BDF8"
+            strokeWidth={4.5}
+            strokeLinecap="round"
+          />
+          {/* Right Eye */}
+          <Path
+            d="M132 94c2-12 18-12 20 0"
+            stroke="#38BDF8"
+            strokeWidth={4.5}
+            strokeLinecap="round"
+          />
+
+          {/* Cute Blush on Cheeks */}
+          <Circle cx="76" cy="112" r="4.5" fill="rgba(244, 114, 182, 0.45)" />
+          <Circle cx="154" cy="112" r="4.5" fill="rgba(244, 114, 182, 0.45)" />
+
+          {/* Small Cyan Smile */}
+          <Path
+            d="M110 110c2 3 8 3 10 0"
+            stroke="#38BDF8"
+            strokeWidth={2.4}
+            strokeLinecap="round"
+          />
+        </Svg>
+      </View>
+    </View>
+  );
+}
+
+export default function WelcomeScreen({ navigation }) {
+  const handleMulai = () => {
+    navigation.navigate('PlacementIntro');
   };
 
   return (
-    <SafeAreaView style={s.safeArea}>
-      {/* Top Header */}
-      <View style={s.header}>
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={handleBack}
-          style={s.backButton}
-          accessibilityLabel="Kembali"
-        >
-          <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M19 12H5M11 6l-6 6 6 6"
-              stroke="#1F2A44"
-              strokeWidth={2.3}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </Svg>
-        </TouchableOpacity>
+    <SafeAreaView style={s.safeArea} edges={['top', 'bottom']}>
+      <ScrollView
+        contentContainerStyle={s.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Top Blue Hero Card (FlipCode - 01 Welcome) */}
+        <WelcomeRobotHero />
 
-        <View style={s.brandRow}>
-          <View style={s.brandIconCircle}>
-            <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M9.5 8L5.5 12L9.5 16M14.5 8L18.5 12L14.5 16"
-                stroke="#FFFFFF"
-                strokeWidth={2.4}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          </View>
-          <Text style={s.brandText}>FlipCode</Text>
+        {/* Carousel / Pagination Dots */}
+        <View style={s.dotsRow}>
+          <View style={s.activeDot} />
+          <View style={s.inactiveDot} />
+          <View style={s.inactiveDot} />
         </View>
 
-        <View style={s.headerSpacer} />
-      </View>
-
-      {/* Main Content */}
-      <View style={s.content}>
-        {/* Illustration Box */}
-        <View style={s.illustrationCard}>
-          <WelcomeIllustration width="100%" height={245} />
-        </View>
-
-        {/* Title & Subtitle */}
-        <Text style={s.title}>Kenali level belajarmu!</Text>
-        <Text style={s.subtitle}>
-          Jawab beberapa soal untuk menemukan tingkat kesulitan yang cocok untukmu.
+        {/* Title: Coding jadi lebih seru! */}
+        <Text style={s.title}>
+          Coding jadi <Text style={s.titleHighlight}>lebih seru!</Text>
         </Text>
 
-        {/* Topic Badges */}
-        <View style={s.pillsRow}>
-          {/* Variabel */}
-          <View style={[s.pill, s.pillVariabel]}>
-            <View style={[s.pillIconCircle, { backgroundColor: '#2554E8' }]}>
-              <Svg width={10} height={10} viewBox="0 0 16 16" fill="none">
-                <Rect
-                  x="2"
-                  y="3"
-                  width="12"
-                  height="10"
-                  rx="2"
-                  stroke="#FFFFFF"
-                  strokeWidth={1.6}
-                />
+        {/* Subtitle */}
+        <Text style={s.subtitle}>
+          Belajar pemrograman lewat kartu dan kuis singkat.
+        </Text>
+
+        {/* Bottom CTA Button: Mulai -> */}
+        <View style={s.footer}>
+          <Button
+            title="Mulai"
+            onPress={handleMulai}
+            rightIcon={
+              <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
                 <Path
-                  d="M5 7h6M5 10h4"
+                  d="M5 12h14M13 6l6 6-6 6"
                   stroke="#FFFFFF"
-                  strokeWidth={1.4}
+                  strokeWidth={2.5}
                   strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </Svg>
-            </View>
-            <Text style={[s.pillText, { color: '#2554E8' }]}>Variabel</Text>
-          </View>
-
-          {/* Tipe Data */}
-          <View style={[s.pill, s.pillTipeData]}>
-            <View style={[s.pillIconCircle, { backgroundColor: '#F5B82E' }]}>
-              <Svg width={10} height={10} viewBox="0 0 16 16" fill="none">
-                <Rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1" fill="#1F2A44" />
-                <Rect x="9" y="2.5" width="4.5" height="4.5" rx="1" fill="#1F2A44" />
-                <Rect x="2.5" y="9" width="4.5" height="4.5" rx="1" fill="#1F2A44" />
-                <Rect x="9" y="9" width="4.5" height="4.5" rx="1" fill="#1F2A44" />
-              </Svg>
-            </View>
-            <Text style={[s.pillText, { color: '#8C5E0A' }]}>Tipe Data</Text>
-          </View>
-
-          {/* Operator */}
-          <View style={[s.pill, s.pillOperator]}>
-            <View style={[s.pillIconCircle, { backgroundColor: '#F26B50' }]}>
-              <Svg width={10} height={10} viewBox="0 0 16 16" fill="none">
-                <Rect
-                  x="2"
-                  y="2"
-                  width="12"
-                  height="12"
-                  rx="2.5"
-                  stroke="#FFFFFF"
-                  strokeWidth={1.6}
-                />
-                <Path
-                  d="M5.5 6.5h2M6.5 5.5v2M9.5 6.5h2M5.5 10.5h5"
-                  stroke="#FFFFFF"
-                  strokeWidth={1.4}
-                  strokeLinecap="round"
-                />
-              </Svg>
-            </View>
-            <Text style={[s.pillText, { color: '#C94A32' }]}>Operator</Text>
-          </View>
+            }
+          />
         </View>
-
-        {/* Meta Info: 9 soal • 3 topik */}
-        <View style={s.metaRow}>
-          <View style={s.metaItem}>
-            <Svg width={15} height={15} viewBox="0 0 24 24" fill="none">
-              <Circle cx="12" cy="13" r="8" stroke="#64748B" strokeWidth={2} />
-              <Path
-                d="M12 9v4l2.5 1.5M9.5 3h5"
-                stroke="#64748B"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-            <Text style={s.metaText}>9 soal</Text>
-          </View>
-
-          <Text style={s.metaDot}>•</Text>
-
-          <View style={s.metaItem}>
-            <Svg width={15} height={15} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
-                stroke="#64748B"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-            <Text style={s.metaText}>3 topik</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Bottom CTA Button */}
-      <View style={s.footer}>
-        <Button
-          title="Mulai Tes"
-          onPress={mulai}
-          rightIcon={
-            <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M5 12h14M13 6l6 6-6 6"
-                stroke="#FFFFFF"
-                strokeWidth={2.5}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          }
-        />
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -196,147 +229,193 @@ const s = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FDFCF7',
   },
-  header: {
-    flexDirection: 'row',
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 24,
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 12,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5EAF2',
+  heroBox: {
+    width: '100%',
+    height: 420,
+    backgroundColor: '#2554E8',
+    borderRadius: 34,
+    paddingTop: 16,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
+    position: 'relative',
+    overflow: 'hidden',
+    shadowColor: '#2554E8',
+    shadowOpacity: 0.28,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
   },
-  brandRow: {
+  brandPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    gap: 7,
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+    zIndex: 10,
   },
-  brandIconCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#2554E8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
+  brandIconSmall: {
+    backgroundColor: '#EEF2FF',
+    borderRadius: 999,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
   },
-  brandText: {
+  brandCodeSymbol: {
+    fontFamily: fonts.mono,
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#2554E8',
+  },
+  brandTitle: {
     fontFamily: fonts.extrabold,
-    fontSize: 20,
+    fontSize: 14,
     color: '#1F2A44',
   },
-  headerSpacer: {
-    width: 40,
+  badgeBraces: {
+    position: 'absolute',
+    top: 70,
+    left: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+    zIndex: 10,
   },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    paddingHorizontal: 22,
-    paddingTop: 6,
+  badgeBracesText: {
+    fontFamily: fonts.mono,
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#1F2A44',
   },
-  illustrationCard: {
-    width: '100%',
-    height: 260,
-    borderRadius: 28,
-    backgroundColor: '#EEF3FF',
-    borderWidth: 1,
-    borderColor: '#E2ECFF',
+  badgeCode: {
+    position: 'absolute',
+    top: 64,
+    right: 22,
+    backgroundColor: '#F59E0B',
+    borderRadius: 14,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+    zIndex: 10,
+  },
+  badgeCodeText: {
+    fontFamily: fonts.mono,
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  badgeSparkle: {
+    position: 'absolute',
+    top: 130,
+    right: 18,
+    zIndex: 10,
+  },
+  badgeTrue: {
+    position: 'absolute',
+    bottom: 24,
+    left: 22,
+    backgroundColor: '#22C55E',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+    zIndex: 10,
+  },
+  badgeTrueText: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: '#FFFFFF',
+  },
+  badgeVar: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+    zIndex: 10,
+  },
+  badgeVarText: {
+    fontFamily: fonts.mono,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1F2A44',
+  },
+  robotContainer: {
+    marginTop: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
+  },
+  dotsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 22,
+    marginBottom: 14,
+  },
+  activeDot: {
+    width: 26,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#2554E8',
+  },
+  inactiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#CBD5E1',
   },
   title: {
-    marginTop: 26,
     fontFamily: fonts.extrabold,
-    fontSize: 25,
+    fontSize: 27,
     color: '#1F2A44',
     textAlign: 'center',
+    letterSpacing: -0.4,
+  },
+  titleHighlight: {
+    color: '#2554E8',
   },
   subtitle: {
     marginTop: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     fontFamily: fonts.medium,
-    fontSize: 14,
-    lineHeight: 21,
+    fontSize: 14.5,
+    lineHeight: 22,
     color: '#64748B',
     textAlign: 'center',
   },
-  pillsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 22,
-  },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 999,
-    paddingVertical: 6,
-    paddingHorizontal: 11,
-    borderWidth: 1,
-  },
-  pillVariabel: {
-    backgroundColor: '#E8EEFF',
-    borderColor: '#C9D8FF',
-  },
-  pillTipeData: {
-    backgroundColor: '#FFFBEB',
-    borderColor: '#FDE68A',
-  },
-  pillOperator: {
-    backgroundColor: '#FFF0ED',
-    borderColor: '#FFD5CC',
-  },
-  pillIconCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 6,
-  },
-  pillText: {
-    fontFamily: fonts.bold,
-    fontSize: 12,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  metaText: {
-    fontFamily: fonts.semibold,
-    fontSize: 12,
-    color: '#64748B',
-    marginLeft: 5,
-  },
-  metaDot: {
-    fontFamily: fonts.bold,
-    fontSize: 12,
-    color: '#CBD5E1',
-    marginHorizontal: 10,
-  },
   footer: {
-    paddingHorizontal: 22,
-    paddingBottom: 22,
+    width: '100%',
+    marginTop: 24,
   },
 });
