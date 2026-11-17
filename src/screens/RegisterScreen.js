@@ -385,7 +385,7 @@ const s = StyleSheet.create({
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
     paddingHorizontal: 22,
-    paddingTop: 16,
+    paddingTop: 36,
     paddingBottom: 18,
     overflow: 'hidden',
     borderBottomWidth: 4,
