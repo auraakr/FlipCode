@@ -11,7 +11,10 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import CheckEmailScreen from '../screens/CheckEmailScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
+import PlacementIntroScreen from '../screens/PlacementIntroScreen';
 import PlacementTestScreen from '../screens/PlacementTestScreen';
 import PlacementResultScreen from '../screens/PlacementResultScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -23,6 +26,8 @@ import QuizResultScreen from '../screens/QuizResultScreen';
 import TopicCompletedScreen from '../screens/TopicCompletedScreen';
 import ResetCompletedScreen from '../screens/ResetCompletedScreen';
 import AboutScreen from '../screens/AboutScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import CustomTabBar from '../components/CustomTabBar';
@@ -74,7 +79,10 @@ export default function AppNavigator() {
     >
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <Stack.Screen name="CheckEmail" component={CheckEmailScreen} />
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
+      <Stack.Screen name="PlacementIntro" component={PlacementIntroScreen} />
       <Stack.Screen name="PlacementTest" component={PlacementTestScreen} />
       <Stack.Screen name="PlacementResult" component={PlacementResultScreen} options={{ gestureEnabled: false }} />
       <Stack.Screen name="MainTabs" component={MainTabs} />
@@ -86,6 +94,8 @@ export default function AppNavigator() {
       <Stack.Screen name="UpdatedLearningPath" component={UpdatedLearningPathScreen} />
       <Stack.Screen name="ResetCompleted" component={ResetCompletedScreen} />
       <Stack.Screen name="About" component={AboutScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
     </Stack.Navigator>
   );
 }

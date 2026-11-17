@@ -1548,6 +1548,89 @@ export function LoginHeroIllustration() {
   );
 }
 
+export function CheckEmailHeroIllustration() {
+  return (
+    <View style={s.checkEmailOuterRing}>
+      <View style={s.checkEmailInnerCircle}>
+        <Svg width={122} height={122} viewBox="0 0 122 122" fill="none">
+          {/* Subtle Inner Glow */}
+          <Circle cx="61" cy="64" r="46" fill="rgba(96, 165, 250, 0.16)" />
+
+          {/* Golden Antenna */}
+          <Rect x="59.5" y="16" width="3" height="9" rx="1.5" fill="#93C5FD" />
+          <Circle cx="61" cy="13.5" r="4.5" fill="#FACC15" />
+
+          {/* Side Earpieces */}
+          <Rect x="24" y="44" width="6" height="17" rx="3" fill="#60A5FA" />
+          <Rect x="92" y="44" width="6" height="17" rx="3" fill="#60A5FA" />
+
+          {/* Robot Torso */}
+          <Rect
+            x="38"
+            y="80"
+            width="46"
+            height="42"
+            rx="15"
+            fill="#1D4ED8"
+            stroke="#3B82F6"
+            strokeWidth={1.2}
+          />
+          <Circle cx="61" cy="95" r="4.5" fill="#38BDF8" />
+
+          {/* Left Arm */}
+          <G transform="rotate(16 36 88)">
+            <Rect x="26" y="78" width="13" height="26" rx="6.5" fill="#3B82F6" />
+          </G>
+
+          {/* Right Waving Arm */}
+          <G transform="rotate(-24 85 78)">
+            <Rect x="79" y="60" width="13" height="28" rx="6.5" fill="#60A5FA" />
+          </G>
+
+          {/* Robot Head */}
+          <Rect x="29" y="25" width="64" height="52" rx="18" fill="#60A5FA" />
+          <Rect x="31" y="27" width="60" height="48" rx="16" fill="#3B82F6" />
+          <Rect x="37" y="33" width="48" height="36" rx="12" fill="#09152B" />
+
+          {/* Cyan Eyes */}
+          <Rect x="48" y="44" width="8" height="12" rx="4" fill="#38BDF8" />
+          <Rect x="66" y="44" width="8" height="12" rx="4" fill="#38BDF8" />
+
+          {/* White Smile */}
+          <Path
+            d="M57 61c1.5 2 6.5 2 8 0"
+            stroke="#FFFFFF"
+            strokeWidth={2}
+            strokeLinecap="round"
+          />
+        </Svg>
+      </View>
+
+      {/* Floating Tilted Envelope Badge */}
+      <View style={s.checkEmailBadgeCard}>
+        <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+          <Rect
+            x="3"
+            y="5"
+            width="18"
+            height="14"
+            rx="3"
+            stroke="#2554E8"
+            strokeWidth={2}
+          />
+          <Path
+            d="M3.5 7l8.5 6 8.5-6"
+            stroke="#2554E8"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </Svg>
+      </View>
+    </View>
+  );
+}
+
 export function DashedLearningPathSvg({ width, height, d }) {
   return (
     <Svg
@@ -1892,5 +1975,40 @@ const s = StyleSheet.create({
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 6 },
     elevation: 4,
+  },
+  checkEmailOuterRing: {
+    width: 162,
+    height: 162,
+    borderRadius: 81,
+    backgroundColor: '#EBF1FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  checkEmailInnerCircle: {
+    width: 122,
+    height: 122,
+    borderRadius: 61,
+    backgroundColor: '#2554E8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  checkEmailBadgeCard: {
+    position: 'absolute',
+    bottom: 6,
+    right: -6,
+    width: 52,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transform: [{ rotate: '-6deg' }],
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
   },
 });
