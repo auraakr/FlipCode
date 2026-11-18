@@ -1,0 +1,24 @@
+# Blueprint Render untuk backend FlipCode (folder server/).
+# Secret (DATABASE_URL, SMTP_*) diisi manual di dashboard Render, bukan di file ini.
+services:
+  - type: web
+    name: flipcode-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 30d
+      - key: DATABASE_URL
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false

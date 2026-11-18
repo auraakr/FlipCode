@@ -17,7 +17,10 @@
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#1F4E9E"
       },
-      "package": "com.anonymous.flipcode"
+      "package": "com.flipcode.app",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/logo.png"
@@ -33,6 +36,12 @@
           "photosPermission": "FlipCode memerlukan akses galeri untuk memilih foto profil."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "61a79a8b-e25d-42c7-b637-3a8f05fe278c"
+      }
+    },
+    "owner": "auraakrs-team"
   }
 }
