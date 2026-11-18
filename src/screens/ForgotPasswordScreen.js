@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fonts } from '../constants/theme';
+import { api } from '../api/client';
 import {
   MailIcon,
   SendPaperPlaneIcon,
@@ -21,16 +22,24 @@ export default function ForgotPasswordScreen({ navigation, route }) {
   const initialEmail = route?.params?.email || '';
   const [email, setEmail] = useState(initialEmail);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSendLink = () => {
+  const handleSendLink = async () => {
     const trimmed = email.trim();
-    if (trimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setError('Format email tidak valid');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setError('Masukkan email yang valid');
       return;
     }
     setError(null);
-    const targetEmail = trimmed || 'aura@email.com';
-    navigation.navigate('CheckEmail', { email: targetEmail });
+    setLoading(true);
+    try {
+      await api.post('/auth/forgot-password', { email: trimmed });
+      navigation.navigate('CheckEmail', { email: trimmed });
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -99,10 +108,11 @@ export default function ForgotPasswordScreen({ navigation, route }) {
               <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={handleSendLink}
-                style={s.submitBtnOuter}
+                disabled={loading}
+                style={[s.submitBtnOuter, loading && { opacity: 0.6 }]}
               >
                 <View style={s.submitBtnInner}>
-                  <Text style={s.submitBtnText}>Kirim Link</Text>
+                  <Text style={s.submitBtnText}>{loading ? 'Mengirim...' : 'Kirim Kode'}</Text>
                   <SendPaperPlaneIcon size={16} color="#FFFFFF" strokeWidth={2.2} />
                 </View>
               </TouchableOpacity>

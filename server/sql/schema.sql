@@ -92,3 +92,12 @@ ALTER TABLE user_topic_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_card_status ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quiz_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE placement_sessions ENABLE ROW LEVEL SECURITY;
+
+-- Kode OTP reset password: hanya hash yang disimpan, berlaku singkat, sekali pakai.
+CREATE TABLE IF NOT EXISTS password_resets (
+  user_id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  code_hash VARCHAR(255) NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  attempts INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

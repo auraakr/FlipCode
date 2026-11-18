@@ -4,15 +4,25 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  TextInput,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fonts } from '../constants/theme';
+import { api } from '../api/client';
 import { CheckIcon } from '../../assets/icons/AppIcons';
 import { CheckEmailHeroIllustration } from '../../assets/illustrations/MascotIllustrations';
 
 export default function CheckEmailScreen({ navigation, route }) {
-  const targetEmail = route?.params?.email || 'aura@email.com';
+  const targetEmail = route?.params?.email || '';
   const [countdown, setCountdown] = useState(45);
+  const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (countdown <= 0) return;
@@ -24,14 +34,43 @@ export default function CheckEmailScreen({ navigation, route }) {
 
   const formattedTime = `00:${String(countdown).padStart(2, '0')}`;
 
-  const handleResend = () => {
+  const handleResend = async () => {
     if (countdown > 0) return;
-    setCountdown(45);
+    try {
+      await api.post('/auth/forgot-password', { email: targetEmail });
+      setCountdown(45);
+      setError(null);
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  const handleReset = async () => {
+    if (code.length !== 6) return setError('Masukkan kode 6 digit dari email');
+    if (password.length < 6) return setError('Password baru minimal 6 karakter');
+    setError(null);
+    setLoading(true);
+    try {
+      await api.post('/auth/reset-password', { email: targetEmail, code, password });
+      if (Platform.OS === 'web') {
+        window.alert('Password berhasil diganti. Silakan masuk.');
+        navigation.navigate('Login');
+      } else {
+        Alert.alert('Berhasil', 'Password berhasil diganti. Silakan masuk.', [
+          { text: 'OK', onPress: () => navigation.navigate('Login') },
+        ]);
+      }
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <SafeAreaView style={s.safeArea} edges={['top', 'bottom']}>
-      <View style={s.container}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled">
         {/* Center Content (FlipCode - 41 Cek Email) */}
         <View style={s.centerSection}>
           <CheckEmailHeroIllustration />
@@ -41,27 +80,48 @@ export default function CheckEmailScreen({ navigation, route }) {
             <View style={s.statusCheckCircle}>
               <CheckIcon size={10} color="#FFFFFF" strokeWidth={3} />
             </View>
-            <Text style={s.statusPillText}>Link terkirim</Text>
+            <Text style={s.statusPillText}>Kode terkirim</Text>
           </View>
 
           {/* Title & Description */}
           <Text style={s.title}>Cek email kamu</Text>
           <Text style={s.subtitle}>
-            Kami sudah mengirim link ke{' '}
+            Kami sudah mengirim kode 6 digit ke{' '}
             <Text style={s.emailBold}>{targetEmail}</Text>
-            {'.\nBuka link itu untuk membuat password baru.'}
+            {'.\nMasukkan kode itu dan password barumu.'}
           </Text>
+
+          <TextInput
+            value={code}
+            onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
+            placeholder="000000"
+            placeholderTextColor="#94A3B8"
+            keyboardType="number-pad"
+            maxLength={6}
+            style={[s.input, s.codeInput]}
+          />
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Password baru (min 6 karakter)"
+            placeholderTextColor="#94A3B8"
+            secureTextEntry
+            autoCapitalize="none"
+            style={s.input}
+          />
         </View>
 
         {/* Bottom Action Buttons */}
         <View style={s.footerSection}>
+          {error ? <Text style={s.errorText}>{error}</Text> : null}
           <TouchableOpacity
             activeOpacity={0.85}
-            onPress={() => navigation.navigate('Login')}
-            style={s.primaryBtnOuter}
+            onPress={handleReset}
+            disabled={loading}
+            style={[s.primaryBtnOuter, loading && { opacity: 0.6 }]}
           >
             <View style={s.primaryBtnInner}>
-              <Text style={s.primaryBtnText}>Kembali ke Masuk</Text>
+              <Text style={s.primaryBtnText}>{loading ? 'Menyimpan...' : 'Ganti Password'}</Text>
             </View>
           </TouchableOpacity>
 
@@ -83,7 +143,8 @@ export default function CheckEmailScreen({ navigation, route }) {
             </Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -94,7 +155,7 @@ const s = StyleSheet.create({
     backgroundColor: '#FDFCF7',
   },
   container: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 48,
     paddingBottom: 28,
@@ -145,6 +206,33 @@ const s = StyleSheet.create({
     color: '#64748B',
     textAlign: 'center',
     paddingHorizontal: 8,
+  },
+  input: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    marginTop: 12,
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: '#1F2A44',
+  },
+  codeInput: {
+    textAlign: 'center',
+    fontFamily: fonts.extrabold,
+    fontSize: 22,
+    letterSpacing: 8,
+    marginTop: 20,
+  },
+  errorText: {
+    fontFamily: fonts.regular,
+    fontSize: 12.5,
+    color: '#EF4444',
+    marginTop: 10,
+    textAlign: 'center',
   },
   emailBold: {
     fontFamily: fonts.bold,
