@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,12 @@ import {
   Image,
   Modal,
   Pressable,
+  Alert,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fonts } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
+import { ProfilePhotoStorage } from '../storage/ProfilePhotoStorage';
 import {
   ArrowLeftIcon,
   CameraOutlineIcon,
@@ -28,30 +30,10 @@ import {
 import { ModalMascotRobot } from '../../assets/illustrations/MascotIllustrations';
 
 // ============================================================================
-// SHARED GLOBAL PROFILE STATE (Synchronizes Settings, Profile, & EditProfile)
+// DATA PROFIL: nama, email, jenjang dari server; foto hanya di perangkat (AuthContext)
 // ============================================================================
-let globalProfileOverrides = {
-  nama: null,
-  email: null,
-  jenjang: 'SMA',
-  useCustomPhoto: false,
-};
-const profileListeners = new Set();
-
-export function updateGlobalProfile(partial) {
-  globalProfileOverrides = { ...globalProfileOverrides, ...partial };
-  profileListeners.forEach((fn) => fn(globalProfileOverrides));
-}
-
 export function useUserProfile() {
-  const { user } = useAuth();
-  const [overrides, setOverrides] = useState(globalProfileOverrides);
-
-  useEffect(() => {
-    const listener = (next) => setOverrides({ ...next });
-    profileListeners.add(listener);
-    return () => profileListeners.delete(listener);
-  }, []);
+  const { user, photoUri } = useAuth();
 
   const rawUserNama =
     user?.nama && user.nama !== 'Aura Siswa' ? user.nama : 'Aura Putri Kireina';
@@ -61,10 +43,10 @@ export function useUserProfile() {
       : 'aura@email.com';
 
   return {
-    nama: overrides.nama || rawUserNama,
-    email: overrides.email || rawUserEmail,
-    jenjang: overrides.jenjang || 'SMA',
-    useCustomPhoto: !!overrides.useCustomPhoto,
+    nama: rawUserNama,
+    email: rawUserEmail,
+    jenjang: user?.jenjang || 'SMA',
+    photoUri: photoUri || null,
   };
 }
 
@@ -72,13 +54,33 @@ export function useUserProfile() {
 // MAIN COMPONENT: ProfileScreen (FlipCode - 42 Setting Profile & 45 Logout)
 // ============================================================================
 export default function ProfileScreen({ navigation }) {
-  const { logout } = useAuth();
+  const { logout, savePhoto, removePhoto } = useAuth();
   const profile = useUserProfile();
   const insets = useSafeAreaInsets();
   const [showPhotoSheet, setShowPhotoSheet] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const initialLetter = (profile.nama?.trim()?.[0] || 'A').toUpperCase();
+
+  // Di layar ini foto langsung tersimpan (tidak ada tombol simpan), hanya di perangkat.
+  const handlePickPhoto = async (source) => {
+    setShowPhotoSheet(false);
+    try {
+      const uri = await ProfilePhotoStorage.pick(source);
+      if (uri) await savePhoto(uri);
+    } catch (e) {
+      Alert.alert('Foto profil', e.message || 'Gagal memuat foto.');
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    setShowPhotoSheet(false);
+    try {
+      await removePhoto();
+    } catch (e) {
+      Alert.alert('Foto profil', 'Gagal menghapus foto.');
+    }
+  };
 
   const handleConfirmLogout = async () => {
     setShowLogoutModal(false);
@@ -118,9 +120,9 @@ export default function ProfileScreen({ navigation }) {
 
           <View style={s.avatarWrap}>
             <View style={s.avatarCircle}>
-              {profile.useCustomPhoto ? (
+              {profile.photoUri ? (
                 <Image
-                  source={require('../../assets/pengaturan/icon_dumy_profile.png')}
+                  source={{ uri: profile.photoUri }}
                   style={s.avatarImage}
                 />
               ) : (
@@ -271,10 +273,7 @@ export default function ProfileScreen({ navigation }) {
 
             <TouchableOpacity
               activeOpacity={0.75}
-              onPress={() => {
-                updateGlobalProfile({ useCustomPhoto: true });
-                setShowPhotoSheet(false);
-              }}
+              onPress={() => handlePickPhoto('camera')}
               style={s.sheetRow}
             >
               <View style={[s.sheetIconBox, { backgroundColor: '#EEF3FF' }]}>
@@ -287,10 +286,7 @@ export default function ProfileScreen({ navigation }) {
 
             <TouchableOpacity
               activeOpacity={0.75}
-              onPress={() => {
-                updateGlobalProfile({ useCustomPhoto: true });
-                setShowPhotoSheet(false);
-              }}
+              onPress={() => handlePickPhoto('gallery')}
               style={s.sheetRow}
             >
               <View style={[s.sheetIconBox, { backgroundColor: '#EEF3FF' }]}>
@@ -303,10 +299,7 @@ export default function ProfileScreen({ navigation }) {
 
             <TouchableOpacity
               activeOpacity={0.75}
-              onPress={() => {
-                updateGlobalProfile({ useCustomPhoto: false });
-                setShowPhotoSheet(false);
-              }}
+              onPress={handleRemovePhoto}
               style={s.sheetRow}
             >
               <View style={[s.sheetIconBox, { backgroundColor: '#FEF2F2' }]}>

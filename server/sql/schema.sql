@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
   placement_done BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Migrasi untuk database yang sudah ada: jenjang sekolah user (SMA / SMK).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS jenjang VARCHAR(10) NOT NULL DEFAULT 'SMA';
 
 CREATE TABLE IF NOT EXISTS topics (
   id VARCHAR(50) PRIMARY KEY,

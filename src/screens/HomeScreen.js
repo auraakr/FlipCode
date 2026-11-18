@@ -107,7 +107,7 @@ const THEMES = {
 };
 
 export default function HomeScreen({ navigation }) {
-  const { user } = useAuth();
+  const { user, photoUri } = useAuth();
   const { guardPlacement } = usePlacementGuard();
   const displayName = user?.nama || 'Aura';
 
@@ -201,7 +201,11 @@ export default function HomeScreen({ navigation }) {
       <View style={s.header}>
         <View style={s.headerLeft}>
           <Image
-            source={require('../../assets/pengaturan/icon_dumy_profile.png')}
+            source={
+              photoUri
+                ? { uri: photoUri }
+                : require('../../assets/pengaturan/icon_dumy_profile.png')
+            }
             style={s.avatarImage}
           />
           <View style={s.greetingContainer}>

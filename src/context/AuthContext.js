@@ -4,12 +4,15 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { api, setAuthToken, setUnauthorizedHandler } from '../api/client';
 import { AuthStorage } from '../storage/AuthStorage';
+import { ProfilePhotoStorage } from '../storage/ProfilePhotoStorage';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [status, setStatus] = useState('loading');
   const [user, setUser] = useState(null);
+  // Foto profil: hanya di perangkat ini (lihat ProfilePhotoStorage).
+  const [photoUri, setPhotoUri] = useState(null);
 
   const clearSession = useCallback(async () => {
     setAuthToken(null);
@@ -24,6 +27,22 @@ export function AuthProvider({ children }) {
     setUser(u);
     setStatus('signedIn');
   }, []);
+
+  // Muat foto lokal milik user yang sedang login.
+  const userId = user?.id;
+  useEffect(() => {
+    if (!userId) {
+      setPhotoUri(null);
+      return undefined;
+    }
+    let cancelled = false;
+    ProfilePhotoStorage.load(userId).then((uri) => {
+      if (!cancelled) setPhotoUri(uri);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   // Saat aplikasi dibuka: pulihkan sesi dari token tersimpan.
   useEffect(() => {
@@ -57,11 +76,12 @@ export function AuthProvider({ children }) {
         await startSession(res);
         return res.user;
       },
-      async register(nama, email, password) {
+      async register(nama, email, password, jenjang) {
         const res = await api.post('/auth/register', {
           nama: nama.trim(),
           email: email.trim(),
           password,
+          ...(jenjang ? { jenjang } : {}),
         });
         await startSession(res);
         return res.user;
@@ -72,9 +92,25 @@ export function AuthProvider({ children }) {
         setUser(u);
         return u;
       },
+      // Simpan perubahan profil ke server ({ nama?, jenjang? }), lalu perbarui user di memori.
+      async updateProfile(changes) {
+        const { user: u } = await api.patch('/auth/me', changes);
+        setUser(u);
+        return u;
+      },
+      photoUri,
+      // Simpan foto hasil ProfilePhotoStorage.pick() ke perangkat.
+      async savePhoto(pickedUri) {
+        const uri = await ProfilePhotoStorage.save(user.id, pickedUri);
+        setPhotoUri(uri);
+      },
+      async removePhoto() {
+        await ProfilePhotoStorage.remove(user.id);
+        setPhotoUri(null);
+      },
       logout: clearSession,
     }),
-    [status, user, startSession, clearSession]
+    [status, user, photoUri, startSession, clearSession]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

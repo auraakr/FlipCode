@@ -11,6 +11,8 @@ import {
   Image,
   Modal,
   Pressable,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fonts } from '../constants/theme';
@@ -24,23 +26,72 @@ import {
   GalleryImageIcon,
   TrashOutlineIcon,
 } from '../../assets/icons/AppIcons';
-import { useUserProfile, updateGlobalProfile } from './ProfileScreen';
+import { useUserProfile } from './ProfileScreen';
+import { ProfilePhotoStorage } from '../storage/ProfilePhotoStorage';
+import { useAuth } from '../context/AuthContext';
 
 export default function EditProfileScreen({ navigation }) {
   const profile = useUserProfile();
+  const { updateProfile, savePhoto, removePhoto } = useAuth();
   const [nama, setNama] = useState(profile.nama);
   const [jenjang, setJenjang] = useState(profile.jenjang);
   const [showPhotoSheet, setShowPhotoSheet] = useState(false);
+  // Pratinjau foto: undefined = tidak diubah, string = foto baru (URI sementara), null = dihapus.
+  // Baru disimpan ke perangkat saat tombol "Simpan Perubahan" ditekan.
+  const [pendingPhoto, setPendingPhoto] = useState(undefined);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const previewUri = pendingPhoto !== undefined ? pendingPhoto : profile.photoUri;
+
+  const handlePickPhoto = async (source) => {
+    setShowPhotoSheet(false);
+    try {
+      const uri = await ProfilePhotoStorage.pick(source);
+      if (uri) setPendingPhoto(uri);
+    } catch (e) {
+      Alert.alert('Foto profil', e.message || 'Gagal memuat foto.');
+    }
+  };
 
   const initialLetter = ((nama || profile.nama)?.trim()?.[0] || 'A').toUpperCase();
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (saving) return;
     const trimmed = nama.trim();
-    updateGlobalProfile({
-      nama: trimmed || profile.nama,
-      jenjang,
-    });
-    navigation.goBack();
+    if (!trimmed) {
+      setError('Nama lengkap tidak boleh kosong');
+      return;
+    }
+
+    const changes = {};
+    if (trimmed !== profile.nama) changes.nama = trimmed;
+    if (jenjang !== profile.jenjang) changes.jenjang = jenjang;
+
+    const photoChanged = pendingPhoto !== undefined;
+
+    // Tidak ada perubahan: tidak perlu menyimpan apa pun.
+    if (Object.keys(changes).length === 0 && !photoChanged) {
+      navigation.goBack();
+      return;
+    }
+
+    setError('');
+    setSaving(true);
+    try {
+      // Nama & jenjang -> server (Supabase). Foto -> hanya di perangkat ini.
+      if (Object.keys(changes).length > 0) await updateProfile(changes);
+      if (photoChanged) {
+        if (pendingPhoto) await savePhoto(pendingPhoto);
+        else await removePhoto();
+      }
+      navigation.goBack();
+    } catch (e) {
+      setError(e.message || 'Gagal menyimpan perubahan');
+      Alert.alert('Gagal menyimpan', e.message || 'Coba lagi nanti.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -77,9 +128,9 @@ export default function EditProfileScreen({ navigation }) {
               onPress={() => setShowPhotoSheet(true)}
               style={s.avatarCircle}
             >
-              {profile.useCustomPhoto ? (
+              {previewUri ? (
                 <Image
-                  source={require('../../assets/pengaturan/icon_dumy_profile.png')}
+                  source={{ uri: previewUri }}
                   style={s.avatarImage}
                 />
               ) : (
@@ -106,13 +157,17 @@ export default function EditProfileScreen({ navigation }) {
                 <UserIcon size={18} color="#2554E8" />
                 <TextInput
                   value={nama}
-                  onChangeText={setNama}
+                  onChangeText={(t) => {
+                    setNama(t);
+                    if (error) setError('');
+                  }}
                   placeholder="Masukkan nama lengkap"
                   placeholderTextColor="#94A3B8"
                   autoCapitalize="words"
                   style={s.textInput}
                 />
               </View>
+              {!!error && <Text style={s.errorText}>{error}</Text>}
             </View>
 
             {/* 2. Email (Disabled / Read-only) */}
@@ -182,10 +237,15 @@ export default function EditProfileScreen({ navigation }) {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleSave}
-              style={s.saveBtnOuter}
+              disabled={saving}
+              style={[s.saveBtnOuter, saving && { opacity: 0.7 }]}
             >
               <View style={s.saveBtnInner}>
-                <Text style={s.saveBtnText}>Simpan Perubahan</Text>
+                {saving ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={s.saveBtnText}>Simpan Perubahan</Text>
+                )}
               </View>
             </TouchableOpacity>
           </View>
@@ -211,10 +271,7 @@ export default function EditProfileScreen({ navigation }) {
 
             <TouchableOpacity
               activeOpacity={0.75}
-              onPress={() => {
-                updateGlobalProfile({ useCustomPhoto: true });
-                setShowPhotoSheet(false);
-              }}
+              onPress={() => handlePickPhoto('camera')}
               style={s.sheetRow}
             >
               <View style={[s.sheetIconBox, { backgroundColor: '#EEF3FF' }]}>
@@ -227,10 +284,7 @@ export default function EditProfileScreen({ navigation }) {
 
             <TouchableOpacity
               activeOpacity={0.75}
-              onPress={() => {
-                updateGlobalProfile({ useCustomPhoto: true });
-                setShowPhotoSheet(false);
-              }}
+              onPress={() => handlePickPhoto('gallery')}
               style={s.sheetRow}
             >
               <View style={[s.sheetIconBox, { backgroundColor: '#EEF3FF' }]}>
@@ -244,7 +298,7 @@ export default function EditProfileScreen({ navigation }) {
             <TouchableOpacity
               activeOpacity={0.75}
               onPress={() => {
-                updateGlobalProfile({ useCustomPhoto: false });
+                setPendingPhoto(null);
                 setShowPhotoSheet(false);
               }}
               style={s.sheetRow}
@@ -407,6 +461,12 @@ const s = StyleSheet.create({
     color: '#64748B',
     marginLeft: 10,
     marginRight: 8,
+  },
+  errorText: {
+    fontFamily: fonts.regular,
+    fontSize: 11.5,
+    color: '#DC2626',
+    marginTop: 6,
   },
   helperText: {
     fontFamily: fonts.regular,

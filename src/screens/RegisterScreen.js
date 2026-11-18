@@ -55,7 +55,7 @@ export default function RegisterScreen({ navigation }) {
 
     setLoading(true);
     try {
-      await register(nama, email, password);
+      await register(nama, email, password, jenjang);
       setLoading(false);
       navigation.replace('Welcome');
     } catch (e) {

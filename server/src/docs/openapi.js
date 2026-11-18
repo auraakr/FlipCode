@@ -38,6 +38,7 @@ export const openapi = {
           id: { type: 'integer' },
           nama: { type: 'string' },
           email: { type: 'string' },
+          jenjang: { type: 'string', enum: ['SMA', 'SMK'] },
           placementDone: { type: 'boolean' },
         },
       },
@@ -130,6 +131,7 @@ export const openapi = {
                 nama: { type: 'string' },
                 email: { type: 'string' },
                 password: { type: 'string', minLength: 6 },
+                jenjang: { type: 'string', enum: ['SMA', 'SMK'], description: 'Opsional, default SMA' },
               },
             },
             { nama: 'Tes', email: 'tes@mail.com', password: '123456' }
@@ -170,6 +172,29 @@ export const openapi = {
         security: secured,
         responses: {
           200: { description: 'OK', content: json({ type: 'object', properties: { user: ref('User') } }) },
+          401: err('Token tidak ada atau tidak valid'),
+        },
+      },
+      patch: {
+        tags: ['Auth'],
+        summary: 'Ubah profil (nama dan/atau jenjang). Email tidak bisa diubah.',
+        security: secured,
+        requestBody: {
+          required: true,
+          content: json(
+            {
+              type: 'object',
+              properties: {
+                nama: { type: 'string', maxLength: 100 },
+                jenjang: { type: 'string', enum: ['SMA', 'SMK'] },
+              },
+            },
+            { nama: 'Aura Putri', jenjang: 'SMK' }
+          ),
+        },
+        responses: {
+          200: { description: 'Profil diperbarui', content: json({ type: 'object', properties: { user: ref('User') } }) },
+          400: err('Tidak ada data, nama kosong, atau jenjang tidak valid'),
           401: err('Token tidak ada atau tidak valid'),
         },
       },

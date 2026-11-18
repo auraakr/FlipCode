@@ -25,7 +25,14 @@
     "plugins": [
       "expo-status-bar",
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "FlipCode memerlukan kamera untuk mengambil foto profil.",
+          "photosPermission": "FlipCode memerlukan akses galeri untuk memilih foto profil."
+        }
+      ]
     ]
   }
 }

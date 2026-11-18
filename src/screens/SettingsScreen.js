@@ -16,7 +16,7 @@ import { fonts } from '../constants/theme';
 import { ProgressRepository } from '../storage/ProgressRepository';
 import { useAuth } from '../context/AuthContext';
 import { setGlobalActiveTopic } from './HomeScreen';
-import { useUserProfile, updateGlobalProfile } from './ProfileScreen';
+import { useUserProfile } from './ProfileScreen';
 import {
   ChevronRightIcon,
   GraduationCapIcon,
@@ -38,7 +38,7 @@ import {
 // ============================================================================
 export default function SettingsScreen() {
   const navigation = useNavigation();
-  const { refreshUser } = useAuth();
+  const { refreshUser, updateProfile } = useAuth();
   const profile = useUserProfile();
   const [showRepeatModal, setShowRepeatModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -46,10 +46,13 @@ export default function SettingsScreen() {
   const displayName = profile.nama;
   const jenjang = profile.jenjang;
 
-  const handleToggleJenjang = () => {
-    updateGlobalProfile({
-      jenjang: jenjang === 'SMA' ? 'SMK' : 'SMA',
-    });
+  // Ubah jenjang dan simpan ke server.
+  const handleToggleJenjang = async () => {
+    try {
+      await updateProfile({ jenjang: jenjang === 'SMA' ? 'SMK' : 'SMA' });
+    } catch (e) {
+      Alert.alert('Gagal mengubah jenjang', e.message || 'Coba lagi nanti.');
+    }
   };
 
   // Konfirmasi "Ya, Ulangi" pada modal Ulangi Tes Awal (Frame 28)
@@ -98,7 +101,11 @@ export default function SettingsScreen() {
           <View style={s.heroLeftRow}>
             <View style={s.avatarOuterRing}>
               <Image
-                source={require('../../assets/pengaturan/icon_dumy_profile.png')}
+                source={
+                  profile.photoUri
+                    ? { uri: profile.photoUri }
+                    : require('../../assets/pengaturan/icon_dumy_profile.png')
+                }
                 style={s.avatarImage}
               />
             </View>

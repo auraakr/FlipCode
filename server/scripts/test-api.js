@@ -124,6 +124,19 @@ try {
   r = await call('GET', '/auth/me');
   check('GET /auth/me', r.status === 200 && r.data?.user?.email === EMAIL && r.data.user.placementDone === false);
 
+  r = await call('PATCH', '/auth/me', { nama: '  Uji Baru  ', jenjang: 'SMK' });
+  check('PATCH /auth/me -> nama & jenjang berubah', r.status === 200 && r.data?.user?.nama === 'Uji Baru' && r.data.user.jenjang === 'SMK', JSON.stringify(r.data));
+  r = await call('GET', '/auth/me');
+  check('perubahan profil tersimpan', r.data?.user?.nama === 'Uji Baru' && r.data.user.jenjang === 'SMK');
+  r = await call('PATCH', '/auth/me', { nama: '   ' });
+  check('PATCH nama kosong -> 400', r.status === 400);
+  r = await call('PATCH', '/auth/me', { jenjang: 'SD' });
+  check('PATCH jenjang tidak valid -> 400', r.status === 400);
+  r = await call('PATCH', '/auth/me', {});
+  check('PATCH tanpa data -> 400', r.status === 400);
+  r = await call('PATCH', '/auth/me', { nama: 'X' }, false);
+  check('PATCH tanpa token -> 401', r.status === 401);
+
   section('Konten');
   r = await call('GET', '/topics');
   check('GET /topics memuat topik uji', r.status === 200 && r.data.topics.some((t) => t.id === TOPIC));
